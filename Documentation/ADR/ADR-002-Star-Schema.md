@@ -167,7 +167,7 @@ The following rules apply:
 
 # References
 
-- ADR-001 – Layered Architecture
+- [ADR-001 - Layered Architecture](ADR/ADR-001-Layered-Architecture.md)
 
 ---
 
