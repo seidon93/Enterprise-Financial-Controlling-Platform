@@ -27,7 +27,7 @@
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
-| 1.0 | July 2026 | Your Name | Initial version |
+| 1.0 | July 2026 | Ondřej Seidl | Initial version |
 
 ---
 
