@@ -2,10 +2,10 @@
 
 | Document Information | |
 |----------------------|------------------------------------------------|
-| **Project Name** | Enterprise Financial Controlling & Management Reporting Solution |
+| **Project Name** | Enterprise Financial Analytics Platform (EFAP) |
 | **Version** | 1.0 |
 | **Status** | Draft |
-| **Author** | *Your Name* |
+| **Author** | *Ondřej Seidl* |
 | **Project Type** | Portfolio / Enterprise BI Solution |
 | **Technology Stack** | Power BI, Power Query, DAX, SQL, Excel |
 | **Repository** | Enterprise-Financial-Controlling |
@@ -15,7 +15,7 @@
 
 # 1. Executive Summary
 
-The Enterprise Financial Controlling & Management Reporting Solution is an end-to-end Business Intelligence project designed to simulate a real-world enterprise financial reporting environment.
+The Enterprise Financial Analytics Platform (EFAP) is an end-to-end Business Intelligence project designed to simulate a real-world enterprise financial reporting environment.
 
 The solution aims to demonstrate how financial data can be transformed into meaningful business insights through modern data modeling, ETL processes, semantic modeling, and interactive dashboards.
 

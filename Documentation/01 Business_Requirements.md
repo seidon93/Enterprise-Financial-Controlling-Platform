@@ -1,6 +1,6 @@
 # Business Requirements Document (BRD)
 
-> **Project:** Enterprise Financial Controlling & Management Reporting Solution  
+> **Project:** Enterprise Financial Analytics Platform (EFAP) 
 > **Document ID:** SD-01  
 > **Version:** 1.0  
 > **Status:** Draft  
@@ -49,7 +49,7 @@
 
 # 1. Executive Summary
 
-The **Enterprise Financial Controlling & Management Reporting Solution** is designed to replace fragmented spreadsheet-based financial reporting with a centralized Business Intelligence platform.
+The **Enterprise Financial Analytics Platform (EFAP)** is designed to replace fragmented spreadsheet-based financial reporting with a centralized Business Intelligence platform.
 
 The solution will provide management with accurate, timely, and interactive financial information, enabling faster and more informed decision-making.
 
