@@ -273,3 +273,122 @@ The following areas are intentionally excluded from the initial implementation:
 - Inventory optimization
 - Predictive AI models
 - Real-time streaming analytics
+
+---
+
+# 9. Functional Requirements
+
+The solution shall provide the following functional capabilities.
+
+| ID | Requirement | Priority |
+|----|-------------|----------|
+| FR-001 | Import financial data from the ERP system. | High |
+| FR-002 | Import budget data from Microsoft Excel files. | High |
+| FR-003 | Support monthly forecast uploads. | High |
+| FR-004 | Store data using a Star Schema model. | High |
+| FR-005 | Calculate standardized financial KPIs. | High |
+| FR-006 | Provide Budget vs Actual analysis. | High |
+| FR-007 | Support Month-to-Date (MTD) and Year-to-Date (YTD) reporting. | High |
+| FR-008 | Enable drill-down from executive summary to transaction level. | High |
+| FR-009 | Filter reports by Company, Business Unit, Cost Center, Profit Center and Fiscal Period. | High |
+| FR-010 | Provide interactive dashboards for executive management. | High |
+| FR-011 | Support Row-Level Security (RLS). | Medium |
+| FR-012 | Export report data to Excel and PDF. | Medium |
+| FR-013 | Provide automated monthly refresh process. | High |
+| FR-014 | Maintain a centralized KPI catalog. | High |
+| FR-015 | Ensure consistent business rules across all reports. | High |
+
+---
+
+# 10. Non-Functional Requirements
+
+| ID | Requirement | Target |
+|----|-------------|--------|
+| NFR-001 | Report opening time | < 5 seconds |
+| NFR-002 | Visual interaction response | < 2 seconds |
+| NFR-003 | Scheduled refresh duration | < 30 minutes |
+| NFR-004 | Availability | 99% |
+| NFR-005 | Security | Role-based access using RLS |
+| NFR-006 | Maintainability | Modular Power Query and DAX design |
+| NFR-007 | Scalability | Support future business entities and KPIs |
+| NFR-008 | Documentation | Complete project documentation in Markdown |
+| NFR-009 | Naming Standards | Enterprise naming conventions |
+| NFR-010 | Data Quality | Validation rules before model refresh |
+
+---
+
+# Quality Attributes
+
+```mermaid
+mindmap
+  root((Quality))
+
+    Performance
+
+    Security
+
+    Scalability
+
+    Maintainability
+
+    Reliability
+
+    Usability
+
+    Documentation
+
+    Governance
+```
+
+---
+
+# 11. Business Assumptions
+
+The project is based on the following assumptions:
+
+- Financial data is available on a monthly basis.
+- The ERP system provides complete General Ledger data.
+- Budget and Forecast data are maintained by the Finance department.
+- Financial reporting follows a monthly closing cycle.
+- All KPIs use standardized business definitions.
+- Historical data is available for trend analysis.
+- Source data is considered accurate after validation.
+
+---
+
+# 12. Project Constraints
+
+The following constraints apply to this implementation:
+
+- Sample data will be used instead of production data.
+- ERP connectivity is simulated.
+- Development is limited to Microsoft Power BI ecosystem.
+- No real-time reporting is included.
+- Cloud services are optional and outside the initial scope.
+
+---
+
+# 13. Business Risks
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Poor data quality | High | Data validation during ETL |
+| Scope expansion | High | Formal change management |
+| Inconsistent KPI definitions | High | Central KPI Catalog |
+| Performance degradation | Medium | Star Schema and DAX optimization |
+| Incorrect business rules | High | Validation with Financial Controller |
+| Manual source files | Medium | Standardized templates and validation |
+
+---
+
+# Risk Overview
+
+```mermaid
+flowchart LR
+
+Risk --> Validation
+Validation --> ETL
+ETL --> SemanticModel
+SemanticModel --> Dashboard
+Dashboard --> BusinessDecision
+```
