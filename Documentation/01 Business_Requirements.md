@@ -147,3 +147,129 @@ mindmap
 ```
 
 ---
+# 5. Business Capabilities
+
+The platform will provide the following business capabilities:
+
+| Capability | Description | Priority |
+|------------|-------------|----------|
+| Financial Reporting | Standardized monthly financial statements and management reports | High |
+| Budget Control | Budget planning, tracking and variance analysis | High |
+| Forecasting | Rolling forecast and year-end outlook | High |
+| Cost Center Analysis | Expense monitoring by organizational unit | High |
+| Profit Center Analysis | Profitability analysis by business area | High |
+| Cash Flow Monitoring | Analysis of operating, investing and financing cash flows | High |
+| KPI Management | Centralized financial KPI definitions and monitoring | High |
+| Executive Dashboards | Interactive dashboards for senior management | High |
+| Self-Service Analytics | Flexible ad-hoc analysis for business users | Medium |
+
+---
+
+# 6. Stakeholders
+
+| Stakeholder | Role | Responsibilities |
+|-------------|------|------------------|
+| Executive Board | Strategic Decision Maker | Reviews company performance and strategic KPIs |
+| Chief Financial Officer (CFO) | Business Sponsor | Owns financial reporting and project direction |
+| Financial Controller | Business Owner | Defines reporting requirements and validates outputs |
+| Accounting Department | Data Provider | Maintains accounting records and source transactions |
+| BI Solution Architect | Solution Owner | Designs overall BI architecture |
+| Power BI Developer | Technical Implementation | Develops semantic model, DAX and reports |
+| IT Department | Infrastructure Support | Maintains systems and security |
+| Department Managers | Business Users | Consume operational and financial reports |
+
+---
+
+# Stakeholder Relationship
+
+```mermaid
+flowchart TD
+
+    CFO --> FinancialController
+    FinancialController --> BISolutionArchitect
+    BISolutionArchitect --> PowerBIDeveloper
+
+    Accounting --> FinancialController
+    IT --> PowerBIDeveloper
+
+    PowerBIDeveloper --> ExecutiveBoard
+```
+
+---
+
+# 7. High-Level Business Process
+
+The financial reporting process follows a monthly reporting cycle.
+
+1. Financial transactions are recorded in the ERP system.
+2. Data is extracted into the reporting environment.
+3. Data quality checks and business validations are performed.
+4. Financial data is transformed into an analytical model.
+5. KPIs are calculated using standardized business rules.
+6. Interactive dashboards are published for business users.
+7. Management reviews results and initiates corrective actions where required.
+
+---
+
+# Financial Reporting Process
+
+```mermaid
+flowchart LR
+
+    ERP[(ERP System)]
+
+    Extract[Extract Data]
+
+    Validate[Validate Data]
+
+    Transform[Transform Data]
+
+    Model[Semantic Model]
+
+    KPI[KPI Calculation]
+
+    Dashboard[Power BI Reports]
+
+    Decision[Management Decision]
+
+    ERP --> Extract --> Validate --> Transform --> Model --> KPI --> Dashboard --> Decision
+```
+
+---
+
+# 8. Project Scope
+
+The project includes the design, implementation and documentation of a complete enterprise financial reporting solution.
+
+## Included
+
+- General Ledger reporting
+- Profit & Loss Statement
+- Budget vs Actual reporting
+- Forecast reporting
+- Cash Flow reporting
+- Cost Center reporting
+- Profit Center reporting
+- Executive dashboard
+- KPI catalog
+- Star schema data model
+- Power Query ETL
+- DAX measure library
+- Data dictionary
+- Business rules documentation
+- Security model (RLS)
+
+---
+
+## Out of Scope
+
+The following areas are intentionally excluded from the initial implementation:
+
+- Payroll processing
+- Tax reporting
+- Manufacturing execution systems (MES)
+- Customer relationship management (CRM)
+- Supply chain optimization
+- Inventory optimization
+- Predictive AI models
+- Real-time streaming analytics
