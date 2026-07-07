@@ -27,7 +27,7 @@
 
 | Version | Date | Author | Description |
 |----------|------|--------|-------------|
-| 1.0 | July 2026 | Your Name | Initial release |
+| 1.0 | July 2026 | Ondřej Seidl | Initial release |
 
 ---
 
@@ -157,3 +157,136 @@ This diagram illustrates the logical architecture of the Enterprise Financial An
 | ADR-001-Layered-Architecture.md | Architectural decision for layered design |
 | 03_Source_Systems.md | Source system definitions |
 | 04_Data_Model.md | Enterprise Star Schema |
+
+---
+
+# 5. Logical Architecture
+
+The solution is organized into independent logical layers. Each layer has a single responsibility and communicates only with adjacent layers.
+
+| Layer | Responsibility | Output |
+|--------|----------------|--------|
+| Source Systems | Provide raw business data | Financial transactions, budgets, forecasts |
+| Staging Layer | Import and validate source data | Standardized datasets |
+| Transformation Layer | Apply cleansing and business rules | Business-ready datasets |
+| Enterprise Data Model | Organize data using Star Schema | Fact and Dimension tables |
+| Semantic & KPI Layer | Business calculations and DAX measures | Trusted KPIs and metrics |
+| Reporting Layer | Interactive dashboards and reports | Business insights |
+
+---
+
+# Figure 2.2 – Logical Architecture Layers
+
+```mermaid
+flowchart LR
+
+    A["Source Systems"]
+    B["Staging Layer"]
+    C["Transformation Layer"]
+    D["Enterprise Star Schema"]
+    E["Semantic & KPI Layer"]
+    F["Reporting Layer"]
+
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+```
+
+**Figure 2.2 Description**
+
+The logical architecture separates data acquisition, transformation, analytical modeling, and reporting into distinct layers. This separation improves maintainability, scalability, and simplifies future enhancements.
+
+---
+
+# 6. End-to-End Data Flow
+
+The platform follows a controlled data pipeline from operational systems to analytical reports.
+
+1. Financial data is extracted from source systems.
+2. Raw datasets are validated and standardized.
+3. Business transformation rules are applied.
+4. Data is loaded into the enterprise Star Schema.
+5. The semantic model calculates KPIs and business metrics.
+6. Power BI dashboards present interactive analytical views.
+
+---
+
+# Figure 2.3 – End-to-End Data Flow
+
+```mermaid
+flowchart LR
+
+    ERP["ERP System"]
+    Budget["Budget Excel"]
+    Forecast["Forecast CSV"]
+
+    Import["Import"]
+    Validate["Validation"]
+    Transform["Transformation"]
+
+    Fact["Fact Tables"]
+    Dim["Dimension Tables"]
+
+    Semantic["Semantic Model"]
+
+    KPI["KPI Calculations"]
+
+    Reports["Power BI Reports"]
+
+    ERP --> Import
+    Budget --> Import
+    Forecast --> Import
+
+    Import --> Validate
+    Validate --> Transform
+
+    Transform --> Fact
+    Transform --> Dim
+
+    Fact --> Semantic
+    Dim --> Semantic
+
+    Semantic --> KPI
+
+    KPI --> Reports
+```
+
+**Figure 2.3 Description**
+
+This diagram illustrates the complete lifecycle of financial data, from operational systems through transformation and semantic modeling to executive reporting.
+
+---
+
+# 7. Technology Stack
+
+| Layer | Technology |
+|--------|------------|
+| Source Systems | ERP (SAP S/4HANA), Microsoft Excel, CSV |
+| Data Integration | Power Query (M) |
+| Data Modeling | Power BI Semantic Model |
+| Business Logic | DAX |
+| Reporting | Microsoft Power BI |
+| Documentation | Markdown + Mermaid |
+| Version Control | Git + GitHub |
+
+---
+
+# 8. Architecture Principles in Practice
+
+| Principle | Implementation |
+|-----------|----------------|
+| Layered Architecture | Independent processing layers |
+| Single Source of Truth | Centralized semantic model |
+| Reusability | Shared DAX measures and KPI catalog |
+| Performance | Star Schema and optimized relationships |
+| Maintainability | Modular Power Query queries |
+| Security | Row-Level Security (RLS) |
+| Governance | Documentation and ADRs |
+
+> **Related ADRs**
+>
+> - ADR-001 – Layered Architecture
+> - ADR-002 – Star Schema *(planned)*
+> - ADR-003 – Power Query as ETL *(planned)*
