@@ -1,55 +1,94 @@
 # Dimension Specification – Dim_Date
 
-**Project:** Enterprise Financial Analytics Platform (EFAP)
+> Enterprise Financial Analytics Platform (EFAP)
 
-**Object Type:** Dimension Table
+---
 
-**Table Name:** Dim_Date
+# Document Information
 
-**Layer:** Semantic Layer
-
-**Status:** Approved
-
-**Version:** 1.0
+| Property | Value |
+|----------|-------|
+| **Document ID** | EFAP-DIM-001 |
+| **Category** | Data Architecture |
+| **Object Type** | Dimension |
+| **Layer** | Semantic Layer |
+| **Version** | 1.0.0 |
+| **Status** | Draft |
+| **Owner** | Data Architecture |
+| **Sprint** | Sprint 2 – Enterprise Data Foundation |
+| **Created** | 2026-07-08 |
+| **Last Updated** | 2026-07-08 |
 
 ---
 
 # Purpose
 
-The Date Dimension provides a standardized calendar for all analytical processes within the Enterprise Financial Controlling Solution.
+The **Dim_Date** dimension provides a centralized enterprise calendar used across all analytical domains within the Enterprise Financial Analytics Platform (EFAP).
 
-It supports financial reporting, budgeting, forecasting, operational analysis, and time intelligence calculations in Power BI.
+It enables consistent time-based reporting, budgeting, forecasting, financial analysis and Power BI Time Intelligence.
 
-This dimension is shared by all fact tables (Conformed Dimension).
+Dim_Date is a **Conformed Dimension** and is shared by all fact tables.
+
+---
+
+# Scope
+
+This specification defines:
+
+- Business purpose
+- Data model
+- Metadata
+- Business rules
+- Data quality requirements
+- Refresh strategy
+- Dependencies
+
+---
+
+# Business Context
+
+Every business transaction occurs at a point in time.
+
+A centralized Date Dimension ensures:
+
+- consistent reporting
+- reusable calendar logic
+- fiscal calendar support
+- elimination of duplicated date logic
+- optimized Power BI performance
 
 ---
 
 # Grain
 
-One record represents one calendar day.
+**One row represents one calendar day.**
 
 Example:
 
+```
 2026-07-08
+```
 
 ---
 
 # Primary Key
 
-| Column | Type |
-|----------|------|
+| Column | Description |
+|---------|-------------|
 | DateKey | Integer (YYYYMMDD) |
 
-Example:
+Example
 
+```
 20260708
+```
 
 ---
 
 # Business Key
 
 | Column |
-|----------|
+|---------|
 | FullDate |
 
 ---
@@ -57,123 +96,124 @@ Example:
 # Used By
 
 - Fact_GL
-- Fact_Sales
-- Fact_AP
-- Fact_AR
 - Fact_Budget
 - Fact_CashFlow
+- Fact_Sales
+- Fact_AR
+- Fact_AP
 - Fact_Inventory
 
 ---
 
-# Attributes
+# Column Metadata
 
-| Column | Data Type | Description |
-|----------|-----------|-------------|
-| DateKey | Integer | Surrogate key (YYYYMMDD) |
-| FullDate | Date | Calendar date |
-| Day | TinyInt | Day of month |
-| DayName | Varchar | Monday, Tuesday... |
-| DayOfWeek | TinyInt | ISO day number |
-| Week | TinyInt | ISO week |
-| Month | TinyInt | Month number |
-| MonthName | Varchar | January |
-| Quarter | TinyInt | Quarter number |
-| QuarterName | Varchar | Q1–Q4 |
-| Year | SmallInt | Calendar year |
-| FiscalMonth | TinyInt | Fiscal month |
-| FiscalQuarter | TinyInt | Fiscal quarter |
-| FiscalYear | SmallInt | Fiscal year |
-| IsWeekend | Boolean | Weekend flag |
-| IsWorkingDay | Boolean | Working day flag |
-| IsMonthEnd | Boolean | Last day of month |
-| IsQuarterEnd | Boolean | Last day of quarter |
-| IsYearEnd | Boolean | Last day of year |
-
----
-
-# Recommended Future Attributes
-
-- MonthShortName
-- QuarterLabel
-- MonthYear
-- YearMonthKey
-- WeekStartDate
-- WeekEndDate
-- MonthStartDate
-- MonthEndDate
-- RelativeMonthOffset
-- RelativeQuarterOffset
-- RelativeYearOffset
-- IsCurrentMonth
-- IsCurrentYear
-- PublicHoliday
-- HolidayName
+| Business Name | Technical Name | Data Type | Nullable | Source | Transformation | Data Owner | Sensitive |
+|---------------|----------------|-----------|----------|--------|----------------|------------|-----------|
+| Date Key | DateKey | Integer | No | Generated | YYYYMMDD | Finance | No |
+| Calendar Date | FullDate | Date | No | Generated | None | Finance | No |
+| Day | Day | TinyInt | No | Generated | Derived | Finance | No |
+| Day Name | DayName | Varchar(20) | No | Generated | Derived | Finance | No |
+| Day Of Week | DayOfWeek | TinyInt | No | Generated | ISO 8601 | Finance | No |
+| ISO Week | ISOWeek | TinyInt | No | Generated | ISO 8601 | Finance | No |
+| Month | Month | TinyInt | No | Generated | Derived | Finance | No |
+| Month Name | MonthName | Varchar(20) | No | Generated | Derived | Finance | No |
+| Quarter | Quarter | TinyInt | No | Generated | Derived | Finance | No |
+| Quarter Name | QuarterName | Varchar(5) | No | Generated | Derived | Finance | No |
+| Calendar Year | Year | SmallInt | No | Generated | Derived | Finance | No |
+| Fiscal Month | FiscalMonth | TinyInt | No | Configurable | Derived | Finance | No |
+| Fiscal Quarter | FiscalQuarter | TinyInt | No | Configurable | Derived | Finance | No |
+| Fiscal Year | FiscalYear | SmallInt | No | Configurable | Derived | Finance | No |
+| Is Weekend | IsWeekend | Boolean | No | Generated | Derived | Finance | No |
+| Is Working Day | IsWorkingDay | Boolean | No | Generated | Derived | Finance | No |
+| Is Month End | IsMonthEnd | Boolean | No | Generated | Derived | Finance | No |
+| Is Quarter End | IsQuarterEnd | Boolean | No | Generated | Derived | Finance | No |
+| Is Year End | IsYearEnd | Boolean | No | Generated | Derived | Finance | No |
 
 ---
 
 # Business Rules
 
-- One row per calendar day.
-- No duplicate dates.
-- No missing dates.
-- Fiscal calendar must be configurable.
-- DateKey must always be unique.
-- Date range should support historical and future planning.
+| Rule ID | Description |
+|----------|-------------|
+| BR-001 | One record per calendar day |
+| BR-002 | No duplicate dates |
+| BR-003 | DateKey must be unique |
+| BR-004 | Fiscal calendar must be configurable |
+| BR-005 | Calendar must contain future planning dates |
+| BR-006 | Calendar must not contain gaps |
 
 ---
 
 # Data Quality Rules
 
-Validation includes:
-
-- Unique DateKey
-- Unique FullDate
-- Continuous date sequence
-- Valid fiscal periods
-- Valid ISO week numbering
-- No NULL values in mandatory columns
+| Rule ID | Validation |
+|----------|------------|
+| DQ-001 | DateKey unique |
+| DQ-002 | FullDate unique |
+| DQ-003 | Continuous calendar |
+| DQ-004 | Valid fiscal periods |
+| DQ-005 | Valid ISO weeks |
+| DQ-006 | No NULL values in mandatory columns |
 
 ---
 
 # Refresh Strategy
 
-Refresh frequency:
-
-Annual
-
-The table is regenerated only when additional years are required.
-
----
-
-# Example Record
-
-| DateKey | FullDate | Day | Month | Quarter | Year | IsWorkingDay |
-|----------|----------|-----|--------|----------|------|--------------|
-| 20260708 | 2026-07-08 | 8 | 7 | 3 | 2026 | TRUE |
+| Property | Value |
+|----------|-------|
+| Refresh Frequency | Annual |
+| Load Type | Full Refresh |
+| Source | Generated |
+| Retention | Unlimited |
 
 ---
 
 # Dependencies
 
-Referenced by:
+## Upstream
 
-- All Fact Tables
+None
+
+## Downstream
+
+- Fact_GL
+- Fact_Budget
+- Fact_CashFlow
+- Fact_Sales
+- Fact_AR
+- Fact_AP
+- Fact_Inventory
+- Power BI Semantic Model
 - Time Intelligence Measures
-- Financial Reporting
-- Budget Analysis
-- Forecasting
-- KPI Layer
+
+---
+
+# Related Documents
+
+| Document ID | Document | Relationship |
+|-------------|----------|--------------|
+| EFAP-BUS-001 | 13_Enterprise_Bus_Matrix.md | Defines shared dimensions |
+| EFAP-LDM-001 | 14_Logical_Data_Model.md | Defines logical model |
+| EFAP-DD-001 | 05_Data_Dictionary.md | Metadata standards |
+| EFAP-ADR-002 | ADR-002-Star-Schema.md | Dimensional modeling |
+| EFAP-ADR-005 | ADR-005-Surrogate-Keys.md | Key strategy |
 
 ---
 
 # Future Enhancements
-
-Potential future improvements include:
 
 - Multiple fiscal calendars
 - Country-specific public holidays
 - Company-specific holidays
 - Manufacturing calendars
 - 4-4-5 calendar support
-- ISO fiscal calendar
+- Relative date calculations
+- Holiday dimension integration
+
+---
+
+# Revision History
+
+| Version | Date | Author | Changes |
+|----------|------|--------|----------|
+| 1.0.0 | 2026-07-08 | Project Team | Initial version |
