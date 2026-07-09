@@ -6,86 +6,57 @@
 // Layer           : Semantic Layer
 // Version         : 1.0.0
 // Status          : Implemented
-// Author          : Project Team
-// Created         : 2026-07-09
-// Last Updated    : 2026-07-09
-//
+// ----------------------------------------------------------------------------
 // Description:
-// Enterprise calendar dimension used across all fact tables.
-//
-// Business Grain:
-// One record represents one calendar day.
-//
-// Dependencies:
-// None
-//
-// Related Documents:
-// - EFAP-DIM-001 (Dim_Date Specification)
-// - EFAP-LDM-001 (Logical Data Model)
-// - EFAP-DD-001  (Data Dictionary)
-//
+// Enterprise calendar dimension for Power BI semantic model.
+// One row represents one calendar day.
 // ============================================================================
 
 let
-
-    // ========================================================================
+    // =========================================================================
     // Configuration
-    // ========================================================================
+    // =========================================================================
 
     StartYear = 2020,
-
     EndYear = 2035,
-
     FiscalYearStartMonth = 1,
-
     Culture = "en-US",
 
-    StartDate =
-        #date(
-            StartYear,
-            1,
-            1
-        ),
+    StartDate = #date(StartYear, 1, 1),
+    EndDate = #date(EndYear, 12, 31),
 
-    EndDate =
-        #date(
-            EndYear,
-            12,
-            31
-        ),
-
-    TotalDays =
+    NumberOfDays =
         Duration.Days(
             EndDate - StartDate
         ) + 1,
 
-    // ========================================================================
+    // =========================================================================
     // Calendar
-    // ========================================================================
+    // =========================================================================
 
-    Calendar =
+    DateList =
         List.Dates(
             StartDate,
-            TotalDays,
+            NumberOfDays,
             #duration(1,0,0,0)
         ),
 
-    CalendarTable =
+    Calendar =
         Table.FromList(
-            Calendar,
+            DateList,
             Splitter.SplitByNothing(),
             {"FullDate"},
             null,
             ExtraValues.Error
         ),
 
-    // ========================================================================
-    // Keys
-    // ========================================================================
+    // =========================================================================
+    // Date Key
+    // =========================================================================
 
-    CalendarWithKeys =
+    AddDateKey =
         Table.AddColumn(
-            CalendarTable,
+            Calendar,
             "DateKey",
             each
                 Date.Year([FullDate]) * 10000 +
@@ -94,118 +65,97 @@ let
             Int64.Type
         ),
 
-    // ========================================================================
+    // =========================================================================
     // Day Attributes
-    // ========================================================================
+    // =========================================================================
 
-    CalendarWithDayAttributes =
-        CalendarWithKeys
-
-        |> Table.AddColumn(
-            _,
+    AddDay =
+        Table.AddColumn(
+            AddDateKey,
             "Day",
             each Date.Day([FullDate]),
             Int64.Type
-        )
+        ),
 
-        |> Table.AddColumn(
-            _,
+    AddDayName =
+        Table.AddColumn(
+            AddDay,
             "DayName",
-            each Date.ToText(
-                [FullDate],
-                "dddd",
-                Culture
-            ),
+            each Date.ToText([FullDate], "dddd", Culture),
             type text
-        )
+        ),
 
-        |> Table.AddColumn(
-            _,
+    AddDayShortName =
+        Table.AddColumn(
+            AddDayName,
             "DayShortName",
-            each Date.ToText(
-                [FullDate],
-                "ddd",
-                Culture
-            ),
+            each Date.ToText([FullDate], "ddd", Culture),
             type text
-        )
+        ),
 
-        |> Table.AddColumn(
-            _,
+    AddDayOfWeek =
+        Table.AddColumn(
+            AddDayShortName,
             "DayOfWeek",
-            each Date.DayOfWeek(
-                    [FullDate],
-                    Day.Monday
-                ) + 1,
-            Int64.Type
-        )
-
-        |> Table.AddColumn(
-            _,
-            "ISOWeek",
-            each Date.WeekOfYear(
-                [FullDate],
-                Day.Monday
-            ),
+            each Date.DayOfWeek([FullDate], Day.Monday) + 1,
             Int64.Type
         ),
 
-    // ========================================================================
+    AddISOWeek =
+        Table.AddColumn(
+            AddDayOfWeek,
+            "ISOWeek",
+            each Date.WeekOfYear([FullDate], Day.Monday),
+            Int64.Type
+        ),
+
+    // =========================================================================
     // Calendar Attributes
-    // ========================================================================
+    // =========================================================================
 
-    CalendarWithCalendarAttributes =
-        CalendarWithDayAttributes
-
-        |> Table.AddColumn(
-            _,
+    AddCalendarMonth =
+        Table.AddColumn(
+            AddISOWeek,
             "CalendarMonth",
             each Date.Month([FullDate]),
             Int64.Type
-        )
+        ),
 
-        |> Table.AddColumn(
-            _,
+    AddMonthName =
+        Table.AddColumn(
+            AddCalendarMonth,
             "MonthName",
-            each Date.ToText(
-                [FullDate],
-                "MMMM",
-                Culture
-            ),
+            each Date.ToText([FullDate], "MMMM", Culture),
             type text
-        )
+        ),
 
-        |> Table.AddColumn(
-            _,
+    AddMonthShortName =
+        Table.AddColumn(
+            AddMonthName,
             "MonthShortName",
-            each Date.ToText(
-                [FullDate],
-                "MMM",
-                Culture
-            ),
+            each Date.ToText([FullDate], "MMM", Culture),
             type text
-        )
+        ),
 
-        |> Table.AddColumn(
-            _,
+    AddCalendarQuarter =
+        Table.AddColumn(
+            AddMonthShortName,
             "CalendarQuarter",
             each Date.QuarterOfYear([FullDate]),
             Int64.Type
-        )
+        ),
 
-        |> Table.AddColumn(
-            _,
+    AddQuarterName =
+        Table.AddColumn(
+            AddCalendarQuarter,
             "QuarterName",
-            each
-                "Q" &
-                Text.From(
-                    Date.QuarterOfYear([FullDate])
-                ),
+            each "Q" & Text.From(Date.QuarterOfYear([FullDate])),
             type text
-        )
+        ),
 
-        |> Table.AddColumn(
-            _,
+    AddCalendarYear =
+        Table.AddColumn(
+            AddQuarterName,
             "CalendarYear",
             each Date.Year([FullDate]),
             Int64.Type
