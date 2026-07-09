@@ -5,6 +5,12 @@ Database Connection
 ===============================================================================
 """
 
+import sys
+from pathlib import Path
+
+# Add Scripts/Python to path so 'common' package is discoverable
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from sqlalchemy import create_engine
 
 from common.config import settings
