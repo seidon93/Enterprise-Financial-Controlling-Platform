@@ -9,7 +9,7 @@ Version         : 1.0.0
 Status          : Development
 
 Description:
-Generates the EFAP Dim_Date dimension and exports it to CSV.
+Generates and loads the EFAP Dim_Date dimension into PostgreSQL.
 
 Author:
 EFAP Project
@@ -25,12 +25,20 @@ Dependencies:
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 import logging
 
+# Add Scripts/Python to path so 'common' package is discoverable
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import pandas as pd
+
+from sqlalchemy import text
+
+from common.database import engine
 
 
 # =============================================================================
@@ -39,8 +47,7 @@ import pandas as pd
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(message)s"
-)
+    format="%(asctime)s | %(levelname)s | %(message)s")
 
 logger = logging.getLogger(__name__)
 
@@ -78,52 +85,84 @@ class DimDateGenerator:
 
 
     def generate(self) -> pd.DataFrame:
-        """
-        Generate the complete Dim_Date dimension.
-        """
 
-        logger.info("Generating Dim_Date...")
-
-        self._create_calendar()
-        # self._add_day_attributes()
-        # self._add_calendar_attributes()
-        # self._add_fiscal_attributes()
-        # self._add_period_attributes()
-        # self._add_business_flags()
-        # self._add_current_flags()
-        # self._reorder_columns()
-        # self._validate()
-
-        logger.info("Dim_Date successfully generated.")
-
-        return self.df
-
-# =============================================================================
-# Calendar
-# =============================================================================
-
-    def _create_calendar(self) -> None:
-        """
-        Create the base calendar DataFrame.
-        """
-
-        logger.info(
-            "Creating calendar from %s to %s",
-            self.config.start_date,
-            self.config.end_date,
-        )
+        logger.info("Generating calendar...")
 
         self.df = pd.DataFrame(
             {
-                "FullDate": pd.date_range(
-                    start=self.config.start_date,
-                    end=self.config.end_date,
+                "full_date": pd.date_range(
+                    self.config.start_date,
+                    self.config.end_date,
                     freq="D",
                 )
             }
         )
 
+        self.df["date_key"] = (
+            self.df["full_date"].dt.strftime("%Y%m%d").astype(int)
+        )
+
+        return self.df
+
+# =============================================================================
+# Validation
+# =============================================================================
+
+    def validate(self) -> None:
+
+        logger.info("Validating Dim_Date...")
+
+        if self.df.empty:
+            raise ValueError("DataFrame is empty.")
+
+        if not self.df["date_key"].is_unique:
+            raise ValueError("DateKey is not unique.")
+
+        if not self.df["full_date"].is_unique:
+            raise ValueError("FullDate is not unique.")
+
+        logger.info("Validation successful.")
+
+# =============================================================================
+# Load
+# =============================================================================
+
+
+    def load(self) -> None:
+
+        logger.info("Loading Dim_Date into PostgreSQL...")
+
+        with engine.begin() as connection:
+
+            connection.execute(
+                text("TRUNCATE TABLE warehouse.dim_date;")
+            )
+
+        self.df.to_sql(
+            name="dim_date",
+            schema="warehouse",
+            con=engine,
+            if_exists="append",
+            index=False,
+        )
+
         logger.info(
-            "Calendar created (%d rows).",
+            "Loaded %s rows.",
             len(self.df),
         )
+
+    def run(self) -> None:
+
+        self.generate()
+
+        self.validate()
+
+        self.load()
+
+if __name__ == "__main__":
+
+    generator = DimDateGenerator(
+        DimDateConfig()
+    )
+
+    generator.run()
