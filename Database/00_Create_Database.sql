@@ -1,0 +1,4 @@
+-- Enterprise Financial Analytics Platform (EFAP)
+-- Database Name: EFAP
+-- Encoding: UTF8
+-- Locale: cs_CZ.UTF-8
