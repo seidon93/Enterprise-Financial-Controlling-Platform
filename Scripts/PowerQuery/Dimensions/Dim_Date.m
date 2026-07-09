@@ -11,6 +11,12 @@
 // Enterprise calendar dimension for Power BI semantic model.
 // One row represents one calendar day.
 // ============================================================================
+// Related Documentation
+// ----------------------------------------------------------------------------
+// 00_Project_Charter.md
+// 11_Project_Roadmap.md
+// 14_Logical_Data_Model.md
+// EFAP-DIM-001_Dim_Date.md
 let
     // =========================================================================
     // Configuration
@@ -22,6 +28,11 @@ let
     StartDate = #date(StartYear, 1, 1),
     EndDate = #date(EndYear, 12, 31),
     NumberOfDays = Duration.Days(EndDate - StartDate) + 1,
+    // Supported:
+    // en-US
+    // cs-CZ
+    // de-DE
+    // fr-FR
     // =========================================================================
     // Calendar
     // =========================================================================
@@ -33,7 +44,7 @@ let
     AddDateKey = Table.AddColumn(
         Calendar,
         "DateKey",
-        each Date.Year([FullDate]) * 10000 + Date.Month([FullDate]) * 100 + Date.Day([FullDate]),
+        each Int64.From(Date.Year([FullDate]) * 10000 + Date.Month([FullDate]) * 100 + Date.Day([FullDate])),
         Int64.Type
     ),
     // =========================================================================
@@ -47,11 +58,13 @@ let
     AddDayOfWeek = Table.AddColumn(
         AddDayShortName, "DayOfWeek", each Date.DayOfWeek([FullDate], Day.Monday) + 1, Int64.Type
     ),
-    AddISOWeek = Table.AddColumn(AddDayOfWeek, "ISOWeek", each Date.WeekOfYear([FullDate], Day.Monday), Int64.Type),
+    AddWeekOfYear = Table.AddColumn(
+        AddDayOfWeek, "WeekOfYear", each Date.WeekOfYear([FullDate], Day.Monday), Int64.Type
+    ),
     // =========================================================================
     // Calendar Attributes
     // =========================================================================
-    AddCalendarMonth = Table.AddColumn(AddISOWeek, "CalendarMonth", each Date.Month([FullDate]), Int64.Type),
+    AddCalendarMonth = Table.AddColumn(AddWeekOfYear, "CalendarMonth", each Date.Month([FullDate]), Int64.Type),
     AddMonthName = Table.AddColumn(
         AddCalendarMonth, "MonthName", each Date.ToText([FullDate], "MMMM", Culture), type text
     ),
@@ -127,7 +140,7 @@ let
     // =========================================================================
     // Current Period Flags
     // =========================================================================
-    Today = Date.From(DateTime.LocalNow()),
+    Today = Date.From(DateTimeZone.FixedUtcNow()),
     CurrentYear = Date.Year(Today),
     CurrentMonth = Date.Month(Today),
     CurrentQuarter = Date.QuarterOfYear(Today),
@@ -159,7 +172,7 @@ let
             "DayName",
             "DayShortName",
             "DayOfWeek",
-            "ISOWeek",
+            "WeekOfYear",
             "CalendarMonth",
             "MonthName",
             "MonthShortName",
