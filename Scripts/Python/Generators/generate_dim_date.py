@@ -36,6 +36,7 @@ from common.calendar import (
     CZECH_MONTH_NAMES,
     CZECH_MONTH_SHORT_NAMES,
     QUARTER_NAMES,
+    get_today,
 )
 
 from common.config import settings
@@ -81,9 +82,8 @@ class DimDateConfig:
 
 class DimDateGenerator:
 
-    def __init__(self, config: DimDateConfig):
+    def __init__(self):
 
-        self.config = config
         self.df = pd.DataFrame()
 
     # =========================================================================
@@ -241,20 +241,29 @@ class DimDateGenerator:
 # ============================================================================
 
     def _add_fiscal_attributes(self) -> None:
+        """
+        Add fiscal calendar attributes.
+        """
 
         logger.info("Adding fiscal attributes...")
 
-        dt = self.df["full_date"].dt
-        fys = self.config.fiscal_year_start_month
+        fiscal_start = settings.FISCAL_YEAR_START_MONTH
 
-        if fys == 1:
-            self.df["fiscal_month"] = dt.month
-            self.df["fiscal_quarter"] = dt.quarter
-            self.df["fiscal_year"] = dt.year
-        else:
-            self.df["fiscal_month"] = (dt.month - fys) % 12 + 1
-            self.df["fiscal_quarter"] = (self.df["fiscal_month"] - 1) // 3 + 1
-            self.df["fiscal_year"] = dt.year + (dt.month >= fys).astype(int)
+        self.df["fiscal_month"] = (
+            ((self.df["calendar_month"] - fiscal_start) % 12 + 1)
+            .astype(int)
+        )
+
+        self.df["fiscal_quarter"] = (
+            ((self.df["fiscal_month"] - 1) // 3 + 1)
+            .astype(int)
+        )
+
+        self.df["fiscal_year"] = (
+            self.df["calendar_year"]
+            + (self.df["calendar_month"] >= fiscal_start).astype(int)
+            - 1
+        ).astype(int)
 
         logger.info("Fiscal attributes created.")
 
@@ -262,43 +271,62 @@ class DimDateGenerator:
 # Period Attributes
 # =============================================================================
 
+
     def _add_period_attributes(self) -> None:
+        """
+        Add period related attributes.
+        """
 
         logger.info("Adding period attributes...")
 
-        dt = self.df["full_date"].dt
+        self.df["year_month"] = (
+            self.df["calendar_year"].astype(str)
+            + "-"
+            + self.df["calendar_month"].astype(str).str.zfill(2)
+        )
 
-        self.df["year_month"] = dt.strftime("%Y-%m")
-        self.df["year_month_key"] = dt.strftime("%Y%m").astype(int)
+        self.df["year_month_key"] = (
+            self.df["calendar_year"] * 100
+            + self.df["calendar_month"]
+        )
 
         self.df["month_start_date"] = (
-            self.df["full_date"] - pd.to_timedelta(dt.day - 1, unit="D")
+            self.df["full_date"]
+            .dt.to_period("M")
+            .dt.start_time
         )
+
         self.df["month_end_date"] = (
-            self.df["month_start_date"] + pd.offsets.MonthEnd(0)
+            self.df["full_date"]
+            .dt.to_period("M")
+            .dt.end_time
+            .dt.normalize()
         )
 
-        self.df["quarter_start_date"] = self.df["full_date"].apply(
-            lambda d: pd.Timestamp(d.year, ((d.quarter - 1) * 3) + 1, 1)
+        self.df["quarter_start_date"] = (
+            self.df["full_date"]
+            .dt.to_period("Q")
+            .dt.start_time
         )
+
         self.df["quarter_end_date"] = (
-            self.df["quarter_start_date"] + pd.offsets.QuarterEnd(0)
+            self.df["full_date"]
+            .dt.to_period("Q")
+            .dt.end_time
+            .dt.normalize()
         )
 
-        self.df["year_start_date"] = dt.year.apply(
-            lambda y: pd.Timestamp(y, 1, 1)
-        )
-        self.df["year_end_date"] = dt.year.apply(
-            lambda y: pd.Timestamp(y, 12, 31)
+        self.df["year_start_date"] = (
+            pd.to_datetime(
+                self.df["calendar_year"].astype(str) + "-01-01"
+            )
         )
 
-        # Convert timestamps to date
-        for col in [
-            "full_date", "month_start_date", "month_end_date",
-            "quarter_start_date", "quarter_end_date",
-            "year_start_date", "year_end_date",
-        ]:
-            self.df[col] = pd.to_datetime(self.df[col]).dt.date
+        self.df["year_end_date"] = (
+            pd.to_datetime(
+                self.df["calendar_year"].astype(str) + "-12-31"
+            )
+        )
 
         logger.info("Period attributes created.")
 
@@ -306,17 +334,36 @@ class DimDateGenerator:
 # Business Flags
 # =============================================================================
 
+
     def _add_business_flags(self) -> None:
+        """
+        Add business flags.
+        """
 
         logger.info("Adding business flags...")
 
-        dt = pd.to_datetime(self.df["full_date"]).dt
+        self.df["is_weekend"] = (
+            self.df["day_of_week"] >= 6
+        )
 
-        self.df["is_weekend"] = (dt.dayofweek >= 5)
-        self.df["is_working_day"] = ~self.df["is_weekend"]
-        self.df["is_month_end"] = dt.is_month_end
-        self.df["is_quarter_end"] = dt.is_quarter_end
-        self.df["is_year_end"] = (dt.month == 12) & (dt.day == 31)
+        self.df["is_working_day"] = (
+            ~self.df["is_weekend"]
+        )
+
+        self.df["is_month_end"] = (
+            self.df["full_date"]
+            == self.df["month_end_date"]
+        )
+
+        self.df["is_quarter_end"] = (
+            self.df["full_date"]
+            == self.df["quarter_end_date"]
+        )
+
+        self.df["is_year_end"] = (
+            self.df["full_date"]
+            == self.df["year_end_date"]
+        )
 
         logger.info("Business flags created.")
 
@@ -325,37 +372,90 @@ class DimDateGenerator:
 # =============================================================================
 
     def _add_current_flags(self) -> None:
+        """
+        Add current period flags.
+        """
 
         logger.info("Adding current flags...")
 
-        today = date.today()
-        dt = pd.to_datetime(self.df["full_date"]).dt
+        today = pd.Timestamp(get_today())
 
-        self.df["is_current_date"] = (self.df["full_date"] == today)
+        current_year = today.year
+        current_month = today.month
+        current_quarter = ((today.month - 1) // 3) + 1
+
+        self.df["is_current_date"] = (
+            self.df["full_date"] == today
+        )
+
         self.df["is_current_month"] = (
-            (dt.year == today.year) & (dt.month == today.month)
+            (self.df["calendar_year"] == current_year)
+            &
+            (self.df["calendar_month"] == current_month)
         )
+
         self.df["is_current_quarter"] = (
-            (dt.year == today.year)
-            & (dt.quarter == ((today.month - 1) // 3 + 1))
+            (self.df["calendar_year"] == current_year)
+            &
+            (self.df["calendar_quarter"] == current_quarter)
         )
-        self.df["is_current_year"] = (dt.year == today.year)
+
+        self.df["is_current_year"] = (
+            self.df["calendar_year"] == current_year
+        )
 
         logger.info("Current flags created.")
 
-# =============================================================================
-# Reorder Columns
-# =============================================================================
+# =========================================================================
+# Final Column Order
+# =========================================================================
 
     def _reorder_columns(self) -> None:
+        """
+        Reorder columns according to the enterprise data model.
+        """
 
-        # Move date_key to the front
-        cols = ["date_key"] + [
-            c for c in self.df.columns if c != "date_key"
+        logger.info("Reordering columns...")
+
+        self.df = self.df[
+            [
+                "date_key",
+                "full_date",
+                "day",
+                "day_name",
+                "day_short_name",
+                "day_of_week",
+                "week_of_year",
+                "calendar_month",
+                "month_name",
+                "month_short_name",
+                "calendar_quarter",
+                "quarter_name",
+                "calendar_year",
+                "fiscal_month",
+                "fiscal_quarter",
+                "fiscal_year",
+                "year_month",
+                "year_month_key",
+                "month_start_date",
+                "month_end_date",
+                "quarter_start_date",
+                "quarter_end_date",
+                "year_start_date",
+                "year_end_date",
+                "is_weekend",
+                "is_working_day",
+                "is_month_end",
+                "is_quarter_end",
+                "is_year_end",
+                "is_current_date",
+                "is_current_month",
+                "is_current_quarter",
+                "is_current_year",
+            ]
         ]
-        self.df = self.df[cols]
 
-        logger.info("Generated %d rows.", len(self.df))
+        logger.info("Columns reordered.")
 
 # =============================================================================
 # Validation
@@ -370,15 +470,21 @@ class DimDateGenerator:
         logger.info("Validation successful.")
 
     def _validate_dataframe(self) -> None:
+        """
+        Validate generated dataframe.
+        """
 
         if self.df.empty:
-            raise ValueError("DataFrame is empty.")
+            raise ValueError("Dim_Date dataframe is empty.")
 
         if not self.df["date_key"].is_unique:
-            raise ValueError("DateKey is not unique.")
+            raise ValueError("date_key must be unique.")
 
         if not self.df["full_date"].is_unique:
-            raise ValueError("FullDate is not unique.")
+            raise ValueError("full_date must be unique.")
+
+        if self.df.isnull().any().any():
+            raise ValueError("Dim_Date contains NULL values.")
 
 # =============================================================================
 # Load
@@ -438,10 +544,12 @@ class DimDateGenerator:
             len(self.df),
         )
 
+# =============================================================================
+# Main
+# =============================================================================
+
 if __name__ == "__main__":
 
-    generator = DimDateGenerator(
-        DimDateConfig()
-    )
+    generator = DimDateGenerator()
 
     generator.run()

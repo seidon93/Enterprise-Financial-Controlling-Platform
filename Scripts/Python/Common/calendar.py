@@ -6,6 +6,8 @@ Calendar Constants
 """
 
 from __future__ import annotations
+import pandas as pd
+from datetime import date
 
 CZECH_DAY_NAMES = {
     1: "Pondělí",
@@ -63,3 +65,6 @@ QUARTER_NAMES = {
     3: "Q3",
     4: "Q4",
 }
+
+def get_today() -> date:
+    return date.today()
