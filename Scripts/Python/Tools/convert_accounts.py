@@ -43,3 +43,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 INPUT_FILE = PROJECT_ROOT / "Data" / "Raw" / "account_chart.md"
 OUTPUT_FILE = PROJECT_ROOT / "Data" / "Reference" / "accounts.csv"
+
+df = pd.read_csv(
+    reference_path / "accounts.csv",
+    dtype={"account_number": str},
+    encoding="utf-8"
+)
