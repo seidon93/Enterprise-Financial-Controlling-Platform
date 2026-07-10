@@ -3,41 +3,34 @@
 Enterprise Financial Analytics Platform (EFAP)
 -------------------------------------------------------------------------------
 Object          : generate_dim_date.py
-Object Type     : Python Generator
+Object Type     : ETL Generator
 Layer           : Data Generation
-Version         : 1.0.0
-Status          : Development
+Version         : 2.0.0
+Status          : Production
+-------------------------------------------------------------------------------
 
 Description:
-Generates and loads the EFAP Dim_Date dimension into PostgreSQL.
-
-Author:
-EFAP Project
-
-Dependencies:
-    pandas
-    pathlib
-    logging
-    datetime
+Generates the enterprise Dim_Date dimension and loads it into PostgreSQL.
 
 ===============================================================================
 """
 
 from __future__ import annotations
 
-import sys
-from dataclasses import dataclass
-from datetime import date
-from pathlib import Path
 import logging
-
-# Add Scripts/Python to path so 'common' package is discoverable
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from datetime import date
 
 import pandas as pd
-
 from sqlalchemy import text
 
+from common.calendar import (
+    CZECH_DAY_NAMES,
+    CZECH_DAY_SHORT_NAMES,
+    CZECH_MONTH_NAMES,
+    CZECH_MONTH_SHORT_NAMES,
+)
+
+from common.config import settings
 from common.database import engine
 
 
@@ -47,7 +40,8 @@ from common.database import engine
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(message)s")
+    format="%(asctime)s | %(levelname)s | %(message)s",
+)
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +65,23 @@ class DimDateConfig:
     def end_date(self) -> date:
         return date(self.end_year, 12, 31)
 
+    # =========================================================================
+    # Public API
+    # =========================================================================
+
+    def run(self) -> None:
+
+        logger.info("Starting Dim_Date generation...")
+
+        self.generate()
+
+        self.validate()
+
+        self.load()
+
+        logger.info("Dim_Date finished successfully.")
+
+
 
 # =============================================================================
 # Generator
@@ -78,38 +89,30 @@ class DimDateConfig:
 
 class DimDateGenerator:
 
-    def __init__(self, config: DimDateConfig):
+    def __init__(self):
 
-        self.config = config
         self.df = pd.DataFrame()
 
 
-    def generate(self) -> pd.DataFrame:
+        def generate(self) -> pd.DataFrame:
 
         logger.info("Generating Dim_Date...")
 
-        self.df = pd.DataFrame(
-            {
-                "full_date": pd.date_range(
-                    self.config.start_date,
-                    self.config.end_date,
-                    freq="D",
-                )
-            }
-        )
-
-        self.df["date_key"] = (
-            self.df["full_date"].dt.strftime("%Y%m%d").astype(int)
-        )
+        self._create_calendar()
 
         self._add_day_attributes()
+
         self._add_calendar_attributes()
+
         self._add_fiscal_attributes()
+
         self._add_period_attributes()
+
         self._add_business_flags()
+
         self._add_current_flags()
 
-        logger.info("Generated %d rows.", len(self.df))
+        self._reorder_columns()
 
         return self.df
 
