@@ -334,4 +334,4 @@ if __name__ == "__main__":
         DimDateConfig()
     )
 
-    generator.run()
+    generator.run()
