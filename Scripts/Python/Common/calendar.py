@@ -56,3 +56,10 @@ CZECH_MONTH_SHORT_NAMES = {
     11: "Lis",
     12: "Pro",
 }
+
+QUARTER_NAMES = {
+    1: "Q1",
+    2: "Q2",
+    3: "Q3",
+    4: "Q4",
+}

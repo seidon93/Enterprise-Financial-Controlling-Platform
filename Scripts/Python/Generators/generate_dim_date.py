@@ -16,6 +16,13 @@ Generates the enterprise Dim_Date dimension and loads it into PostgreSQL.
 """
 
 from __future__ import annotations
+from dataclasses import dataclass
+
+import sys
+from pathlib import Path
+
+# Add Scripts/Python to the path so 'common' package can be found
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import logging
 from datetime import date
@@ -28,6 +35,7 @@ from common.calendar import (
     CZECH_DAY_SHORT_NAMES,
     CZECH_MONTH_NAMES,
     CZECH_MONTH_SHORT_NAMES,
+    QUARTER_NAMES,
 )
 
 from common.config import settings
@@ -65,6 +73,19 @@ class DimDateConfig:
     def end_date(self) -> date:
         return date(self.end_year, 12, 31)
 
+
+
+# =============================================================================
+# Generator
+# =============================================================================
+
+class DimDateGenerator:
+
+    def __init__(self, config: DimDateConfig):
+
+        self.config = config
+        self.df = pd.DataFrame()
+
     # =========================================================================
     # Public API
     # =========================================================================
@@ -82,19 +103,7 @@ class DimDateConfig:
         logger.info("Dim_Date finished successfully.")
 
 
-
-# =============================================================================
-# Generator
-# =============================================================================
-
-class DimDateGenerator:
-
-    def __init__(self):
-
-        self.df = pd.DataFrame()
-
-
-        def generate(self) -> pd.DataFrame:
+    def generate(self) -> pd.DataFrame:
 
         logger.info("Generating Dim_Date...")
 
@@ -117,61 +126,119 @@ class DimDateGenerator:
         return self.df
 
 # =============================================================================
-# Day Attributes
+# Calendar Creation
 # =============================================================================
 
+    def _create_calendar(self) -> None:
+
+        self.df = pd.DataFrame(
+            {
+                "full_date": pd.date_range(
+                    self.config.start_date,
+                    self.config.end_date,
+                    freq="D",
+                )
+            }
+        )
+
+        self.df["date_key"] = (
+            self.df["full_date"].dt.strftime("%Y%m%d").astype(int)
+        )
+
+    # =========================================================================
+    # Day Attributes
+    # =========================================================================
+
     def _add_day_attributes(self) -> None:
+        """
+        Add day related attributes.
+        """
 
         logger.info("Adding day attributes...")
 
-        self.df["day"] = self.df["full_date"].dt.day
+        iso = self.df["full_date"].dt.isocalendar()
 
-        self.df["day_name"] = self.df["full_date"].dt.day_name()
-
-        self.df["day_short_name"] = (
-            self.df["day_name"]
-            .str[:3]
+        self.df["date_key"] = (
+            self.df["full_date"]
+            .dt.strftime("%Y%m%d")
+            .astype(int)
         )
 
-        # ISO: Monday = 1 ... Sunday = 7
-        self.df["day_of_week"] = (
+        self.df["day"] = (
             self.df["full_date"]
-            .dt.isocalendar()
-            .day
+            .dt.day
             .astype(int)
+        )
+
+        self.df["day_of_week"] = (
+            iso.day.astype(int)
         )
 
         self.df["week_of_year"] = (
-            self.df["full_date"]
-            .dt.isocalendar()
-            .week
-            .astype(int)
+            iso.week.astype(int)
+        )
+
+        self.df["day_name"] = (
+            self.df["day_of_week"]
+            .map(CZECH_DAY_NAMES)
+        )
+
+        self.df["day_short_name"] = (
+            self.df["day_of_week"]
+            .map(CZECH_DAY_SHORT_NAMES)
         )
 
         logger.info("Day attributes created.")
 
-# =============================================================================
-# Calendar Attributes
-# =============================================================================
+    # =========================================================================
+    # Calendar Attributes
+    # =========================================================================
 
     def _add_calendar_attributes(self) -> None:
+        """
+        Add calendar attributes.
+        """
 
         logger.info("Adding calendar attributes...")
 
-        dt = self.df["full_date"].dt
+        self.df["calendar_month"] = (
+            self.df["full_date"]
+            .dt.month
+            .astype(int)
+        )
 
-        self.df["calendar_month"] = dt.month
-        self.df["month_name"] = dt.month_name()
-        self.df["month_short_name"] = dt.strftime("%b")
-        self.df["calendar_quarter"] = dt.quarter
-        self.df["quarter_name"] = "Q" + dt.quarter.astype(str)
-        self.df["calendar_year"] = dt.year
+        self.df["month_name"] = (
+            self.df["calendar_month"]
+            .map(CZECH_MONTH_NAMES)
+        )
+
+        self.df["month_short_name"] = (
+            self.df["calendar_month"]
+            .map(CZECH_MONTH_SHORT_NAMES)
+        )
+
+        self.df["calendar_quarter"] = (
+            self.df["full_date"]
+            .dt.quarter
+            .astype(int)
+        )
+
+        self.df["quarter_name"] = (
+            self.df["calendar_quarter"]
+            .map(QUARTER_NAMES)
+        )
+
+        self.df["calendar_year"] = (
+            self.df["full_date"]
+            .dt.year
+            .astype(int)
+        )
 
         logger.info("Calendar attributes created.")
 
-# =============================================================================
+# ============================================================================
 # Fiscal Attributes
-# =============================================================================
+# ============================================================================
 
     def _add_fiscal_attributes(self) -> None:
 
@@ -277,12 +344,32 @@ class DimDateGenerator:
         logger.info("Current flags created.")
 
 # =============================================================================
+# Reorder Columns
+# =============================================================================
+
+    def _reorder_columns(self) -> None:
+
+        # Move date_key to the front
+        cols = ["date_key"] + [
+            c for c in self.df.columns if c != "date_key"
+        ]
+        self.df = self.df[cols]
+
+        logger.info("Generated %d rows.", len(self.df))
+
+# =============================================================================
 # Validation
 # =============================================================================
 
     def validate(self) -> None:
 
         logger.info("Validating Dim_Date...")
+
+        self._validate_dataframe()
+
+        logger.info("Validation successful.")
+
+    def _validate_dataframe(self) -> None:
 
         if self.df.empty:
             raise ValueError("DataFrame is empty.")
@@ -292,8 +379,6 @@ class DimDateGenerator:
 
         if not self.df["full_date"].is_unique:
             raise ValueError("FullDate is not unique.")
-
-        logger.info("Validation successful.")
 
 # =============================================================================
 # Load
@@ -306,12 +391,14 @@ class DimDateGenerator:
         with engine.begin() as connection:
 
             connection.execute(
-                text("TRUNCATE TABLE warehouse.dim_date;")
+                text(
+                    f"TRUNCATE TABLE {settings.DB_SCHEMA}.dim_date;"
+                )
             )
 
         self.df.to_sql(
             name="dim_date",
-            schema="warehouse",
+            schema=settings.DB_SCHEMA,
             con=engine,
             if_exists="append",
             index=False,
@@ -322,14 +409,34 @@ class DimDateGenerator:
             len(self.df),
         )
 
-    def run(self) -> None:
+    # =========================================================================
+    # Calendar
+    # =========================================================================
 
-        self.generate()
+    def _create_calendar(self) -> None:
+        """
+        Create the base calendar DataFrame.
+        """
 
-        self.validate()
+        logger.info("Creating calendar...")
 
-        self.load()
+        start_date = date(settings.CALENDAR_START_YEAR, 1, 1)
+        end_date = date(settings.CALENDAR_END_YEAR, 12, 31)
 
+        self.df = pd.DataFrame(
+            {
+                "full_date": pd.date_range(
+                    start=start_date,
+                    end=end_date,
+                    freq="D",
+                )
+            }
+        )
+
+        logger.info(
+            "Calendar created (%s rows).",
+            len(self.df),
+        )
 
 if __name__ == "__main__":
 
