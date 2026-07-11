@@ -16,8 +16,7 @@ CREATE TABLE IF NOT EXISTS warehouse.fact_gl (
     -- =====================================================================
     -- Primary Key
     -- =====================================================================
-    gl_entry_key BIGINT PRIMARY KEY,
-    -- =====================================================================
+    gl_entry_key BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY -- =====================================================================
     -- Document Information
     -- =====================================================================
     document_number VARCHAR(30) NOT NULL,
