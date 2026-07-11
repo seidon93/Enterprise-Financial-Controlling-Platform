@@ -125,6 +125,103 @@ class DimAccountGenerator:
             "Loaded %d accounts.",
             len(self.df),
         )
+# =============================================================================
+# Transform
+# =============================================================================
+
+    def _transform(self) -> None:
+        """
+        Transform source data into Dim_Account.
+        """
+
+        logger.info("Transforming accounts...")
+
+        # -------------------------------------------------------------------------
+        # Account Key
+        # -------------------------------------------------------------------------
+
+        if "account_key" in self.df.columns:
+            self.df.drop(columns=["account_key"], inplace=True)
+
+        self.df.insert(
+            0,
+            "account_key",
+            range(1, len(self.df) + 1),
+        )
+
+        # -------------------------------------------------------------------------
+        # Account Class
+        # -------------------------------------------------------------------------
+
+        self.df["account_class"] = (
+            self.df["account_number"]
+            .str[0]
+            .astype(int)
+        )
+
+        # -------------------------------------------------------------------------
+        # Account Group
+        # -------------------------------------------------------------------------
+
+        self.df["account_group"] = (
+            self.df["account_number"]
+            .str[:2]
+            .astype(int)
+        )
+
+        # -------------------------------------------------------------------------
+        # Statement Type
+        # -------------------------------------------------------------------------
+
+        self.df["statement_type"] = (
+            self.df["account_class"]
+            .map(STATEMENT_TYPE)
+        )
+
+        # -------------------------------------------------------------------------
+        # Reporting Group
+        # -------------------------------------------------------------------------
+
+        self.df["reporting_group"] = (
+            self.df["account_class"]
+            .map(REPORTING_GROUP)
+        )
+
+        # -------------------------------------------------------------------------
+        # Reporting Category
+        # -------------------------------------------------------------------------
+
+        self.df["reporting_category"] = (
+            self.df["account_class"]
+            .map(REPORTING_CATEGORY)
+        )
+
+        # -------------------------------------------------------------------------
+        # Normal Balance
+        # -------------------------------------------------------------------------
+
+        self.df["normal_balance"] = (
+            self.df["account_class"]
+            .map(NORMAL_BALANCE)
+        )
+
+        # -------------------------------------------------------------------------
+        # Flags
+        # -------------------------------------------------------------------------
+
+        self.df["is_posting_account"] = True
+
+        self.df["is_active"] = True
+
+        # -------------------------------------------------------------------------
+        # Validity
+        # -------------------------------------------------------------------------
+
+        self.df["valid_from"] = self.config.valid_from
+
+        self.df["valid_to"] = self.config.valid_to
+
+        logger.info("Transformation finished.")
 
     # =========================================================================
     # Generate
@@ -136,6 +233,8 @@ class DimAccountGenerator:
 
         self._load_source()
 
+        self._transform()
+
         return self.df
 
 if __name__ == "__main__":
@@ -145,5 +244,7 @@ if __name__ == "__main__":
     df = generator.generate()
 
     print(df.head())
+
+    print(df.columns)
 
     print(df.dtypes)
