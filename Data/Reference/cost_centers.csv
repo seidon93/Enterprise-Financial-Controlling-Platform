@@ -1,14 +1,15 @@
-cost_center_code,cost_center_name,department_name,manager_name,location
-1000,Finance,Finance,CFO,Prague
-1100,Accounting,Finance,Chief Accountant,Prague
-1200,Controlling,Finance,Financial Controller,Prague
-2000,Sales,Commercial,Sales Director,Brno
-2100,Marketing,Commercial,Marketing Director,Brno
-3000,Production,Operations,Production Manager,Ostrava
-3100,Logistics,Operations,Logistics Manager,Ostrava
-4000,Information Technology,Shared Services,IT Manager,Prague
-5000,Human Resources,Shared Services,HR Manager,Prague
-6000,Purchasing,Operations,Purchasing Manager,Ostrava
-7000,Research and Development,Engineering,R&D Manager,Brno
-8000,Quality Management,Operations,Quality Manager,Ostrava
-9000,Executive Management,Executive,CEO,Prague
+cost_center_code,cost_center_name,parent_cost_center_code,cost_center_level,department_name,manager_name,location
+1000,Finance,,1,Finance,CFO,Prague
+1100,Accounting,1000,2,Finance,Chief Accountant,Prague
+1200,Controlling,1000,2,Finance,Financial Controller,Prague
+2000,Commercial,,1,Commercial,Commercial Director,Brno
+2100,Sales,2000,2,Commercial,Sales Director,Brno
+2200,Marketing,2000,2,Commercial,Marketing Director,Brno
+3000,Operations,,1,Operations,Operations Director,Ostrava
+3100,Production,3000,2,Operations,Production Manager,Ostrava
+3200,Logistics,3000,2,Operations,Logistics Manager,Ostrava
+3300,Purchasing,3000,2,Operations,Purchasing Manager,Ostrava
+4000,Shared Services,,1,Shared Services,Shared Services Director,Prague
+4100,Information Technology,4000,2,Shared Services,IT Manager,Prague
+4200,Human Resources,4000,2,Shared Services,HR Manager,Prague
+5000,Executive,,1,Executive,CEO,Prague
