@@ -9,71 +9,72 @@ Version         : 1.0.0
 Status          : Development
 -------------------------------------------------------------------------------
 Description:
-Generates accounting document numbers and line numbers.
+Generates accounting document metadata and document numbers.
 ===============================================================================
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import sys
+from collections import defaultdict
 from datetime import date
+from pathlib import Path
 
+# Add Scripts to path so 'accounting' and 'common' packages are discoverable
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-@dataclass(frozen=True)
-class DocumentInfo:
-    """Accounting document metadata."""
-
-    document_number: str
-    line_number: int
-    document_type: str
-    posting_date: date
-    document_date: date
-    due_date: date
+from accounting.enums import DocumentType
+from accounting.models import DocumentInfo
 
 
 class DocumentGenerator:
     """
-    Generates accounting document identifiers.
+    Generates accounting documents.
+
+    One generator instance is intended for one ETL batch.
     """
 
-    def __init__(self) -> None:
-        self._counters = {}
-
-    def next_document_number(
-        self,
-        posting_date: date,
-        document_type: str,
-    ) -> str:
-        """
-        Example:
-            AR2026000001
-            AP2026000001
-            GL2026000001
-        """
-
-        year = posting_date.year
-        key = (document_type, year)
-
-        current = self._counters.get(key, 0) + 1
-        self._counters[key] = current
-
-        return f"{document_type}{year}{current:06d}"
+    def __init__(self, start_number: int = 1) -> None:
+        self._counters: dict[tuple[DocumentType, int], int] = defaultdict(
+            lambda: start_number - 1
+        )
 
     @staticmethod
-    def create_document(
-        document_number: str,
-        line_number: int,
-        document_type: str,
+    def _get_fiscal_period(posting_date: date) -> int:
+        """Returns fiscal period (month)."""
+        return posting_date.month
+
+    def create(
+        self,
+        *,
+        document_type: DocumentType,
         posting_date: date,
         document_date: date,
         due_date: date,
     ) -> DocumentInfo:
+        """
+        Create a new accounting document.
+        """
+
+        fiscal_year = posting_date.year
+        fiscal_period = self._get_fiscal_period(posting_date)
+
+        key = (document_type, fiscal_year)
+
+        self._counters[key] += 1
+
+        sequence = self._counters[key]
+
+        document_number = (
+            f"{document_type.value}-{fiscal_year}-{sequence:06d}"
+        )
 
         return DocumentInfo(
             document_number=document_number,
-            line_number=line_number,
-            document_type=document_type,
+            document_type=document_type.value,
             posting_date=posting_date,
             document_date=document_date,
             due_date=due_date,
+            fiscal_year=fiscal_year,
+            fiscal_period=fiscal_period,
         )
