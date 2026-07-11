@@ -1,100 +1,66 @@
 # 19. Fact_GL Design
 
-**Project:** Enterprise Financial Analytics Platform (EFAP)
-
-**Document Type:** Fact Table Design
-
-**Version:** 1.0.0
-
-**Status:** Draft
+| Metadata | Value |
+|----------|-------|
+| **Project** | Enterprise Financial Analytics Platform (EFAP) |
+| **Document Type** | Fact Table Design |
+| **Version** | 1.0.0 |
+| **Status** | Approved |
+| **Owner** | Project Team |
+| **Last Updated** | 2026-07-11 |
 
 ---
 
 # 1. Purpose
 
-Fact_GL (General Ledger Fact) is the central transactional fact table of the Enterprise Financial Analytics Platform.
+The **Fact_GL (General Ledger Fact)** table is the central transactional fact table of the Enterprise Financial Analytics Platform (EFAP).
 
-It stores accounting journal line items and serves as the primary source for financial reporting and controlling.
+It stores accounting journal line items and serves as the primary source for financial reporting, financial controlling and management analytics.
 
-Typical reports include:
+The table is designed according to Kimball dimensional modeling principles and optimized for analytical workloads in PostgreSQL and Power BI.
 
-- Profit & Loss Statement
-- Balance Sheet
-- Trial Balance
-- Cash Flow
-- Budget vs Actual
+---
+
+# 2. Business Purpose
+
+The table supports the following business processes:
+
+- General Ledger
+- Financial Accounting
+- Financial Controlling
+- Management Reporting
+- Variance Analysis
 - Cost Center Reporting
 - Department Reporting
-- Management Reporting
-- KPI Dashboard
+- Multi-period Financial Analysis
 
 ---
 
-# 2. Grain
+# 3. Grain
 
-One record represents one accounting journal line.
+## Grain Definition
 
-Examples:
+**One record represents one accounting journal line item.**
 
-Document FV202600001
+Example:
 
-Line 1
+| Document | Line | Account | Debit | Credit |
+|----------|------|---------|-------:|--------:|
+| FV202600001 | 1 | 311 | 121000 | 0 |
+| FV202600001 | 2 | 604 | 0 | 100000 |
+| FV202600001 | 3 | 343 | 0 | 21000 |
 
-311 Customer Receivable
-
-121 000 CZK
-
----
-
-Document FV202600001
-
-Line 2
-
-604 Sales Revenue
-
-100 000 CZK
+This grain allows complete reconstruction of accounting documents while maintaining full analytical flexibility.
 
 ---
 
-Document FV202600001
+# 4. Star Schema Relationships
 
-Line 3
-
-343 VAT Output
-
-21 000 CZK
-
----
-
-# 3. Fact Table Structure
-
-| Column | Type | Description |
-|---------|------|-------------|
-| gl_entry_key | BIGINT | Surrogate Key |
-| document_number | VARCHAR(30) | Accounting document |
-| line_number | INTEGER | Document line |
-| posting_date_key | INTEGER | FK → Dim_Date |
-| company_key | INTEGER | FK → Dim_Company |
-| account_key | INTEGER | FK → Dim_Account |
-| cost_center_key | INTEGER | FK → Dim_Cost_Center |
-| department_key | INTEGER | FK → Dim_Department |
-| currency_key | INTEGER | FK → Dim_Currency |
-| debit_amount | NUMERIC(18,2) | Debit |
-| credit_amount | NUMERIC(18,2) | Credit |
-| amount_local | NUMERIC(18,2) | Signed Amount |
-| quantity | NUMERIC(18,3) | Quantity |
-| description | VARCHAR(255) | Description |
-| source_system | VARCHAR(50) | ERP Source |
-| created_at | TIMESTAMP | ETL Timestamp |
-| batch_id | VARCHAR(50) | ETL Batch |
-
----
-
-# 4. Dimension Relationships
-
-| Dimension | FK |
-|------------|----|
+| Dimension | Foreign Key |
+|------------|-------------|
 | Dim_Date | posting_date_key |
+| Dim_Date | document_date_key |
+| Dim_Date | due_date_key |
 | Dim_Company | company_key |
 | Dim_Account | account_key |
 | Dim_Cost_Center | cost_center_key |
@@ -103,66 +69,164 @@ Line 3
 
 ---
 
-# 5. Business Rules
+# 5. Fact Table Structure
 
-- Every record belongs to exactly one accounting document.
-- Every record represents one journal entry.
-- Debit and Credit values cannot be negative.
-- Signed amount = Debit − Credit.
-- Every record must reference valid dimension keys.
-- All reporting is based on journal line level.
+## Technical Keys
+
+| Column | Data Type | Description |
+|---------|-----------|-------------|
+| gl_entry_key | BIGINT | Surrogate Key |
+| document_number | VARCHAR(30) | Accounting Document Number |
+| line_number | INTEGER | Line Number |
 
 ---
 
-# 6. Measures
+## Date Keys
 
-The following measures will be created in Power BI.
+| Column | Data Type | Description |
+|---------|-----------|-------------|
+| posting_date_key | INTEGER | Posting Date |
+| document_date_key | INTEGER | Document Date |
+| due_date_key | INTEGER | Due Date |
 
-Financial
+---
 
-- Revenue
-- Expenses
-- Gross Profit
-- EBITDA
-- EBIT
-- Net Profit
+## Dimension Keys
 
-Balance Sheet
+| Column | Data Type | Description |
+|---------|-----------|-------------|
+| company_key | INTEGER | Company |
+| account_key | INTEGER | Account |
+| cost_center_key | INTEGER | Cost Center |
+| department_key | INTEGER | Department |
+| currency_key | INTEGER | Currency |
 
-- Assets
-- Liabilities
-- Equity
+---
 
-Management
+## Business Attributes
+
+| Column | Data Type | Description |
+|---------|-----------|-------------|
+| document_type | VARCHAR(20) | AR / AP / BANK / GL / PAYROLL / DEPR |
+| description | VARCHAR(255) | Journal Line Description |
+| source_system | VARCHAR(50) | ERP Source |
+
+---
+
+## Measures
+
+| Column | Data Type |
+|---------|-----------|
+| debit_amount | NUMERIC(18,2) |
+| credit_amount | NUMERIC(18,2) |
+| amount_local | NUMERIC(18,2) |
+| quantity | NUMERIC(18,3) |
+
+---
+
+## Audit Columns
+
+| Column | Data Type |
+|---------|-----------|
+| created_at | TIMESTAMP |
+| batch_id | VARCHAR(50) |
+
+---
+
+# 6. Business Rules
+
+## Mandatory Rules
+
+- Every journal line belongs to one accounting document.
+- Every journal line references valid dimension keys.
+- Debit Amount must be greater than or equal to zero.
+- Credit Amount must be greater than or equal to zero.
+- Amount_Local = Debit Amount − Credit Amount.
+- Each accounting document must balance (Σ Debit = Σ Credit).
+- Document Number + Line Number must be unique.
+
+---
+
+# 7. Data Quality Rules
+
+| Rule | Description |
+|------|-------------|
+| FK Validation | All foreign keys must exist |
+| Positive Values | Debit and Credit cannot be negative |
+| Balance Validation | Every document must balance |
+| Duplicate Validation | No duplicate document lines |
+| Mandatory Fields | Required columns cannot be NULL |
+
+---
+
+# 8. Expected Data Volume
+
+| Environment | Estimated Rows |
+|--------------|---------------:|
+| Development | 100,000 |
+| Test | 1,000,000 |
+| Production | 10,000,000+ |
+
+---
+
+# 9. Power BI Measures
+
+The Fact_GL table will serve as the source for:
+
+## Financial Statements
+
+- Profit & Loss
+- Balance Sheet
+- Trial Balance
+- Cash Flow
+
+## Management Reporting
 
 - Budget vs Actual
 - Forecast vs Actual
-- Cost Center Variance
-- Department Variance
+- Cost Center Analysis
+- Department Analysis
+- Monthly Closing
+- Quarterly Closing
+- Year-End Closing
+
+## KPI
+
+- Revenue
+- Gross Margin
+- EBITDA
+- EBIT
+- Net Profit
+- Operating Margin
+- Cost Ratio
 
 ---
 
-# 7. Future Extensions
+# 10. Future Enhancements
 
-Planned future enhancements:
+Planned future extensions include:
 
-- Multi-company consolidation
-- Multi-currency reporting
-- IFRS Adjustments
 - Budget Fact
 - Forecast Fact
-- Actual vs Budget
+- Multi-company Consolidation
+- Multi-currency Translation
+- IFRS Adjustments
 - Scenario Planning
+- AI Forecasting
 
 ---
 
-# 8. Implementation Status
+# 11. References
 
-| Component | Status |
-|------------|--------|
-| Business Design | Completed |
-| Star Schema | Completed |
-| SQL DDL | Planned |
-| Python Generator | Planned |
-| PostgreSQL Load | Planned |
-| Power BI | Planned |
+- 18_Star_Schema.md
+- 14_Logical_Data_Model.md
+- 02_Solution_Architecture.md
+- ADR-001-Star-Schema.md
+
+---
+
+# 12. Revision History
+
+| Version | Date | Description |
+|----------|------|-------------|
+| 1.0.0 | 2026-07-11 | Initial version |
