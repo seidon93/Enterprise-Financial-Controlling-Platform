@@ -1,0 +1,14 @@
+cost_center_code,cost_center_name,department_name,manager_name,location
+1000,Finance,Finance,CFO,Prague
+1100,Accounting,Finance,Chief Accountant,Prague
+1200,Controlling,Finance,Financial Controller,Prague
+2000,Sales,Commercial,Sales Director,Brno
+2100,Marketing,Commercial,Marketing Director,Brno
+3000,Production,Operations,Production Manager,Ostrava
+3100,Logistics,Operations,Logistics Manager,Ostrava
+4000,Information Technology,Shared Services,IT Manager,Prague
+5000,Human Resources,Shared Services,HR Manager,Prague
+6000,Purchasing,Operations,Purchasing Manager,Ostrava
+7000,Research and Development,Engineering,R&D Manager,Brno
+8000,Quality Management,Operations,Quality Manager,Ostrava
+9000,Executive Management,Executive,CEO,Prague
