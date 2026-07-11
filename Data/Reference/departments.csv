@@ -1,0 +1,12 @@
+department_code,department_name,division_name,director_name,location
+FIN,Finance,Corporate,CFO,Prague
+ACC,Accounting,Corporate,Chief Accountant,Prague
+CTR,Controlling,Corporate,Financial Controller,Prague
+SAL,Sales,Commercial,Sales Director,Brno
+MKT,Marketing,Commercial,Marketing Director,Brno
+PRD,Production,Operations,Production Director,Ostrava
+LOG,Logistics,Operations,Logistics Director,Ostrava
+PUR,Purchasing,Operations,Purchasing Director,Ostrava
+IT,Information Technology,Shared Services,IT Director,Prague
+HR,Human Resources,Shared Services,HR Director,Prague
+EXE,Executive Management,Executive,CEO,Prague
