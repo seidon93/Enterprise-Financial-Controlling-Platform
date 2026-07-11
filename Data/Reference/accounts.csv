@@ -1,82 +1,82 @@
 account_key,account_number,account_name,account_type,account_class,account_group,is_posting_account,is_active
-1,01100,Land and Buildings,A,0,1,True,True
-2,01200,Plant and Machinery,A,0,2,True,True
-3,01300,Vehicles,A,0,3,True,True
-4,01400,Office Equipment,A,0,4,True,True
-5,01500,Computer Hardware,A,0,5,True,True
-6,01600,Intangible Assets,A,0,6,True,True
-7,01700,Assets Under Construction,A,0,7,True,True
-8,01800,Accumulated Depreciation – Buildings,A,0,8,True,True
-9,01900,Accumulated Depreciation – Machinery,A,0,9,True,True
-10,11100,Raw Materials,A,1,1,True,True
-11,11200,Work in Progress,A,1,2,True,True
-12,11300,Finished Goods,A,1,3,True,True
-13,11400,Spare Parts,A,1,4,True,True
-14,11500,Packaging Materials,A,1,5,True,True
-15,11600,Goods in Transit,A,1,6,True,True
-16,21100,Trade Receivables – Domestic,A,2,1,True,True
-17,21200,Trade Receivables – Foreign,A,2,2,True,True
-18,21300,VAT Receivable,A,2,3,True,True
-19,21400,Advances to Suppliers,A,2,4,True,True
-20,21500,Employee Advances,A,2,5,True,True
-21,21600,Other Receivables,A,2,6,True,True
-22,21700,Allowance for Doubtful Accounts,A,2,7,True,True
-23,31100,Cash on Hand,A,3,1,True,True
-24,31200,Bank Account – Operating,A,3,2,True,True
-25,31300,Bank Account – Savings,A,3,3,True,True
-26,31400,Short-Term Deposits,A,3,4,True,True
-27,31500,Petty Cash,A,3,5,True,True
-28,31600,Cash Equivalents,A,3,6,True,True
-29,41100,Share Capital,P,4,1,True,True
-30,41200,Share Premium,P,4,2,True,True
-31,41300,Retained Earnings,P,4,3,True,True
-32,41400,Legal Reserves,P,4,4,True,True
-33,41500,Current Year Result,P,4,5,True,True
-34,42100,Long-Term Bank Loans,P,4,6,True,True
-35,42200,Bonds Payable,P,4,7,True,True
-36,42300,Lease Liabilities,P,4,8,True,True
-37,43100,Trade Payables – Domestic,P,4,9,True,True
-38,43200,Trade Payables – Foreign,P,4,10,True,True
-39,43300,VAT Payable,P,4,11,True,True
-40,43400,Wages and Salaries Payable,P,4,12,True,True
-41,43500,Social Security Payable,P,4,13,True,True
-42,43600,Income Tax Payable,P,4,14,True,True
-43,43700,Other Current Liabilities,P,4,15,True,True
-44,43800,Accrued Expenses,P,4,16,True,True
-45,43900,Provisions,P,4,17,True,True
-46,51100,Raw Material Consumption,E,5,1,True,True
-47,51200,Energy Costs,E,5,2,True,True
-48,51300,Packaging Costs,E,5,3,True,True
-49,52100,Wages – Production,E,5,4,True,True
-50,52200,Wages – Administration,E,5,5,True,True
-51,52300,Salaries – Management,E,5,6,True,True
-52,52400,Social Security Contributions,E,5,7,True,True
-53,52500,Employee Benefits,E,5,8,True,True
-54,53100,Rent and Lease Expense,E,5,9,True,True
-55,53200,Maintenance and Repairs,E,5,10,True,True
-56,53300,Insurance Expense,E,5,11,True,True
-57,53400,Office Supplies,E,5,12,True,True
-58,53500,Telecommunications,E,5,13,True,True
-59,53600,Travel and Entertainment,E,5,14,True,True
-60,53700,Professional Services,E,5,15,True,True
-61,53800,Marketing and Advertising,E,5,16,True,True
-62,53900,Depreciation Expense,E,5,17,True,True
-63,54000,Amortization Expense,E,5,18,True,True
-64,54100,Bad Debt Expense,E,5,19,True,True
-65,54200,IT and Software Costs,E,5,20,True,True
-66,61100,Sales Revenue – Domestic,R,6,1,True,True
-67,61200,Sales Revenue – Export,R,6,2,True,True
-68,61300,Service Revenue,R,6,3,True,True
-69,61400,Revenue from Contracts,R,6,4,True,True
-70,61500,Other Operating Revenue,R,6,5,True,True
-71,62100,Sales Returns and Allowances,R,6,6,True,True
-72,62200,Sales Discounts,R,6,7,True,True
-73,71100,Interest Income,R,7,1,True,True
-74,71200,Interest Expense,E,7,2,True,True
-75,71300,Foreign Exchange Gains,R,7,3,True,True
-76,71400,Foreign Exchange Losses,E,7,4,True,True
-77,71500,Dividend Income,R,7,5,True,True
-78,71600,Other Financial Income,R,7,6,True,True
-79,71700,Other Financial Expense,E,7,7,True,True
-80,71800,Realized Gains on Investments,R,7,8,True,True
-81,71900,Realized Losses on Investments,E,7,9,True,True
+1,011,Land and Buildings,A,0,1,True,True
+2,012,Plant and Machinery,A,0,2,True,True
+3,013,Vehicles,A,0,3,True,True
+4,014,Office Equipment,A,0,4,True,True
+5,015,Computer Hardware,A,0,5,True,True
+6,016,Intangible Assets,A,0,6,True,True
+7,017,Assets Under Construction,A,0,7,True,True
+8,018,Accumulated Depreciation – Buildings,A,0,8,True,True
+9,019,Accumulated Depreciation – Machinery,A,0,9,True,True
+10,111,Raw Materials,A,1,1,True,True
+11,112,Work in Progress,A,1,2,True,True
+12,113,Finished Goods,A,1,3,True,True
+13,114,Spare Parts,A,1,4,True,True
+14,115,Packaging Materials,A,1,5,True,True
+15,116,Goods in Transit,A,1,6,True,True
+16,211,Trade Receivables – Domestic,A,2,1,True,True
+17,212,Trade Receivables – Foreign,A,2,2,True,True
+18,213,VAT Receivable,A,2,3,True,True
+19,214,Advances to Suppliers,A,2,4,True,True
+20,215,Employee Advances,A,2,5,True,True
+21,216,Other Receivables,A,2,6,True,True
+22,217,Allowance for Doubtful Accounts,A,2,7,True,True
+23,311,Cash on Hand,A,3,1,True,True
+24,312,Bank Account – Operating,A,3,2,True,True
+25,313,Bank Account – Savings,A,3,3,True,True
+26,314,Short-Term Deposits,A,3,4,True,True
+27,315,Petty Cash,A,3,5,True,True
+28,316,Cash Equivalents,A,3,6,True,True
+29,411,Share Capital,P,4,1,True,True
+30,412,Share Premium,P,4,2,True,True
+31,413,Retained Earnings,P,4,3,True,True
+32,414,Legal Reserves,P,4,4,True,True
+33,415,Current Year Result,P,4,5,True,True
+34,421,Long-Term Bank Loans,P,4,6,True,True
+35,422,Bonds Payable,P,4,7,True,True
+36,423,Lease Liabilities,P,4,8,True,True
+37,431,Trade Payables – Domestic,P,4,9,True,True
+38,432,Trade Payables – Foreign,P,4,10,True,True
+39,433,VAT Payable,P,4,11,True,True
+40,434,Wages and Salaries Payable,P,4,12,True,True
+41,435,Social Security Payable,P,4,13,True,True
+42,436,Income Tax Payable,P,4,14,True,True
+43,437,Other Current Liabilities,P,4,15,True,True
+44,438,Accrued Expenses,P,4,16,True,True
+45,439,Provisions,P,4,17,True,True
+46,511,Raw Material Consumption,E,5,1,True,True
+47,512,Energy Costs,E,5,2,True,True
+48,513,Packaging Costs,E,5,3,True,True
+49,521,Wages – Production,E,5,4,True,True
+50,522,Wages – Administration,E,5,5,True,True
+51,523,Salaries – Management,E,5,6,True,True
+52,524,Social Security Contributions,E,5,7,True,True
+53,525,Employee Benefits,E,5,8,True,True
+54,531,Rent and Lease Expense,E,5,9,True,True
+55,532,Maintenance and Repairs,E,5,10,True,True
+56,533,Insurance Expense,E,5,11,True,True
+57,534,Office Supplies,E,5,12,True,True
+58,535,Telecommunications,E,5,13,True,True
+59,536,Travel and Entertainment,E,5,14,True,True
+60,537,Professional Services,E,5,15,True,True
+61,538,Marketing and Advertising,E,5,16,True,True
+62,539,Depreciation Expense,E,5,17,True,True
+63,540,Amortization Expense,E,5,18,True,True
+64,541,Bad Debt Expense,E,5,19,True,True
+65,542,IT and Software Costs,E,5,20,True,True
+66,611,Sales Revenue – Domestic,R,6,1,True,True
+67,612,Sales Revenue – Export,R,6,2,True,True
+68,613,Service Revenue,R,6,3,True,True
+69,614,Revenue from Contracts,R,6,4,True,True
+70,615,Other Operating Revenue,R,6,5,True,True
+71,621,Sales Returns and Allowances,R,6,6,True,True
+72,622,Sales Discounts,R,6,7,True,True
+73,711,Interest Income,R,7,1,True,True
+74,712,Interest Expense,E,7,2,True,True
+75,713,Foreign Exchange Gains,R,7,3,True,True
+76,714,Foreign Exchange Losses,E,7,4,True,True
+77,715,Dividend Income,R,7,5,True,True
+78,716,Other Financial Income,R,7,6,True,True
+79,717,Other Financial Expense,E,7,7,True,True
+80,718,Realized Gains on Investments,R,7,8,True,True
+81,719,Realized Losses on Investments,E,7,9,True,True
