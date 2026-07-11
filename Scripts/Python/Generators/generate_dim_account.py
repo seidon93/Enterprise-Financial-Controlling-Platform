@@ -258,80 +258,91 @@ class DimAccountGenerator:
 
         return self.df
 
-    # =============================================================================
-# Validation
-# =============================================================================
+    # =========================================================================
+    # Validation
+    # =========================================================================
 
-def validate(self) -> None:
-    """
-    Validate Dim_Account data.
-    """
+    def validate(self) -> None:
+        """
+        Validate Dim_Account data.
+        """
 
-    logger.info("Validating Dim_Account...")
+        logger.info("Validating Dim_Account...")
 
-    if self.df.empty:
-        raise ValueError("Dim_Account is empty.")
+        if self.df.empty:
+            raise ValueError("Dim_Account is empty.")
 
-    if not self.df["account_key"].is_unique:
-        raise ValueError("AccountKey contains duplicates.")
+        if not self.df["account_key"].is_unique:
+            raise ValueError("AccountKey contains duplicates.")
 
-    if not self.df["account_number"].is_unique:
-        raise ValueError("AccountNumber contains duplicates.")
+        if not self.df["account_number"].is_unique:
+            raise ValueError("AccountNumber contains duplicates.")
 
-    if self.df["account_name"].isnull().any():
-        raise ValueError("AccountName contains NULL values.")
+        if self.df["account_name"].isnull().any():
+            raise ValueError("AccountName contains NULL values.")
 
-    if self.df["account_type"].isnull().any():
-        raise ValueError("AccountType contains NULL values.")
+        if self.df["account_type"].isnull().any():
+            raise ValueError("AccountType contains NULL values.")
 
-    logger.info(
-        "Validation successful (%d rows).",
-        len(self.df),
-    )
-
-    # =============================================================================
-# Load
-# =============================================================================
-
-def load(self) -> None:
-    """
-    Load Dim_Account into PostgreSQL.
-    """
-
-    logger.info("Loading Dim_Account...")
-
-    with engine.begin() as connection:
-
-        connection.execute(
-            text(
-                f"TRUNCATE TABLE {settings.DB_SCHEMA}.dim_account;"
-            )
+        logger.info(
+            "Validation successful (%d rows).",
+            len(self.df),
         )
 
-    self.df.to_sql(
-        name="dim_account",
-        schema=settings.DB_SCHEMA,
-        con=engine,
-        if_exists="append",
-        index=False,
-        method="multi",
-    )
+    # =========================================================================
+    # Load
+    # =========================================================================
 
-    logger.info(
-        "Loaded %d rows into warehouse.dim_account.",
-        len(self.df),
-    )
+    def load(self) -> None:
+        """
+        Load Dim_Account into PostgreSQL.
+        """
+
+        logger.info("Loading Dim_Account...")
+
+        with engine.begin() as connection:
+
+            connection.execute(
+                text(
+                    f"TRUNCATE TABLE {settings.DB_SCHEMA}.dim_account;"
+                )
+            )
+
+        self.df.to_sql(
+            name="dim_account",
+            schema=settings.DB_SCHEMA,
+            con=engine,
+            if_exists="append",
+            index=False,
+            method="multi",
+        )
+
+        logger.info(
+            "Loaded %d rows into warehouse.dim_account.",
+            len(self.df),
+        )
+
+    # =========================================================================
+    # Run
+    # =========================================================================
+
+    def run(self) -> None:
+
+        self.generate()
+
+        self.validate()
+
+        self.load()
+
+        logger.info("Dim_Account completed successfully.")
+
 
 # =============================================================================
-# Run
+# Main
 # =============================================================================
 
-def run(self) -> None:
+if __name__ == "__main__":
 
-    self.generate()
+    generator = DimAccountGenerator()
 
-    self.validate()
-
-    self.load()
-
-    logger.info("Dim_Account completed successfully.")
+    generator.run()
