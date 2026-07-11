@@ -135,7 +135,6 @@ class DimAccountGenerator:
         """
 
         logger.info("Transforming accounts...")
-
         # -------------------------------------------------------------------------
         # Account Key
         # -------------------------------------------------------------------------
@@ -217,9 +216,31 @@ class DimAccountGenerator:
         # Validity
         # -------------------------------------------------------------------------
 
-        self.df["valid_from"] = self.config.valid_from
+        self.df["valid_from"] = pd.to_datetime(self.config.valid_from)
+        self.df["valid_to"] = pd.to_datetime(self.config.valid_to)
 
-        self.df["valid_to"] = self.config.valid_to
+        # -------------------------------------------------------------------------
+        # Final Column Order
+        # -------------------------------------------------------------------------
+
+        self.df = self.df[
+            [
+                "account_key",
+                "account_number",
+                "account_name",
+                "account_type",
+                "account_class",
+                "account_group",
+                "statement_type",
+                "reporting_group",
+                "reporting_category",
+                "normal_balance",
+                "is_posting_account",
+                "is_active",
+                "valid_from",
+                "valid_to",
+            ]
+        ]
 
         logger.info("Transformation finished.")
 
