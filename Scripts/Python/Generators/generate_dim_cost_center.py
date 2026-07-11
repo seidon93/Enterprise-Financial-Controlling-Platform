@@ -150,6 +150,28 @@ class DimCostCenterGenerator:
 
         logger.info("Loading Dim_Cost_Center into PostgreSQL...")
 
+        with engine.begin() as connection:
+
+            connection.execute(
+                text(
+                f"TRUNCATE TABLE {settings.DB_SCHEMA}.dim_cost_center;"
+            )
+        )
+
+        self.df.to_sql(
+            name="dim_cost_center",
+            schema=settings.DB_SCHEMA,
+            con=engine,
+            if_exists="append",
+            index=False,
+            method="multi",
+        )
+
+        logger.info(
+            "Loaded %d rows.",
+            len(self.df),
+        )
+
         
 
     def generate(self):
