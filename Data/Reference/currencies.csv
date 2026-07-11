@@ -1,0 +1,9 @@
+currency_code,currency_name,currency_symbol,country,iso_numeric,is_reporting_currency
+CZK,Czech Koruna,Kč,Czech Republic,203,TRUE
+EUR,Euro,€,Eurozone,978,FALSE
+USD,US Dollar,$,United States,840,FALSE
+GBP,Pound Sterling,£,United Kingdom,826,FALSE
+PLN,Polish Zloty,zł,Poland,985,FALSE
+HUF,Hungarian Forint,Ft,Hungary,348,FALSE
+CHF,Swiss Franc,CHF,Switzerland,756,FALSE
+SEK,Swedish Krona,kr,Sweden,752,FALSE
