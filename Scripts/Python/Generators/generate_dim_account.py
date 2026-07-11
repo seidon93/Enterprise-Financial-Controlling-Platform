@@ -258,14 +258,80 @@ class DimAccountGenerator:
 
         return self.df
 
-if __name__ == "__main__":
+    # =============================================================================
+# Validation
+# =============================================================================
 
-    generator = DimAccountGenerator()
+def validate(self) -> None:
+    """
+    Validate Dim_Account data.
+    """
 
-    df = generator.generate()
+    logger.info("Validating Dim_Account...")
 
-    print(df.head())
+    if self.df.empty:
+        raise ValueError("Dim_Account is empty.")
 
-    print(df.columns)
+    if not self.df["account_key"].is_unique:
+        raise ValueError("AccountKey contains duplicates.")
 
-    print(df.dtypes)
+    if not self.df["account_number"].is_unique:
+        raise ValueError("AccountNumber contains duplicates.")
+
+    if self.df["account_name"].isnull().any():
+        raise ValueError("AccountName contains NULL values.")
+
+    if self.df["account_type"].isnull().any():
+        raise ValueError("AccountType contains NULL values.")
+
+    logger.info(
+        "Validation successful (%d rows).",
+        len(self.df),
+    )
+
+    # =============================================================================
+# Load
+# =============================================================================
+
+def load(self) -> None:
+    """
+    Load Dim_Account into PostgreSQL.
+    """
+
+    logger.info("Loading Dim_Account...")
+
+    with engine.begin() as connection:
+
+        connection.execute(
+            text(
+                f"TRUNCATE TABLE {settings.DB_SCHEMA}.dim_account;"
+            )
+        )
+
+    self.df.to_sql(
+        name="dim_account",
+        schema=settings.DB_SCHEMA,
+        con=engine,
+        if_exists="append",
+        index=False,
+        method="multi",
+    )
+
+    logger.info(
+        "Loaded %d rows into warehouse.dim_account.",
+        len(self.df),
+    )
+
+# =============================================================================
+# Run
+# =============================================================================
+
+def run(self) -> None:
+
+    self.generate()
+
+    self.validate()
+
+    self.load()
+
+    logger.info("Dim_Account completed successfully.")
