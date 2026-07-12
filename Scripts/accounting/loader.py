@@ -179,11 +179,15 @@ class FactGLLoader:
                 )
 
                 inserted_rows += 1
-                print(f"Inserted line {line.line_number}")
+                logger.debug(
+                    "Inserted line %s",
+                    line.line_number,
+                )
 
         logger.info(
             "Inserted %s rows for document %s",
             inserted_rows,
             entry.document.document_number,
         )
+
         return inserted_rows
