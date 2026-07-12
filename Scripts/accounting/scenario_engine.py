@@ -18,11 +18,25 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+_scripts_root   = str(Path(__file__).resolve().parent.parent)          # Scripts
+_scripts_python = str(Path(__file__).resolve().parent.parent / "Python")  # Scripts/Python
+sys.path.insert(0, _scripts_root)
+sys.path.insert(0, _scripts_python)
 
 import logging
 
 from accounting.scenario_config import ScenarioConfig
+
+from accounting.document_generator import DocumentGenerator
+from accounting.dimension_mapper import DimensionMapper
+from accounting.loader import FactGLLoader
+from scenarios.sales_invoice import SalesInvoiceScenario
+
+from common.batch_context import BatchContext
+from common.database import db
+
+from domain.business_data_provider import BusinessDataProvider
+from Generators.sales_generator import SalesGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -95,12 +109,59 @@ class ScenarioEngine:
 
         logger.info("Scenario Engine initialized successfully.")
 
+        self.run_sales()
+
     # -------------------------------------------------------------------------
     # Future scenario methods
     # -------------------------------------------------------------------------
 
     def run_sales(self) -> None:
-        logger.info("Sales scenario not implemented yet.")
+        """
+        Execute Sales Invoice generation.
+        """
+
+        logger.info("=" * 70)
+        logger.info("Generating Sales Invoices")
+        logger.info("=" * 70)
+
+        provider = BusinessDataProvider(
+            seed=self.config.random_seed
+        )
+
+        mapper = DimensionMapper(db)
+        mapper.initialize()
+
+        loader = FactGLLoader(
+            db,
+            mapper,
+        )
+
+        scenario = SalesInvoiceScenario(
+            DocumentGenerator()
+        )
+
+        generator = SalesGenerator(
+            provider,
+            scenario,
+            loader,
+        )
+
+        batch = BatchContext()
+
+        inserted = generator.generate(
+            documents=10,
+            batch=batch,
+        )
+
+        logger.info(
+            "Inserted %s journal rows.",
+            inserted,
+        )
+
+        logger.info(
+            "Batch ID: %s",
+            batch.batch_id,
+        )
 
     def run_vendor(self) -> None:
         logger.info("Vendor scenario not implemented yet.")
