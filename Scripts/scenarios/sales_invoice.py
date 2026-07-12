@@ -73,7 +73,7 @@ class SalesInvoiceScenario(AccountingScenario):
         entry.add_line(
             JournalLine(
                 line_number=1,
-                account_number="311",
+                account_number="211",
                 company_code=request.company_code,
                 cost_center_code=request.cost_center_code,
                 department_code=request.department_code,
@@ -89,7 +89,7 @@ class SalesInvoiceScenario(AccountingScenario):
         entry.add_line(
             JournalLine(
                 line_number=2,
-                account_number="604",
+                account_number="611",
                 company_code=request.company_code,
                 cost_center_code=request.cost_center_code,
                 department_code=request.department_code,
@@ -105,7 +105,7 @@ class SalesInvoiceScenario(AccountingScenario):
         entry.add_line(
             JournalLine(
                 line_number=3,
-                account_number="343",
+                account_number="433",
                 company_code=request.company_code,
                 cost_center_code=request.cost_center_code,
                 department_code=request.department_code,

@@ -105,6 +105,9 @@ class FactGLLoader:
         int
             Number of inserted rows.
         """
+        print("=== LOADER START ===")
+        print(f"Document: {entry.document.document_number}")
+        print(f"Lines: {len(entry.lines)}")
 
         inserted_rows = 0
 
@@ -160,11 +163,13 @@ class FactGLLoader:
                 )
 
                 inserted_rows += 1
+                print(f"Inserted line {line.line_number}")
 
         logger.info(
             "Inserted %s rows for document %s",
             inserted_rows,
             entry.document.document_number,
         )
-
+        print(f"Inserted rows: {inserted_rows}")
+        print("=== LOADER END ===")
         return inserted_rows
