@@ -36,7 +36,7 @@ from common.batch_context import BatchContext
 from common.database import db
 
 from domain.business_data_provider import BusinessDataProvider
-from Generators.sales_generator import SalesGenerator
+from Python.Generators.sales_generator import SalesGenerator
 
 logger = logging.getLogger(__name__)
 
