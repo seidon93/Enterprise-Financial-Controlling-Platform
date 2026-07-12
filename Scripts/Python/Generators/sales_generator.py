@@ -32,7 +32,8 @@ from scenarios.sales_invoice import (
     SalesInvoiceRequest,
     SalesInvoiceScenario,
 )
-from Scripts.common.batch_context import BatchContext
+# pyrefly: ignore [missing-import]
+from common.batch_context import BatchContext
 from domain.business_data_provider import BusinessDataProvider
 
 logger = logging.getLogger(__name__)

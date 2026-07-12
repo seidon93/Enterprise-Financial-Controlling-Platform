@@ -20,6 +20,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import random
 
 from domain.company_profile import CompanyProfile
+from datetime import date, timedelta
+from decimal import Decimal
+import random
+
+from domain.business_transaction import BusinessTransaction
 
 
 class BusinessDataProvider:
@@ -89,3 +94,40 @@ class BusinessDataProvider:
             weights=[c.sales_weight for c in self.company_profiles],
             k=1,
         )[0]
+
+    def random_due_date(self, invoice_date: date) -> date:
+        """
+            Generate invoice due date.
+        """
+
+        payment_terms = random.choice([14, 30, 45, 60])
+
+        return invoice_date + timedelta(days=payment_terms)
+
+    def random_vat_rate(self) -> Decimal:
+        """
+        Returns VAT rate.
+        """
+
+        return Decimal("0.21")
+
+    def create_sales_transaction(self) -> BusinessTransaction:
+        """
+        Create business transaction for Sales Invoice.
+        """
+
+        company = self.random_company()
+
+        invoice_date = self.random_invoice_date()
+
+        return BusinessTransaction(
+            company_code=company,
+            cost_center_code=self.random_cost_center(),
+            department_code=self.random_department(),
+            currency_code=self.random_currency(company),
+            invoice_date=invoice_date,
+            due_date=self.random_due_date(invoice_date),
+            amount=self.random_invoice_amount(),
+            vat_rate=self.random_vat_rate(),
+            description="Sales Invoice",
+        )
