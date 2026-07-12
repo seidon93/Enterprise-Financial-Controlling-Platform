@@ -81,6 +81,25 @@ class FactGLLoader:
         %(created_at)s,
         %(batch_id)s
     )
+    ON CONFLICT (document_number, line_number)
+    DO UPDATE SET
+        document_type     = EXCLUDED.document_type,
+        posting_date_key  = EXCLUDED.posting_date_key,
+        document_date_key = EXCLUDED.document_date_key,
+        due_date_key      = EXCLUDED.due_date_key,
+        company_key       = EXCLUDED.company_key,
+        account_key       = EXCLUDED.account_key,
+        cost_center_key   = EXCLUDED.cost_center_key,
+        department_key    = EXCLUDED.department_key,
+        currency_key      = EXCLUDED.currency_key,
+        debit_amount      = EXCLUDED.debit_amount,
+        credit_amount     = EXCLUDED.credit_amount,
+        amount_local      = EXCLUDED.amount_local,
+        quantity          = EXCLUDED.quantity,
+        description       = EXCLUDED.description,
+        source_system     = EXCLUDED.source_system,
+        created_at        = EXCLUDED.created_at,
+        batch_id          = EXCLUDED.batch_id
     """
 
     def __init__(

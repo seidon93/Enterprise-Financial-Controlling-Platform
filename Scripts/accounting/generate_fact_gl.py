@@ -44,6 +44,12 @@ def main() -> None:
     # Infrastructure
     mapper = DimensionMapper(db)
     mapper.initialize()
+    print(f"Companies loaded     : {len(mapper.company_map)}")
+    print(f"Accounts loaded      : {len(mapper.account_map)}")
+    print(f"Cost centers loaded  : {len(mapper.cost_center_map)}")
+    print(f"Departments loaded   : {len(mapper.department_map)}")
+    print(f"Currencies loaded    : {len(mapper.currency_map)}")
+
     loader = FactGLLoader(db, mapper)
     generator = DocumentGenerator()
     batch = BatchContext()
@@ -52,19 +58,19 @@ def main() -> None:
     scenario = SalesInvoiceScenario(generator)
 
     request = SalesInvoiceRequest(
-        company_code="CZ001",
-        cost_center_code="1000",
-        department_code="FIN",
-        currency_code="CZK",
+    company_code="CZ001",
+    cost_center_code="1000",
+    department_code="FIN",
+    currency_code="CZK",
 
-        invoice_date=date.today(),
-        due_date=date.today(),
+    invoice_date=date.today(),
+    due_date=date.today(),
 
-        net_amount=Decimal("10000.00"),
-        vat_rate=Decimal("0.21"),
+    net_amount=Decimal("10000.00"),
+    vat_rate=Decimal("0.21"),
 
-        description="Test Sales Invoice",
-    )
+    description="Test Sales Invoice",
+)
 
     # Create accounting entry
     entry = scenario.create(request)
