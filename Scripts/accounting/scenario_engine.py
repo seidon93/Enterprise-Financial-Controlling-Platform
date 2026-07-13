@@ -149,7 +149,7 @@ class ScenarioEngine:
         batch = BatchContext()
 
         inserted = generator.generate(
-            documents=10,
+            documents=self.config.sales_documents,
             batch=batch,
         )
 
