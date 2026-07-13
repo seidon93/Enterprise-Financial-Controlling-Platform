@@ -10,14 +10,13 @@ Status          : Development
 ===============================================================================
 """
 
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-import random
 
 from domain.company_profile import CompanyProfile
 from datetime import date, timedelta
@@ -100,7 +99,7 @@ class BusinessDataProvider:
             Generate invoice due date.
         """
 
-        payment_terms = random.choice([14, 30, 45, 60])
+        payment_terms = self.random.choice([14, 30, 45, 60])
 
         return invoice_date + timedelta(days=payment_terms)
 
@@ -121,13 +120,86 @@ class BusinessDataProvider:
         invoice_date = self.random_invoice_date()
 
         return BusinessTransaction(
-            company_code=company,
+            company_code=company.company_code,
             cost_center_code=self.random_cost_center(),
             department_code=self.random_department(),
-            currency_code=self.random_currency(company),
+            currency_code=company.currency_code,
             invoice_date=invoice_date,
             due_date=self.random_due_date(invoice_date),
-            amount=self.random_invoice_amount(),
+            amount=self.random_invoice_amount(company),
             vat_rate=self.random_vat_rate(),
             description="Sales Invoice",
         )
+
+    def random_invoice_date(self) -> date:
+        """
+        Returns random invoice date between 2021 and 2025.
+        """
+
+        start = date(2021, 1, 1)
+        end = date(2025, 12, 31)
+
+        days = (end - start).days
+
+        return start + timedelta(days=self.random.randint(0, days))
+
+    def random_cost_center(self) -> str:
+        """
+        Returns random cost center.
+        """
+
+        return self.random.choice(
+            [
+                "1000",
+                "1100",
+                "1200",
+                "2000",
+                "2100",
+                "2200",
+                "3000",
+                "3100",
+                "3200",
+                "3300",
+                "4000",
+                "4100",
+                "4200",
+                "5000",
+            ]
+        )
+
+    def random_department(self) -> str:
+        """
+        Returns random department.
+        """
+
+        return self.random.choice(
+            [
+                "FIN",
+                "ACC",
+                "CTR",
+                "SAL",
+                "MKT",
+                "PRD",
+                "LOG",
+                "PUR",
+                "IT",
+                "HR",
+                "EXE",
+            ]
+        )
+
+    def random_invoice_amount(
+        self,
+        company: CompanyProfile,
+    ) -> Decimal:
+        """
+        Returns realistic invoice amount.
+        """
+
+        base = Decimal("50000")
+
+        amount = float(base) * self.random.uniform(0.5, 1.5)
+
+        amount *= company.growth_factor
+
+        return Decimal(str(round(amount, 2)))
