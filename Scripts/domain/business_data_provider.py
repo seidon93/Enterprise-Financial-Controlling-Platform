@@ -24,6 +24,7 @@ from decimal import Decimal
 import random
 
 from domain.business_transaction import BusinessTransaction
+from domain.business_calendar import BusinessCalendar
 
 
 class BusinessDataProvider:
@@ -34,6 +35,11 @@ class BusinessDataProvider:
     def __init__(self, seed: int = 42):
 
         self.random = random.Random(seed)
+        self.calendar = BusinessCalendar(
+            start_date=date(2021, 1, 1),
+            end_date=date(2025, 12, 31),
+            seed=seed,
+        )
 
         self.company_profiles = [
 
@@ -133,15 +139,9 @@ class BusinessDataProvider:
 
     def random_invoice_date(self) -> date:
         """
-        Returns random invoice date between 2021 and 2025.
+        Returns a random business invoice date.
         """
-
-        start = date(2021, 1, 1)
-        end = date(2025, 12, 31)
-
-        days = (end - start).days
-
-        return start + timedelta(days=self.random.randint(0, days))
+        return self.calendar.random_business_date()
 
     def random_cost_center(self) -> str:
         """
