@@ -28,13 +28,12 @@ from datetime import date
 from decimal import Decimal
 
 from accounting.loader import FactGLLoader
-from scenarios.sales_invoice import (
-    SalesInvoiceRequest,
-    SalesInvoiceScenario,
-)
+
 # pyrefly: ignore [missing-import]
 from common.batch_context import BatchContext
 from domain.business_data_provider import BusinessDataProvider
+from domain.business_event_generator import BusinessEventGenerator
+from accounting.scenario_router import ScenarioRouter
 
 logger = logging.getLogger(__name__)
 
@@ -47,12 +46,13 @@ class SalesGenerator:
     def __init__(
         self,
         provider: BusinessDataProvider,
-        scenario: SalesInvoiceScenario,
+        event_generator: BusinessEventGenerator,
+        router: ScenarioRouter,
         loader: FactGLLoader,
-    ) -> None:
-
+    ):
         self.provider = provider
-        self.scenario = scenario
+        self.event_generator = event_generator
+        self.router = router
         self.loader = loader
 
     def generate(
@@ -71,24 +71,9 @@ class SalesGenerator:
 
         for _ in range(documents):
 
-            company = self.provider.random_company()
+            event = self.event_generator.sales_event()
 
-            request = SalesInvoiceRequest(
-                company_code=company.company_code,
-                cost_center_code="1000",
-                department_code="FIN",
-                currency_code=company.currency_code,
-
-                invoice_date=date.today(),
-                due_date=date.today(),
-
-                net_amount=Decimal("10000.00"),
-                vat_rate=Decimal("0.21"),
-
-                description="Generated Sales Invoice",
-            )
-
-            entry = self.scenario.create(request)
+            entry = self.router.process(event)
 
             inserted += self.loader.load(
                 entry,

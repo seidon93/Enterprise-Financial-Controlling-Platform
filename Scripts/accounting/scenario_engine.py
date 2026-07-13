@@ -36,6 +36,8 @@ from common.batch_context import BatchContext
 from common.database import db
 
 from domain.business_data_provider import BusinessDataProvider
+from domain.business_event_generator import BusinessEventGenerator
+from accounting.scenario_router import ScenarioRouter
 from Python.Generators.sales_generator import SalesGenerator
 
 logger = logging.getLogger(__name__)
@@ -140,9 +142,14 @@ class ScenarioEngine:
             DocumentGenerator()
         )
 
+        event_generator = BusinessEventGenerator(provider)
+
+        router = ScenarioRouter(scenario)
+
         generator = SalesGenerator(
             provider,
-            scenario,
+            event_generator,
+            router,
             loader,
         )
 

@@ -54,13 +54,13 @@ class ScenarioRouter:
 
                 request = SalesInvoiceRequest(
                     company_code=event.company_code,
-                    cost_center_code="1000",
-                    department_code="SAL",
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
                     currency_code=event.currency_code,
                     invoice_date=event.event_date,
-                    due_date=event.event_date,
+                    due_date=event.due_date,
                     net_amount=event.amount,
-                    vat_rate=Decimal("0.21"),
+                    vat_rate=event.vat_rate,
                     description=event.description,
                 )
 

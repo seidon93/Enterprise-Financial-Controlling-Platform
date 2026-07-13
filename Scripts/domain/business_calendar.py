@@ -15,7 +15,7 @@ Provides business dates for enterprise simulations.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, timedelta
 import random
 
@@ -29,6 +29,7 @@ class BusinessCalendar:
     start_date: date
     end_date: date
     seed: int = 42
+    _random: random.Random = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self._random = random.Random(self.seed)

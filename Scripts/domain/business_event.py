@@ -36,3 +36,11 @@ class BusinessEvent:
     currency_code: str
 
     description: str
+
+    cost_center_code: str
+
+    department_code: str
+
+    vat_rate: Decimal
+    
+    due_date: date
