@@ -30,6 +30,10 @@ from scenarios.sales_invoice import (
     SalesInvoiceScenario,
 )
 
+from scenarios.purchase_invoice import (
+    PurchaseInvoiceRequest,
+    PurchaseInvoiceScenario,
+)
 
 class ScenarioRouter:
     """
@@ -39,9 +43,11 @@ class ScenarioRouter:
     def __init__(
         self,
         sales_scenario: SalesInvoiceScenario,
+        purchase_scenario: PurchaseInvoiceScenario,
     ) -> None:
 
         self.sales_scenario = sales_scenario
+        self.purchase_scenario = purchase_scenario
 
     def process(
         self,
@@ -65,6 +71,20 @@ class ScenarioRouter:
                 )
 
                 return self.sales_scenario.create(request)
+
+            case BusinessEventType.PURCHASE_INVOICE:
+                request = PurchaseInvoiceRequest(
+                    company_code=event.company_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                    currency_code=event.currency_code,
+                    invoice_date=event.event_date,
+                    due_date=event.due_date,
+                    net_amount=event.amount,
+                    vat_rate=event.vat_rate,
+                    description=event.description,
+                )
+                return self.purchase_scenario.create(request)
 
             case _:
 

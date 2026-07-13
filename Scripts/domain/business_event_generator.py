@@ -53,3 +53,23 @@ class BusinessEventGenerator:
             vat_rate=transaction.vat_rate,
             due_date=transaction.due_date,
         )
+
+    def purchase_event(self) -> BusinessEvent:
+        """
+        Generate one purchase business event.
+        """
+
+        transaction = self.provider.create_purchase_transaction()
+
+        return BusinessEvent(
+            event_type=BusinessEventType.PURCHASE_INVOICE,
+            company_code=transaction.company_code,
+            event_date=transaction.invoice_date,
+            amount=transaction.amount,
+            currency_code=transaction.currency_code,
+            description=transaction.description,
+            cost_center_code=transaction.cost_center_code,
+            department_code=transaction.department_code,
+            vat_rate=transaction.vat_rate,
+            due_date=transaction.due_date,
+        )

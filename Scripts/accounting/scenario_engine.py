@@ -40,6 +40,10 @@ from domain.business_event_generator import BusinessEventGenerator
 from accounting.scenario_router import ScenarioRouter
 from Python.Generators.sales_generator import SalesGenerator
 
+from scenarios.purchase_invoice import PurchaseInvoiceScenario
+from Python.Generators.purchase_generator import PurchaseGenerator
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -52,7 +56,7 @@ class ScenarioEngine:
 
         self.config = config
 
-    def run(self) -> None:
+    def run_accounting(self) -> None:
         """
         Execute complete ETL generation.
         """
@@ -111,7 +115,7 @@ class ScenarioEngine:
 
         logger.info("Scenario Engine initialized successfully.")
 
-        self.run_sales()
+        self.run_accounting()
 
     # -------------------------------------------------------------------------
     # Future scenario methods
@@ -119,15 +123,19 @@ class ScenarioEngine:
 
     def run_sales(self) -> None:
         """
-        Execute Sales Invoice generation.
+        Execute Sales and Purchase Invoice generation.
         """
 
         logger.info("=" * 70)
-        logger.info("Generating Sales Invoices")
+        logger.info("Generating Accounting Documents")
         logger.info("=" * 70)
 
         provider = BusinessDataProvider(
             seed=self.config.random_seed
+        )
+
+        event_generator = BusinessEventGenerator(
+            provider
         )
 
         mapper = DimensionMapper(db)
@@ -138,15 +146,27 @@ class ScenarioEngine:
             mapper,
         )
 
-        scenario = SalesInvoiceScenario(
+        sales_scenario = SalesInvoiceScenario(
             DocumentGenerator()
         )
 
-        event_generator = BusinessEventGenerator(provider)
+        purchase_scenario = PurchaseInvoiceScenario(
+            DocumentGenerator()
+        )
 
-        router = ScenarioRouter(scenario)
+        router = ScenarioRouter(
+            sales_scenario=sales_scenario,
+            purchase_scenario=purchase_scenario,
+        )
 
-        generator = SalesGenerator(
+        sales_generator = SalesGenerator(
+            provider,
+            event_generator,
+            router,
+            loader,
+        )
+
+        purchase_generator = PurchaseGenerator(
             provider,
             event_generator,
             router,
@@ -155,18 +175,35 @@ class ScenarioEngine:
 
         batch = BatchContext()
 
-        inserted = generator.generate(
+        sales_rows = sales_generator.generate(
             documents=self.config.sales_documents,
             batch=batch,
         )
 
+        purchase_rows = purchase_generator.generate(
+            documents=self.config.vendor_documents,
+            batch=batch,
+        )
+
+        inserted = sales_rows + purchase_rows
+
         logger.info(
-            "Inserted %s journal rows.",
+            "Sales rows inserted     : %s",
+            sales_rows,
+        )
+
+        logger.info(
+            "Purchase rows inserted : %s",
+            purchase_rows,
+        )
+
+        logger.info(
+            "Total rows inserted    : %s",
             inserted,
         )
 
         logger.info(
-            "Batch ID: %s",
+            "Batch ID               : %s",
             batch.batch_id,
         )
 
