@@ -26,7 +26,10 @@ class DocumentType(str, Enum):
     PAYROLL = "PAYROLL"    # Payroll
     DEPR = "DEPR"          # Depreciation
     VAT = "VAT"            # VAT Settlement
-
+    CP = "CP"              # Customer Payment
+    SP = "SP"              # Supplier Payment
+    FA = "FA"              # Fixed Assets
+    JV = "JV"              # Journal Voucher
 
 class ScenarioType(str, Enum):
     """Accounting scenario types."""

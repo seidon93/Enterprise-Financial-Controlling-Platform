@@ -35,6 +35,11 @@ from scenarios.purchase_invoice import (
     PurchaseInvoiceScenario,
 )
 
+from scenarios.customer_payment import (
+    CustomerPaymentRequest,
+    CustomerPaymentScenario,
+)
+
 class ScenarioRouter:
     """
     Converts BusinessEvents into JournalEntries.
@@ -44,10 +49,12 @@ class ScenarioRouter:
         self,
         sales_scenario: SalesInvoiceScenario,
         purchase_scenario: PurchaseInvoiceScenario,
+        customer_payment_scenario: CustomerPaymentScenario,
     ) -> None:
 
         self.sales_scenario = sales_scenario
         self.purchase_scenario = purchase_scenario
+        self.customer_payment_scenario = customer_payment_scenario
 
     def process(
         self,
@@ -86,8 +93,23 @@ class ScenarioRouter:
                 )
                 return self.purchase_scenario.create(request)
 
+            case BusinessEventType.CUSTOMER_PAYMENT:
+                request = CustomerPaymentRequest(
+                    company_code=event.company_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                    currency_code=event.currency_code,
+                    invoice_date=event.event_date,
+                    due_date=event.due_date,
+                    net_amount=event.amount,
+                    vat_rate=event.vat_rate,
+                    description=event.description,
+                )
+                return self.customer_payment_scenario.create(request)
+
             case _:
 
                 raise NotImplementedError(
                     f"Unsupported event: {event.event_type}"
                 )
+    

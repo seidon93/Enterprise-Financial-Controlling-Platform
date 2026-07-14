@@ -158,6 +158,27 @@ class BusinessDataProvider:
             description="Purchase Invoice",
         )
 
+    def create_customer_payment(self) -> BusinessTransaction:
+        """
+        Create business transaction for Customer Payment.
+        """
+
+        company = self.random_company()
+
+        invoice_date = self.random_invoice_date()
+
+        return BusinessTransaction(
+            company_code=company.company_code,
+            cost_center_code=self.random_cost_center(),
+            department_code=self.random_department(),
+            currency_code=company.currency_code,
+            invoice_date=invoice_date,
+            due_date=self.random_due_date(invoice_date),
+            amount=self.random_invoice_amount(company),
+            vat_rate=self.random_vat_rate(),
+            description="Customer Payment",
+        )
+
     def random_invoice_date(self) -> date:
         """
         Returns a random business invoice date.
