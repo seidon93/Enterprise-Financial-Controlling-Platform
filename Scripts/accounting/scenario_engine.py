@@ -115,7 +115,7 @@ class ScenarioEngine:
 
         logger.info("Scenario Engine initialized successfully.")
 
-        self.run_accounting()
+       
 
     # -------------------------------------------------------------------------
     # Future scenario methods

@@ -24,7 +24,7 @@ def main() -> None:
 
     engine = ScenarioEngine(config)
 
-    engine.run()
+    engine.run_accounting()
 
 
 if __name__ == "__main__":
