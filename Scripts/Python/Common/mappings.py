@@ -26,6 +26,8 @@ STATEMENT_TYPE = {
     5: "Profit and Loss",
     6: "Profit and Loss",
     7: "Profit and Loss",
+    8: "Profit and Loss",
+    9: "Balance Sheet",
 }
 
 # =============================================================================
@@ -41,6 +43,8 @@ NORMAL_BALANCE = {
     5: "Debit",
     6: "Credit",
     7: "Credit",
+    8: "Credit",
+    9: "Debit",
 }
 
 # =============================================================================
@@ -56,6 +60,8 @@ REPORTING_GROUP = {
     5: "Operating Costs",
     6: "Financial Result",
     7: "Closing Accounts",
+    8: "Other Income",
+    9: "Assets",
 }
 
 # =============================================================================
@@ -71,4 +77,6 @@ REPORTING_CATEGORY = {
     5: "Operating",
     6: "Financial",
     7: "Closing",
+    8: "Other Income",
+    9: "Assets",
 }

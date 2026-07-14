@@ -1,82 +1,252 @@
 account_key,account_number,account_name,account_type,account_class,account_group,is_posting_account,is_active
-1,011,Land and Buildings,A,0,1,True,True
-2,012,Plant and Machinery,A,0,2,True,True
-3,013,Vehicles,A,0,3,True,True
-4,014,Office Equipment,A,0,4,True,True
-5,015,Computer Hardware,A,0,5,True,True
-6,016,Intangible Assets,A,0,6,True,True
-7,017,Assets Under Construction,A,0,7,True,True
-8,018,Accumulated Depreciation – Buildings,A,0,8,True,True
-9,019,Accumulated Depreciation – Machinery,A,0,9,True,True
-10,111,Raw Materials,A,1,1,True,True
-11,112,Work in Progress,A,1,2,True,True
-12,113,Finished Goods,A,1,3,True,True
-13,114,Spare Parts,A,1,4,True,True
-14,115,Packaging Materials,A,1,5,True,True
-15,116,Goods in Transit,A,1,6,True,True
-16,211,Trade Receivables – Domestic,A,2,1,True,True
-17,212,Trade Receivables – Foreign,A,2,2,True,True
-18,213,VAT Receivable,A,2,3,True,True
-19,214,Advances to Suppliers,A,2,4,True,True
-20,215,Employee Advances,A,2,5,True,True
-21,216,Other Receivables,A,2,6,True,True
-22,217,Allowance for Doubtful Accounts,A,2,7,True,True
-23,311,Cash on Hand,A,3,1,True,True
-24,312,Bank Account – Operating,A,3,2,True,True
-25,313,Bank Account – Savings,A,3,3,True,True
-26,314,Short-Term Deposits,A,3,4,True,True
-27,315,Petty Cash,A,3,5,True,True
-28,316,Cash Equivalents,A,3,6,True,True
-29,411,Share Capital,P,4,1,True,True
-30,412,Share Premium,P,4,2,True,True
-31,413,Retained Earnings,P,4,3,True,True
-32,414,Legal Reserves,P,4,4,True,True
-33,415,Current Year Result,P,4,5,True,True
-34,421,Long-Term Bank Loans,P,4,6,True,True
-35,422,Bonds Payable,P,4,7,True,True
-36,423,Lease Liabilities,P,4,8,True,True
-37,431,Trade Payables – Domestic,P,4,9,True,True
-38,432,Trade Payables – Foreign,P,4,10,True,True
-39,433,VAT Payable,P,4,11,True,True
-40,434,Wages and Salaries Payable,P,4,12,True,True
-41,435,Social Security Payable,P,4,13,True,True
-42,436,Income Tax Payable,P,4,14,True,True
-43,437,Other Current Liabilities,P,4,15,True,True
-44,438,Accrued Expenses,P,4,16,True,True
-45,439,Provisions,P,4,17,True,True
-46,511,Raw Material Consumption,E,5,1,True,True
-47,512,Energy Costs,E,5,2,True,True
-48,513,Packaging Costs,E,5,3,True,True
-49,521,Wages – Production,E,5,4,True,True
-50,522,Wages – Administration,E,5,5,True,True
-51,523,Salaries – Management,E,5,6,True,True
-52,524,Social Security Contributions,E,5,7,True,True
-53,525,Employee Benefits,E,5,8,True,True
-54,531,Rent and Lease Expense,E,5,9,True,True
-55,532,Maintenance and Repairs,E,5,10,True,True
-56,533,Insurance Expense,E,5,11,True,True
-57,534,Office Supplies,E,5,12,True,True
-58,535,Telecommunications,E,5,13,True,True
-59,536,Travel and Entertainment,E,5,14,True,True
-60,537,Professional Services,E,5,15,True,True
-61,538,Marketing and Advertising,E,5,16,True,True
-62,539,Depreciation Expense,E,5,17,True,True
-63,540,Amortization Expense,E,5,18,True,True
-64,541,Bad Debt Expense,E,5,19,True,True
-65,542,IT and Software Costs,E,5,20,True,True
-66,611,Sales Revenue – Domestic,R,6,1,True,True
-67,612,Sales Revenue – Export,R,6,2,True,True
-68,613,Service Revenue,R,6,3,True,True
-69,614,Revenue from Contracts,R,6,4,True,True
-70,615,Other Operating Revenue,R,6,5,True,True
-71,621,Sales Returns and Allowances,R,6,6,True,True
-72,622,Sales Discounts,R,6,7,True,True
-73,711,Interest Income,R,7,1,True,True
-74,712,Interest Expense,E,7,2,True,True
-75,713,Foreign Exchange Gains,R,7,3,True,True
-76,714,Foreign Exchange Losses,E,7,4,True,True
-77,715,Dividend Income,R,7,5,True,True
-78,716,Other Financial Income,R,7,6,True,True
-79,717,Other Financial Expense,E,7,7,True,True
-80,718,Realized Gains on Investments,R,7,8,True,True
-81,719,Realized Losses on Investments,E,7,9,True,True
+1,11,Intangible results of development,A,0,1,True,True
+2,12,Software,A,0,1,True,True
+3,13,Other valuable rights,A,0,1,True,True
+4,14,Goodwill,A,0,1,True,True
+5,15,Emission allowances,A,0,1,True,True
+6,16,Preferential limits,A,0,1,True,True
+7,19,Other intangible fixed assets,A,0,1,True,True
+8,21,Buildings and structures,A,0,2,True,True
+9,22,Tangible movable assets and their sets,A,0,2,True,True
+10,25,Perennial crops,A,0,2,True,True
+11,26,Adult animals and their groups,A,0,2,True,True
+12,29,Other tangible fixed assets,A,0,2,True,True
+13,31,Land,A,0,3,True,True
+14,32,Works of art and collections,A,0,3,True,True
+15,41,Incomplete intangible fixed assets (WIP),A,0,4,True,True
+16,42,Incomplete tangible fixed assets (WIP),A,0,4,True,True
+17,51,Advances paid for intangible fixed assets,A,0,5,True,True
+18,52,Advances paid for tangible fixed assets,A,0,5,True,True
+19,53,Advances paid for financial fixed assets,A,0,5,True,True
+20,61,Shares - controlled or controlling entity,A,0,6,True,True
+21,62,Shares - significant influence,A,0,6,True,True
+22,63,Other long-term securities and shares,A,0,6,True,True
+23,65,Long-term securities held to maturity,A,0,6,True,True
+24,66,Loans and borrowings - controlled or controlling entity,A,0,6,True,True
+25,67,Other loans and borrowings,A,0,6,True,True
+26,68,Loans and borrowings - significant influence,A,0,6,True,True
+27,69,Other long-term financial assets,A,0,6,True,True
+28,72,Accumulated amortization of intangible results of development,A,0,7,True,True
+29,73,Accumulated amortization of software,A,0,7,True,True
+30,74,Accumulated amortization of other valuable rights,A,0,7,True,True
+31,75,Accumulated amortization of goodwill,A,0,7,True,True
+32,79,Accumulated amortization of other intangible fixed assets,A,0,7,True,True
+33,81,Accumulated depreciation of buildings,A,0,8,True,True
+34,82,Accumulated depreciation of tangible movable assets,A,0,8,True,True
+35,85,Accumulated depreciation of perennial crops,A,0,8,True,True
+36,86,Accumulated depreciation of adult animals,A,0,8,True,True
+37,89,Accumulated depreciation of other tangible fixed assets,A,0,8,True,True
+38,91,Provisions for intangible fixed assets,A,0,9,True,True
+39,92,Provisions for tangible fixed assets,A,0,9,True,True
+40,93,Provisions for incomplete intangible fixed assets,A,0,9,True,True
+41,94,Provisions for incomplete tangible fixed assets,A,0,9,True,True
+42,95,Provisions for advances paid for fixed assets,A,0,9,True,True
+43,96,Provisions for long-term financial assets,A,0,9,True,True
+44,97,Valuation difference on acquired assets,A,0,9,True,True
+45,98,Accumulated amortization of valuation diff. on acquired assets,A,0,9,True,True
+46,111,Material purchases,A,1,11,True,True
+47,112,Material in stock,A,1,11,True,True
+48,119,Material in transit,A,1,11,True,True
+49,121,Work in progress,A,1,12,True,True
+50,122,Semi-finished goods of own production,A,1,12,True,True
+51,123,Finished goods,A,1,12,True,True
+52,124,Young and other animals and their groups,A,1,12,True,True
+53,131,Goods purchases,A,1,13,True,True
+54,132,Goods in stock and in shops,A,1,13,True,True
+55,139,Goods in transit,A,1,13,True,True
+56,151,Advances paid for material,A,1,15,True,True
+57,152,Advances paid for young animals,A,1,15,True,True
+58,153,Advances paid for goods,A,1,15,True,True
+59,191,Provisions for material,A,1,19,True,True
+60,192,Provisions for work in progress,A,1,19,True,True
+61,193,Provisions for semi-finished goods,A,1,19,True,True
+62,194,Provisions for finished goods,A,1,19,True,True
+63,195,Provisions for young animals,A,1,19,True,True
+64,196,Provisions for goods,A,1,19,True,True
+65,197,Provisions for advances paid for material,A,1,19,True,True
+66,198,Provisions for advances paid for goods,A,1,19,True,True
+67,199,Provisions for advances paid for young animals,A,1,19,True,True
+68,211,Cash in hand,A,2,21,True,True
+69,213,Valuables (stamps and vouchers),A,2,21,True,True
+70,221,Cash at bank,A,2,22,True,True
+71,231,Short-term bank loans,P,2,23,True,True
+72,232,Discount loans,P,2,23,True,True
+73,241,Issued short-term bonds,P,2,24,True,True
+74,249,Other short-term financial assistance,P,2,24,True,True
+75,251,Registered equity securities for trading,A,2,25,True,True
+76,252,Treasury shares,P,2,25,True,True
+77,253,Registered debt securities for trading,A,2,25,True,True
+78,254,Bills of exchange for collection,A,2,25,True,True
+79,255,Own bonds,P,2,25,True,True
+80,256,Debt securities maturing within 1 year held to maturity,A,2,25,True,True
+81,257,Other trading securities,A,2,25,True,True
+82,258,Shares - controlled or controlling entity,A,2,25,True,True
+83,261,Cash in transit,A,2,26,True,True
+84,291,Provisions for short-term financial assets,A,2,29,True,True
+85,311,Trade receivables (Customers),A,3,31,True,True
+86,312,Bills of exchange for collection,A,3,31,True,True
+87,313,Receivables from discounted securities,A,3,31,True,True
+88,314,Advances paid - long-term and short-term,A,3,31,True,True
+89,315,Other receivables,A,3,31,True,True
+90,321,Trade payables (Suppliers),P,3,32,True,True
+91,322,Bills of exchange to be paid,P,3,32,True,True
+92,324,Advances received,P,3,32,True,True
+93,325,Other payables,P,3,32,True,True
+94,331,Employees (Wages payable),P,3,33,True,True
+95,333,Other payables to employees,P,3,33,True,True
+96,335,Receivables from employees,A,3,33,True,True
+97,336,Clearing with social security and health insurance institutions,P,3,33,True,True
+98,341,Income tax,P,3,34,True,True
+99,342,Other direct taxes,P,3,34,True,True
+100,343,Value added tax (VAT),P,3,34,True,True
+101,345,Other taxes and fees,P,3,34,True,True
+102,346,Subsidies from the state budget,P,3,34,True,True
+103,347,Other subsidies,P,3,34,True,True
+104,349,VAT clearing account,A,3,34,True,True
+105,351,Receivables - controlled or controlling entity,A,3,35,True,True
+106,352,Receivables - significant influence,A,3,35,True,True
+107,353,Receivables for subscribed registered capital,A,3,35,True,True
+108,354,Receivables from partners for loss coverage,A,3,35,True,True
+109,355,Other receivables from partners of a business corporation,A,3,35,True,True
+110,358,Receivables from partners associated in companies,A,3,35,True,True
+111,361,Payables - controlled or controlling entity,P,3,36,True,True
+112,362,Payables - significant influence,P,3,36,True,True
+113,364,Payables to partners in profit distribution,P,3,36,True,True
+114,365,Other payables to partners of a business corporation,P,3,36,True,True
+115,366,Payables to partners from dependent activity,P,3,36,True,True
+116,367,Payables from subscribed unpaid securities and deposits,P,3,36,True,True
+117,368,Payables to partners associated in a company,P,3,36,True,True
+118,371,Receivables from the sale of a business establishment,A,3,37,True,True
+119,372,Payables from the purchase of a business establishment,P,3,37,True,True
+120,373,Receivables and payables from fixed forward transactions,A,3,37,True,True
+121,374,Receivables from rent and lease,A,3,37,True,True
+122,375,Receivables from issued bonds,A,3,37,True,True
+123,376,Purchased options,A,3,37,True,True
+124,377,Sold options,P,3,37,True,True
+125,378,Other receivables,A,3,37,True,True
+126,379,Other payables,P,3,37,True,True
+127,381,Prepaid expenses,A,3,38,True,True
+128,382,Complex prepaid expenses,A,3,38,True,True
+129,383,Accrued expenses,P,3,38,True,True
+130,384,Deferred income,P,3,38,True,True
+131,385,Accrued income,A,3,38,True,True
+132,388,Estimated active accounts (Accrued revenues),A,3,38,True,True
+133,389,Estimated passive accounts (Accrued liabilities),P,3,38,True,True
+134,391,Provisions for receivables,A,3,39,True,True
+135,395,Internal clearing,A,3,39,True,True
+136,398,Connecting account for the company,A,3,39,True,True
+137,411,Registered capital,P,4,41,True,True
+138,412,Share premium,P,4,41,True,True
+139,413,Other capital funds,P,4,41,True,True
+140,414,Valuation differences from revaluation of assets and liabilities,P,4,41,True,True
+141,416,Valuation differences in business corporation transformations,P,4,41,True,True
+142,417,Differences from business corporation transformations,P,4,41,True,True
+143,418,Valuation differences from revaluation in business transformations,P,4,41,True,True
+144,419,Changes in registered capital,P,4,41,True,True
+145,421,Other reserve funds,P,4,42,True,True
+146,422,Indivisible fund,P,4,42,True,True
+147,423,Statutory fund,P,4,42,True,True
+148,426,Other profit/loss of previous years,P,4,42,True,True
+149,427,Other funds,P,4,42,True,True
+150,428,Retained earnings of previous years,P,4,42,True,True
+151,429,Unsettled loss of previous years,P,4,42,True,True
+152,431,Profit/loss in the approval process,P,4,43,True,True
+153,432,Decided on advance payment of profit share,P,4,43,True,True
+154,451,Reserves under special legal regulations,P,4,45,True,True
+155,453,Income tax reserve,P,4,45,True,True
+156,459,Other reserves,P,4,45,True,True
+157,461,Payables to credit institutions,P,4,46,True,True
+158,471,Long-term payables - controlled or controlling entity,P,4,47,True,True
+159,472,Long-term payables - significant influence,P,4,47,True,True
+160,473,Issued bonds,P,4,47,True,True
+161,474,Payables from rent and lease,P,4,47,True,True
+162,475,Long-term advances received,P,4,47,True,True
+163,478,Long-term bills of exchange to be paid,P,4,47,True,True
+164,479,Other long-term payables,P,4,47,True,True
+165,481,Deferred tax liability and asset,P,4,48,True,True
+166,491,Individual entrepreneur's account,P,4,49,True,True
+167,501,Material consumption,T,5,50,True,True
+168,502,Energy consumption,T,5,50,True,True
+169,503,Consumption of other non-storable supplies,T,5,50,True,True
+170,504,Cost of goods sold,T,5,50,True,True
+171,511,Repairs and maintenance,T,5,51,True,True
+172,512,Travel expenses,T,5,51,True,True
+173,513,Representation costs (Entertainment),E,5,51,True,True
+174,518,Other services,T,5,51,True,True
+175,521,Payroll costs (Wages),T,5,52,True,True
+176,522,Incomes of partners of a business corp. from dependent activity,T,5,52,True,True
+177,523,Remuneration to members of business corporation bodies,E,5,52,True,True
+178,524,Statutory social and health insurance,T,5,52,True,True
+179,525,Other social and health insurance,E,5,52,True,True
+180,526,Social costs of individual entrepreneur,E,5,52,True,True
+181,527,Statutory social costs,T,5,52,True,True
+182,528,Other social costs,E,5,52,True,True
+183,531,Road tax,T,5,53,True,True
+184,532,Real estate tax,T,5,53,True,True
+185,538,Other taxes and fees,T,5,53,True,True
+186,541,Net book value of sold long-term intangible and tangible assets,T,5,54,True,True
+187,542,Sold material,T,5,54,True,True
+188,543,Donations provided in the operating area,E,5,54,True,True
+189,544,Contractual penalties and default interest,T,5,54,True,True
+190,545,Other fines and penalties,E,5,54,True,True
+191,546,Write-off of receivables,E,5,54,True,True
+192,547,Extraordinary operating expenses,T,5,54,True,True
+193,548,Other operating expenses,T,5,54,True,True
+194,549,Shortages and damages in operating area,T,5,54,True,True
+195,551,Depreciation of intangible and tangible fixed assets,T,5,55,True,True
+196,552,Creation and settlement of reserves under special legal regulations,T,5,55,True,True
+197,554,Creation and settlement of other reserves,E,5,55,True,True
+198,555,Creation and settlement of complex prepaid expenses,T,5,55,True,True
+199,557,Settlement of accumulated amortization of valuation diff. on acquired assets,E,5,55,True,True
+200,558,Creation and settlement of statutory provisions,T,5,55,True,True
+201,559,Creation and settlement of provisions,E,5,55,True,True
+202,561,Sold securities and shares,T,5,56,True,True
+203,562,Interest expenses,T,5,56,True,True
+204,563,Foreign exchange losses,T,5,56,True,True
+205,564,Expenses from revaluation of equity securities for trading,T,5,56,True,True
+206,565,Donations provided in the financial area,T,5,56,True,True
+207,566,Expenses from financial assets,T,5,56,True,True
+208,567,Expenses from derivative transactions,T,5,56,True,True
+209,568,Other and extraordinary financial expenses,T,5,56,True,True
+210,569,Shortages and damages on financial assets,T,5,56,True,True
+211,574,Creation and settlement of financial reserves,E,5,57,True,True
+212,579,Creation and settlement of provisions in financial activities,E,5,57,True,True
+213,581,Change in inventory of work in progress,T,5,58,True,True
+214,582,Change in inventory of semi-finished goods,T,5,58,True,True
+215,583,Change in inventory of finished goods,T,5,58,True,True
+216,584,Change in inventory of young and other animals,T,5,58,True,True
+217,585,Capitalization of material and goods,T,5,58,True,True
+218,586,Capitalization of intra-company services,T,5,58,True,True
+219,587,Capitalization of intangible fixed assets,T,5,58,True,True
+220,588,Capitalization of tangible fixed assets,T,5,58,True,True
+221,591,Income tax - payable,E,5,59,True,True
+222,592,Income tax - deferred,E,5,59,True,True
+223,595,Additional income tax levies,E,5,59,True,True
+224,596,Transfer of profit/loss share to partners,E,5,59,True,True
+225,597,Transfer of operating expenses,T,5,59,True,True
+226,598,Transfer of financial expenses,T,5,59,True,True
+227,599,Change in the income tax reserve,E,5,59,True,True
+228,601,Revenues from own products,T,6,60,True,True
+229,602,Revenues from services,T,6,60,True,True
+230,604,Revenues from goods,T,6,60,True,True
+231,641,Revenues from sale of long-term intangible and tangible assets,T,6,64,True,True
+232,642,Revenues from sale of material,T,6,64,True,True
+233,644,Contractual penalties and default interest,T,6,64,True,True
+234,646,Revenues from written-off receivables,T,6,64,True,True
+235,648,Other operating revenues,T,6,64,True,True
+236,649,Extraordinary operating revenues,T,6,64,True,True
+237,661,Revenues from sale of securities and shares,T,6,66,True,True
+238,662,Interest revenues,T,6,66,True,True
+239,663,Foreign exchange gains,T,6,66,True,True
+240,664,Revenues from revaluation of equity securities for trading,T,6,66,True,True
+241,665,Revenues from long-term financial assets,T,6,66,True,True
+242,666,Revenues from short-term financial assets,T,6,66,True,True
+243,667,Revenues from derivative transactions,T,6,66,True,True
+244,668,Other financial and extraordinary revenues,T,6,66,True,True
+245,669,Donations received in the financial area,T,6,66,True,True
+246,697,Transfer of operating revenues,T,6,69,True,True
+247,698,Transfer of financial revenues,T,6,69,True,True
+248,701,Opening balance sheet account,C,7,70,True,True
+249,702,Closing balance sheet account,C,7,70,True,True
+250,710,Profit and loss account,C,7,71,True,True
+251,799,Memorandum account,C,7,79,True,True

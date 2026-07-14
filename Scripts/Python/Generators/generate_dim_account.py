@@ -304,7 +304,7 @@ class DimAccountGenerator:
 
             connection.execute(
                 text(
-                    f"TRUNCATE TABLE {settings.DB_SCHEMA}.dim_account;"
+                    f"TRUNCATE TABLE {settings.DB_SCHEMA}.dim_account CASCADE;"
                 )
             )
 
