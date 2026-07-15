@@ -57,6 +57,7 @@ class ScenarioConfig:
     payroll_documents: int = 7_000
     asset_transactions: int = 3_000
     journal_entries: int = 20_000
+    supplier_payments: int = 30_000
 
     # -------------------------------------------------------------------------
     # Random Seed

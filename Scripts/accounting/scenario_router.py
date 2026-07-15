@@ -40,6 +40,10 @@ from scenarios.customer_payment import (
     CustomerPaymentScenario,
 )
 
+from scenarios.supplier_payment import (
+    SupplierPaymentRequest,
+    SupplierPaymentScenario,
+)
 
 
 class ScenarioRouter:
@@ -52,11 +56,13 @@ class ScenarioRouter:
         sales_scenario: SalesInvoiceScenario,
         purchase_scenario: PurchaseInvoiceScenario,
         customer_payment_scenario: CustomerPaymentScenario,
+        supplier_payment_scenario: SupplierPaymentScenario,
     ) -> None:
 
         self.sales_scenario = sales_scenario
         self.purchase_scenario = purchase_scenario
         self.customer_payment_scenario = customer_payment_scenario
+        self.supplier_payment_scenario = supplier_payment_scenario
 
     def process(
         self,
@@ -108,6 +114,19 @@ class ScenarioRouter:
                 )
 
                 return self.customer_payment_scenario.create(request)
+
+            case BusinessEventType.SUPPLIER_PAYMENT:
+                request = SupplierPaymentRequest(
+                    company_code=event.company_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                    currency_code=event.currency_code,
+                    payment_date=event.event_date,
+                    payment_amount=event.amount,
+                    description=event.description,
+                )
+
+                return self.supplier_payment_scenario.create(request)
 
             case _:
 

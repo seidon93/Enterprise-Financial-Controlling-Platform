@@ -114,3 +114,23 @@ class BusinessEventGenerator:
             vat_rate=Decimal("0.00"),
             due_date=transaction.due_date,
         )
+
+    def supplier_payment_event(self) -> BusinessEvent:
+        """
+        Generate one supplier payment business event.
+        """
+
+        transaction = self.provider.create_supplier_payment_transaction()
+
+        return BusinessEvent(
+            event_type=BusinessEventType.SUPPLIER_PAYMENT,
+            company_code=transaction.company_code,
+            event_date=transaction.invoice_date,
+            amount=transaction.amount,
+            currency_code=transaction.currency_code,
+            description=transaction.description,
+            cost_center_code=transaction.cost_center_code,
+            department_code=transaction.department_code,
+            vat_rate=transaction.vat_rate,
+            due_date=transaction.due_date,
+        )
