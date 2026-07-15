@@ -51,6 +51,7 @@ class ScenarioConfig:
 
     sales_documents: int = 45_000
     vendor_documents: int = 30_000
+    customer_payments: int = 40_000
     bank_transactions: int = 70_000
     inventory_transactions: int = 100_000
     payroll_documents: int = 7_000

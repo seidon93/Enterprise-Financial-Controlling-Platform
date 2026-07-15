@@ -43,6 +43,8 @@ from Python.Generators.sales_generator import SalesGenerator
 from scenarios.purchase_invoice import PurchaseInvoiceScenario
 from Python.Generators.purchase_generator import PurchaseGenerator
 
+from scenarios.customer_payment import CustomerPaymentScenario
+from Python.Generators.customer_payment_generator import CustomerPaymentGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -154,9 +156,15 @@ class ScenarioEngine:
             DocumentGenerator()
         )
 
+        customer_payment_scenario = CustomerPaymentScenario(
+            DocumentGenerator()
+        )
+        
+
         router = ScenarioRouter(
             sales_scenario=sales_scenario,
             purchase_scenario=purchase_scenario,
+            customer_payment_scenario=customer_payment_scenario,
         )
 
         sales_generator = SalesGenerator(
@@ -173,6 +181,13 @@ class ScenarioEngine:
             loader,
         )
 
+        customer_payment_generator = CustomerPaymentGenerator(
+            provider,
+            event_generator,
+            router,
+            loader,
+        )
+        
         batch = BatchContext()
 
         sales_rows = sales_generator.generate(
@@ -185,7 +200,16 @@ class ScenarioEngine:
             batch=batch,
         )
 
-        inserted = sales_rows + purchase_rows
+        customer_payment_rows = customer_payment_generator.generate(
+            documents=self.config.customer_payments,
+            batch=batch,
+        )
+
+        inserted = (
+            sales_rows
+            + purchase_rows
+            + customer_payment_rows
+        )
 
         logger.info(
             "Sales rows inserted     : %s",
@@ -195,6 +219,11 @@ class ScenarioEngine:
         logger.info(
             "Purchase rows inserted : %s",
             purchase_rows,
+        )
+
+        logger.info(
+            "Customer payment rows inserted : %s",
+            customer_payment_rows,
         )
 
         logger.info(

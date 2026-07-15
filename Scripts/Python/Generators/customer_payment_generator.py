@@ -2,14 +2,14 @@
 ===============================================================================
 Enterprise Financial Analytics Platform (EFAP)
 -------------------------------------------------------------------------------
-Object          : purchase_generator.py
-Object Type     : Purchase Generator
+Object          : customer_payment_generator.py
+Object Type     : Customer Payment Generator
 Layer           : Data Generation
 Version         : 1.0.0
 Status          : Development
 -------------------------------------------------------------------------------
 Description:
-Generates realistic purchase invoices and loads them into Fact_GL.
+Generates realistic customer payments and loads them into Fact_GL.
 ===============================================================================
 """
 
@@ -27,18 +27,21 @@ sys.path.insert(0, _scripts_root)
 import logging
 
 from accounting.loader import FactGLLoader
+
 # pyrefly: ignore [missing-import]
 from common.batch_context import BatchContext
+
 from domain.business_data_provider import BusinessDataProvider
 from domain.business_event_generator import BusinessEventGenerator
+
 from accounting.scenario_router import ScenarioRouter
 
 logger = logging.getLogger(__name__)
 
 
-class PurchaseGenerator:
+class CustomerPaymentGenerator:
     """
-    Generates purchase invoices.
+    Generates customer payments.
     """
 
     def __init__(
@@ -59,20 +62,12 @@ class PurchaseGenerator:
         documents: int,
         batch: BatchContext,
     ) -> int:
-        """
-        Generate purchase invoices.
-
-        Returns
-        -------
-        int
-            Number of inserted journal lines.
-        """
 
         inserted = 0
 
         for _ in range(documents):
 
-            event = self.event_generator.purchase_event()
+            event = self.event_generator.customer_payment_event()
 
             entry = self.router.process(event)
 
@@ -82,7 +77,7 @@ class PurchaseGenerator:
             )
 
         logger.info(
-            "Generated %s purchase invoices.",
+            "Generated %s customer payments.",
             documents,
         )
 
