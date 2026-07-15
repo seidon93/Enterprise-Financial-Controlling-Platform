@@ -11,6 +11,7 @@ Status          : Development
 """
 
 
+
 from __future__ import annotations
 
 import sys
@@ -195,7 +196,7 @@ class BusinessDataProvider:
             currency_code=company.currency_code,
             invoice_date=payment_date,
             due_date=payment_date,
-            amount=self.random_invoice_amount(),
+            amount=self.random_invoice_amount(company),
             vat_rate=Decimal("0.00"),
             description="Customer Payment",
         )
