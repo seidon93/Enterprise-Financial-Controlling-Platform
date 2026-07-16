@@ -46,6 +46,9 @@ from Python.Generators.purchase_generator import PurchaseGenerator
 from scenarios.customer_payment import CustomerPaymentScenario
 from Python.Generators.customer_payment_generator import CustomerPaymentGenerator
 
+from scenarios.supplier_payment import SupplierPaymentScenario
+from Python.Generators.supplier_payment_generator import SupplierPaymentGenerator
+
 logger = logging.getLogger(__name__)
 
 
@@ -159,12 +162,17 @@ class ScenarioEngine:
         customer_payment_scenario = CustomerPaymentScenario(
             DocumentGenerator()
         )
+
+        supplier_payment_scenario = SupplierPaymentScenario(
+            DocumentGenerator()
+        )
         
 
         router = ScenarioRouter(
             sales_scenario=sales_scenario,
             purchase_scenario=purchase_scenario,
             customer_payment_scenario=customer_payment_scenario,
+            supplier_payment_scenario=supplier_payment_scenario,
         )
 
         sales_generator = SalesGenerator(
@@ -188,6 +196,13 @@ class ScenarioEngine:
             loader,
         )
         
+        supplier_payment_generator = SupplierPaymentGenerator(
+            provider,
+            event_generator,
+            router,
+            loader,
+        )
+
         batch = BatchContext()
 
         sales_rows = sales_generator.generate(
@@ -205,10 +220,16 @@ class ScenarioEngine:
             batch=batch,
         )
 
+        supplier_payment_rows = supplier_payment_generator.generate(
+            documents=self.config.supplier_payments,
+            batch=batch,
+        )
+        
         inserted = (
             sales_rows
             + purchase_rows
             + customer_payment_rows
+            + supplier_payment_rows
         )
 
         logger.info(
@@ -224,6 +245,11 @@ class ScenarioEngine:
         logger.info(
             "Customer payment rows inserted : %s",
             customer_payment_rows,
+        )
+
+        logger.info(
+            "Supplier payment rows inserted : %s",
+            supplier_payment_rows,
         )
 
         logger.info(
