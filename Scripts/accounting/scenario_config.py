@@ -17,12 +17,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from accounting.load_mode import LoadMode
+
 
 @dataclass(slots=True)
 class ScenarioConfig:
     """
     Global configuration for data generation.
     """
+
+    # -------------------------------------------------------------------------
+    # Load Mode
+    # -------------------------------------------------------------------------
+
+    load_mode: LoadMode = LoadMode.FULL
 
     # -------------------------------------------------------------------------
     # Time Period
