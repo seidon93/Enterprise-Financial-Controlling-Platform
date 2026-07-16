@@ -26,7 +26,6 @@ sys.path.insert(0, _scripts_python)
 
 import logging
 
-from Python.Generators import supplier_payment_generator
 
 from accounting.scenario_config import ScenarioConfig
 
@@ -42,12 +41,8 @@ from domain.business_event_generator import BusinessEventGenerator
 from accounting.scenario_router import ScenarioRouter
 from scenarios.sales_invoice import SalesInvoiceScenario
 
-from common.batch_context import BatchContext
 from common.database import db
 
-from domain.business_data_provider import BusinessDataProvider
-from domain.business_event_generator import BusinessEventGenerator
-from accounting.scenario_router import ScenarioRouter
 from Python.Generators.sales_generator import SalesGenerator
 
 from scenarios.purchase_invoice import PurchaseInvoiceScenario
@@ -160,110 +155,7 @@ class ScenarioEngine:
                     f"Unsupported load mode: {self.config.load_mode}"
                 )
 
-    # -------------------------------------------------------------------------
-    # Future scenario methods
-    # -------------------------------------------------------------------------
 
-    def run_sales(self) -> None:
-        """
-        Execute Sales and Purchase Invoice generation.
-        """
-
-        logger.info("=" * 70)
-        logger.info("Generating Accounting Documents")
-        logger.info("=" * 70)
-
-        (
-            provider,
-            event_generator,
-            loader,
-            router,
-            batch,
-        ) = self.create_runtime()
-
-        sales_generator = SalesGenerator(
-            provider,
-            event_generator,
-            router,
-            loader,
-        )
-
-        purchase_generator = PurchaseGenerator(
-            provider,
-            event_generator,
-            router,
-            loader,
-        )
-
-        customer_payment_generator = CustomerPaymentGenerator(
-            provider,
-            event_generator,
-            router,
-            loader,
-        )
-
-        supplier_payment_generator = SupplierPaymentGenerator(
-            provider,
-            event_generator,
-            router,
-            loader,
-        )
-        sales_rows = sales_generator.generate(
-            documents=self.config.sales_documents,
-            batch=batch,
-        )
-
-        purchase_rows = purchase_generator.generate(
-            documents=self.config.vendor_documents,
-            batch=batch,
-        )
-
-        customer_payment_rows = customer_payment_generator.generate(
-            documents=self.config.customer_payments,
-            batch=batch,
-        )
-
-        supplier_payment_rows = supplier_payment_generator.generate(
-            documents=self.config.supplier_payments,
-            batch=batch,
-        )
-
-        inserted = (
-            sales_rows
-            + purchase_rows
-            + customer_payment_rows
-            + supplier_payment_rows
-        )
-
-        logger.info(
-            "Sales rows inserted     : %s",
-            sales_rows,
-        )
-
-        logger.info(
-            "Purchase rows inserted : %s",
-            purchase_rows,
-        )
-
-        logger.info(
-            "Customer payment rows inserted : %s",
-            customer_payment_rows,
-        )
-
-        logger.info(
-            "Supplier payment rows inserted : %s",
-            supplier_payment_rows,
-        )
-
-        logger.info(
-            "Total rows inserted    : %s",
-            inserted,
-        )
-
-        logger.info(
-            "Batch ID               : %s",
-            batch.batch_id,
-        )
 
     def create_runtime(self):
         """
@@ -319,6 +211,108 @@ class ScenarioEngine:
             batch,
         )
 
+    def run_sales(self) -> None:
+        """
+        Execute complete accounting generation.
+        """
+
+        logger.info("=" * 70)
+        logger.info("Generating Accounting Documents")
+        logger.info("=" * 70)
+
+        (
+            provider,
+            event_generator,
+            loader,
+            router,
+            batch,
+        ) = self.create_runtime()
+
+        sales_generator = SalesGenerator(
+            provider,
+            event_generator,
+            router,
+            loader,
+        )
+
+        purchase_generator = PurchaseGenerator(
+            provider,
+            event_generator,
+            router,
+            loader,
+        )
+
+        customer_payment_generator = CustomerPaymentGenerator(
+            provider,
+            event_generator,
+            router,
+            loader,
+        )
+
+        supplier_payment_generator = SupplierPaymentGenerator(
+            provider,
+            event_generator,
+            router,
+            loader,
+        )
+
+        sales_rows = sales_generator.generate(
+            documents=self.config.sales_documents,
+            batch=batch,
+        )
+
+        purchase_rows = purchase_generator.generate(
+            documents=self.config.vendor_documents,
+            batch=batch,
+        )
+
+        customer_payment_rows = customer_payment_generator.generate(
+            documents=self.config.customer_payments,
+            batch=batch,
+        )
+
+        supplier_payment_rows = supplier_payment_generator.generate(
+            documents=self.config.supplier_payments,
+            batch=batch,
+        )
+
+        inserted = (
+            sales_rows
+            + purchase_rows
+            + customer_payment_rows
+            + supplier_payment_rows
+        )
+
+        logger.info(
+            "Sales rows inserted            : %s",
+            sales_rows,
+        )
+
+        logger.info(
+            "Purchase rows inserted         : %s",
+            purchase_rows,
+        )
+
+        logger.info(
+            "Customer payment rows inserted : %s",
+            customer_payment_rows,
+        )
+
+        logger.info(
+            "Supplier payment rows inserted : %s",
+            supplier_payment_rows,
+        )
+
+        logger.info(
+            "Total rows inserted            : %s",
+            inserted,
+        )
+
+        logger.info(
+            "Batch ID                       : %s",
+            batch.batch_id,
+        )
+
     def run_sales_only(self) -> None:
         """
         Generate only Sales Invoices.
@@ -357,7 +351,6 @@ class ScenarioEngine:
             "Batch ID: %s",
             batch.batch_id,
         )
-
 
     def run_purchase_only(self) -> None:
         """
@@ -456,25 +449,25 @@ class ScenarioEngine:
             batch,
         ) = self.create_runtime()
 
-        generator = SupplierPaymentGenerator(
+        supplier_payment_generator = SupplierPaymentGenerator(
             provider,
             event_generator,
             router,
             loader,
         )
 
-        inserted = generator.generate(
+        supplier_payment_rows = supplier_payment_generator.generate(
             documents=self.config.supplier_payments,
             batch=batch,
         )
 
         logger.info(
-            "Supplier payment rows inserted: %s",
-            inserted,
+            "Supplier payment rows inserted : %s",
+            supplier_payment_rows,
         )
 
         logger.info(
-            "Batch ID: %s",
+            "Batch ID : %s",
             batch.batch_id,
         )
 
