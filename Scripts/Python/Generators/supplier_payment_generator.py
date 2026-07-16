@@ -36,6 +36,7 @@ from domain.business_event_generator import BusinessEventGenerator
 
 from accounting.scenario_router import ScenarioRouter
 
+
 logger = logging.getLogger(__name__)
 
 
