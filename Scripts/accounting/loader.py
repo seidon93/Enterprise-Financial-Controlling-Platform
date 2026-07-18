@@ -50,6 +50,7 @@ class FactGLLoader:
         cost_center_key,
         department_key,
         currency_key,
+        customer_key,
         debit_amount,
         credit_amount,
         amount_local,
@@ -72,6 +73,7 @@ class FactGLLoader:
         %(cost_center_key)s,
         %(department_key)s,
         %(currency_key)s,
+        %(customer_key)s,
         %(debit_amount)s,
         %(credit_amount)s,
         %(amount_local)s,
@@ -79,7 +81,7 @@ class FactGLLoader:
         %(description)s,
         %(source_system)s,
         %(created_at)s,
-        %(batch_id)s
+        %(batch_id)s,
     )
     ON CONFLICT (document_number, line_number)
     DO UPDATE SET
@@ -162,6 +164,9 @@ class FactGLLoader:
                         ),
                         "currency_key": self.mapper.currency_key(
                             line.currency_code
+                        ),
+                        "customer_key": self.mapper.customer_key(
+                            line.customer_code
                         ),
 
                         "debit_amount": line.debit_amount,

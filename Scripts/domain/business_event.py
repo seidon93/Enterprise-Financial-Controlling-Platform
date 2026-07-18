@@ -21,9 +21,6 @@ from domain.business_event_type import BusinessEventType
 
 @dataclass(slots=True, frozen=True)
 class BusinessEvent:
-    """
-    Represents one business event.
-    """
 
     event_type: BusinessEventType
 
@@ -42,5 +39,7 @@ class BusinessEvent:
     department_code: str
 
     vat_rate: Decimal
-    
+
     due_date: date
+
+    customer_code: str | None = None

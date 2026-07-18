@@ -42,6 +42,7 @@ class CustomerPaymentRequest:
     payment_amount: Decimal
 
     description: str = ""
+    customer_code: str | None = None
 
 
 class CustomerPaymentScenario(AccountingScenario):
@@ -76,6 +77,7 @@ class CustomerPaymentScenario(AccountingScenario):
                 credit_amount=Decimal("0.00"),
                 amount_local=request.payment_amount,
                 description="Customer Payment",
+                customer_code=request.customer_code,
             )
         )
 
@@ -92,6 +94,7 @@ class CustomerPaymentScenario(AccountingScenario):
                 credit_amount=request.payment_amount,
                 amount_local=request.payment_amount,
                 description="Trade Receivable Settlement",
+                customer_code=request.customer_code,
             )
         )
 

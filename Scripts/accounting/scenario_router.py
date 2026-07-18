@@ -83,6 +83,7 @@ class ScenarioRouter:
                     net_amount=event.amount,
                     vat_rate=event.vat_rate,
                     description=event.description,
+                    customer_code=event.customer_code,
                 )
 
                 return self.sales_scenario.create(request)
@@ -111,6 +112,7 @@ class ScenarioRouter:
                     payment_date=event.event_date,
                     payment_amount=event.amount,
                     description=event.description,
+                    customer_code=event.customer_code,
                 )
 
                 return self.customer_payment_scenario.create(request)

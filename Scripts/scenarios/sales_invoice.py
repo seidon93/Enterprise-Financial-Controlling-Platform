@@ -43,6 +43,8 @@ class SalesInvoiceRequest:
 
     description: str = ""
 
+    customer_code: str | None = None
+
 
 class SalesInvoiceScenario(AccountingScenario):
     """
@@ -82,6 +84,7 @@ class SalesInvoiceScenario(AccountingScenario):
                 credit_amount=Decimal("0.00"),
                 amount_local=gross_amount,
                 description="Customer Receivable",
+                customer_code=request.customer_code,
             )
         )
 
@@ -98,6 +101,7 @@ class SalesInvoiceScenario(AccountingScenario):
                 credit_amount=request.net_amount,
                 amount_local=request.net_amount,
                 description="Sales Revenue",
+                customer_code=request.customer_code,
             )
         )
 
@@ -114,6 +118,7 @@ class SalesInvoiceScenario(AccountingScenario):
                 credit_amount=vat_amount,
                 amount_local=vat_amount,
                 description="Output VAT",
+                customer_code=request.customer_code,
             )
         )
 

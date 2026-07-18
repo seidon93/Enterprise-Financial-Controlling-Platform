@@ -47,25 +47,28 @@ class DocumentInfo:
 
 @dataclass(slots=True)
 class JournalLine:
-    """
-    One accounting journal line.
-    """
 
     line_number: int
 
     account_number: str
+
     company_code: str
+
     cost_center_code: str
+
     department_code: str
+
     currency_code: str
 
     debit_amount: Decimal
+
     credit_amount: Decimal
+
     amount_local: Decimal
 
-    quantity: Decimal = Decimal("1.000")
+    description: str
 
-    description: str = ""
+    customer_code: str | None = None
 
 
 # ============================================================================

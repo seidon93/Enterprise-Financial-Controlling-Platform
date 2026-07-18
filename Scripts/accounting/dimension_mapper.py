@@ -39,6 +39,7 @@ class DimensionMapper:
         self.cost_center_map: dict[str, int] = {}
         self.department_map: dict[str, int] = {}
         self.currency_map: dict[str, int] = {}
+        self.customer_map: dict[str, int] = {}
 
     def initialize(self) -> None:
 
@@ -74,6 +75,14 @@ class DimensionMapper:
             "currency_key",
         )
 
+        self.customer_map = self._load_dimension(
+            "warehouse.dim_customer",
+            "customer_code",
+            "customer_key",
+        )
+
+        self.load_customers()
+
         logger.info("Dimension mappings loaded successfully.")
 
     def _load_dimension(
@@ -100,6 +109,39 @@ class DimensionMapper:
             row[business_key]: row[surrogate_key]
             for row in rows
         }
+
+    def load_customers(self) -> None:
+        """
+        Loads customer dimension.
+        """
+
+        sql = """
+            SELECT
+                customer_code,
+                customer_key
+            FROM warehouse.dim_customer
+        """
+
+        rows = self.db.fetch_all(sql)
+
+        self.customer_map = {
+            row["customer_code"]: row["customer_key"]
+            for row in rows
+        }
+
+
+    def customer_key(
+        self,
+        customer_code: str | None,
+    ) -> int | None:
+        """
+        Returns surrogate key for customer.
+        """
+
+        if customer_code is None:
+            return None
+
+        return self.customer_map.get(customer_code)
 
     def account_key(self, account_number: str) -> int:
         return self.account_map[account_number]

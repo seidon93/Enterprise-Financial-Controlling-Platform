@@ -53,6 +53,7 @@ class BusinessEventGenerator:
             department_code=transaction.department_code,
             vat_rate=transaction.vat_rate,
             due_date=transaction.due_date,
+            customer_code=transaction.customer_code,
         )
 
     def purchase_event(self) -> BusinessEvent:
@@ -73,6 +74,7 @@ class BusinessEventGenerator:
             department_code=transaction.department_code,
             vat_rate=transaction.vat_rate,
             due_date=transaction.due_date,
+            customer_code=None,
         )
 
     def customer_payment_event(self) -> BusinessEvent:
@@ -93,6 +95,7 @@ class BusinessEventGenerator:
             department_code=transaction.department_code,
             vat_rate=transaction.vat_rate,
             due_date=transaction.due_date,
+            customer_code=transaction.customer_code,
         )
 
     def customer_payment_event(self) -> BusinessEvent:
@@ -133,4 +136,5 @@ class BusinessEventGenerator:
             department_code=transaction.department_code,
             vat_rate=transaction.vat_rate,
             due_date=transaction.due_date,
+            customer_code=None,
         )

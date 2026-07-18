@@ -36,3 +36,5 @@ class BusinessTransaction:
     vat_rate: Decimal
 
     description: str
+    
+    customer_code: str | None = None
