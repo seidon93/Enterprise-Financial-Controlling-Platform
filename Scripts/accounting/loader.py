@@ -51,6 +51,7 @@ class FactGLLoader:
         department_key,
         currency_key,
         customer_key,
+        supplier_key,
         debit_amount,
         credit_amount,
         amount_local,
@@ -74,6 +75,7 @@ class FactGLLoader:
         %(department_key)s,
         %(currency_key)s,
         %(customer_key)s,
+        %(supplier_key)s,
         %(debit_amount)s,
         %(credit_amount)s,
         %(amount_local)s,
@@ -94,6 +96,8 @@ class FactGLLoader:
         cost_center_key   = EXCLUDED.cost_center_key,
         department_key    = EXCLUDED.department_key,
         currency_key      = EXCLUDED.currency_key,
+        customer_key      = EXCLUDED.customer_key,
+        supplier_key      = EXCLUDED.supplier_key,
         debit_amount      = EXCLUDED.debit_amount,
         credit_amount     = EXCLUDED.credit_amount,
         amount_local      = EXCLUDED.amount_local,
@@ -167,6 +171,9 @@ class FactGLLoader:
                         ),
                         "customer_key": self.mapper.customer_key(
                             line.customer_code
+                        ),
+                        "supplier_key": self.mapper.supplier_key(
+                            line.supplier_code
                         ),
 
                         "debit_amount": line.debit_amount,

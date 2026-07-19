@@ -99,6 +99,7 @@ class ScenarioRouter:
                     net_amount=event.amount,
                     vat_rate=event.vat_rate,
                     description=event.description,
+                    supplier_code=event.supplier_code,
                 )
                 return self.purchase_scenario.create(request)
 
@@ -123,6 +124,7 @@ class ScenarioRouter:
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
                     currency_code=event.currency_code,
+                    supplier_code=event.supplier_code,
                     payment_date=event.event_date,
                     payment_amount=event.amount,
                     description=event.description,

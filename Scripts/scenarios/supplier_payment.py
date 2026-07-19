@@ -36,6 +36,7 @@ class SupplierPaymentRequest:
     cost_center_code: str
     department_code: str
     currency_code: str
+    supplier_code: str
 
     payment_date: date
 
@@ -72,6 +73,7 @@ class SupplierPaymentScenario(AccountingScenario):
                 cost_center_code=request.cost_center_code,
                 department_code=request.department_code,
                 currency_code=request.currency_code,
+                supplier_code=request.supplier_code,
                 debit_amount=request.payment_amount,
                 credit_amount=Decimal("0.00"),
                 amount_local=request.payment_amount,
@@ -88,6 +90,7 @@ class SupplierPaymentScenario(AccountingScenario):
                 cost_center_code=request.cost_center_code,
                 department_code=request.department_code,
                 currency_code=request.currency_code,
+                supplier_code=request.supplier_code,
                 debit_amount=Decimal("0.00"),
                 credit_amount=request.payment_amount,
                 amount_local=request.payment_amount,

@@ -28,12 +28,13 @@ from scenarios.base import AccountingScenario
 
 @dataclass(slots=True, frozen=True)
 class PurchaseInvoiceRequest:
-    """Input data for a purchase invoice."""
 
     company_code: str
     cost_center_code: str
     department_code: str
     currency_code: str
+
+    supplier_code: str
 
     invoice_date: date
     due_date: date
@@ -77,6 +78,7 @@ class PurchaseInvoiceScenario(AccountingScenario):
                 cost_center_code=request.cost_center_code,
                 department_code=request.department_code,
                 currency_code=request.currency_code,
+                supplier_code=request.supplier_code,
                 debit_amount=Decimal("0.00"),
                 credit_amount=gross_amount,
                 amount_local=gross_amount,
@@ -93,6 +95,7 @@ class PurchaseInvoiceScenario(AccountingScenario):
                 cost_center_code=request.cost_center_code,
                 department_code=request.department_code,
                 currency_code=request.currency_code,
+                supplier_code=request.supplier_code,
                 debit_amount=request.net_amount,
                 credit_amount=Decimal("0.00"),
                 amount_local=request.net_amount,
@@ -109,6 +112,7 @@ class PurchaseInvoiceScenario(AccountingScenario):
                 cost_center_code=request.cost_center_code,
                 department_code=request.department_code,
                 currency_code=request.currency_code,
+                supplier_code=request.supplier_code,
                 debit_amount=vat_amount,
                 credit_amount=Decimal("0.00"),
                 amount_local=vat_amount,

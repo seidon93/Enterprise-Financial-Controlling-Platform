@@ -43,3 +43,5 @@ class BusinessEvent:
     due_date: date
 
     customer_code: str | None = None
+
+    supplier_code: str | None = None

@@ -69,7 +69,7 @@ class JournalLine:
     description: str
 
     customer_code: str | None = None
-
+    supplier_code: str | None = None
 
 # ============================================================================
 # Journal Entry
