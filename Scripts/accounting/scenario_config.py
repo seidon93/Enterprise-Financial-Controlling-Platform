@@ -15,6 +15,11 @@ Central configuration for enterprise data generation scenarios.
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from dataclasses import dataclass, field
 
 from accounting.load_mode import LoadMode
@@ -30,7 +35,7 @@ class ScenarioConfig:
     # Load Mode
     # -------------------------------------------------------------------------
 
-    load_mode: LoadMode = LoadMode.FULL
+    load_mode: LoadMode = LoadMode.PURCHASE_ONLY
 
     # -------------------------------------------------------------------------
     # Time Period

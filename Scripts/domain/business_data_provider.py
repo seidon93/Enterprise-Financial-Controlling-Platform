@@ -10,8 +10,6 @@ Status          : Development
 ===============================================================================
 """
 
-
-
 from __future__ import annotations
 
 import sys
@@ -28,6 +26,7 @@ from domain.business_transaction import BusinessTransaction
 from domain.business_calendar import BusinessCalendar
 
 from domain.customer_provider import CustomerProvider
+from domain.supplier_provider import SupplierProvider
 
 class BusinessDataProvider:
     """
@@ -42,6 +41,7 @@ class BusinessDataProvider:
             end_date=date(2025, 12, 31),
             seed=seed,
         )
+        self.supplier_provider = SupplierProvider(seed)
         self.customer_provider = CustomerProvider()
 
         self.company_profiles = [
@@ -151,7 +151,7 @@ class BusinessDataProvider:
 
         invoice_date = self.random_invoice_date()
 
-        customer = self.customer_provider.random_customer()
+        supplier = self.supplier_provider.random_supplier()
 
         return BusinessTransaction(
             company_code=company.company_code,
@@ -163,7 +163,7 @@ class BusinessDataProvider:
             amount=self.random_invoice_amount(company),
             vat_rate=self.random_vat_rate(),
             description="Purchase Invoice",
-            customer_code=customer.customer_code,
+            supplier_code=supplier.supplier_code,
         )
 
 
@@ -197,6 +197,8 @@ class BusinessDataProvider:
 
         payment_date = self.random_invoice_date()
 
+        supplier = self.supplier_provider.random_supplier()
+
         return BusinessTransaction(
             company_code=company.company_code,
             cost_center_code=self.random_cost_center(),
@@ -207,6 +209,7 @@ class BusinessDataProvider:
             amount=self.random_invoice_amount(company),
             vat_rate=Decimal("0.00"),
             description="Supplier Payment",
+            supplier_code=supplier.supplier_code,
         )
 
     def random_invoice_date(self) -> date:

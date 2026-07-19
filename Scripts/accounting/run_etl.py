@@ -21,7 +21,7 @@ logging.basicConfig(
 
 def main() -> None:
 
-    config = ScenarioConfig(load_mode=LoadMode.SUPPLIER_PAYMENT_ONLY)
+    config = ScenarioConfig(load_mode=LoadMode.PURCHASE_ONLY)
 
     engine = ScenarioEngine(config)
 
