@@ -81,8 +81,6 @@ class DimensionMapper:
             "customer_key",
         )
 
-        self.load_customers()
-
         logger.info("Dimension mappings loaded successfully.")
 
     def _load_dimension(
@@ -107,25 +105,6 @@ class DimensionMapper:
 
         return {
             row[business_key]: row[surrogate_key]
-            for row in rows
-        }
-
-    def load_customers(self) -> None:
-        """
-        Loads customer dimension.
-        """
-
-        sql = """
-            SELECT
-                customer_code,
-                customer_key
-            FROM warehouse.dim_customer
-        """
-
-        rows = self.db.fetch_all(sql)
-
-        self.customer_map = {
-            row["customer_code"]: row["customer_key"]
             for row in rows
         }
 

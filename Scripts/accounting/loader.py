@@ -81,7 +81,7 @@ class FactGLLoader:
         %(description)s,
         %(source_system)s,
         %(created_at)s,
-        %(batch_id)s,
+        %(batch_id)s
     )
     ON CONFLICT (document_number, line_number)
     DO UPDATE SET

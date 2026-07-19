@@ -140,3 +140,11 @@ class CustomerProvider:
 
             is_active=True,
         )
+
+    def random_customer(self) -> Customer:
+        """
+        Returns a random customer.
+        """
+
+        customer_id = self.random.randint(1, 10_000)
+        return self.create_customer(customer_id)

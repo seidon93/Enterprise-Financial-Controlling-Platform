@@ -11,6 +11,7 @@ import logging
 
 from accounting.scenario_config import ScenarioConfig
 from accounting.scenario_engine import ScenarioEngine
+from accounting.load_mode import LoadMode
 
 logging.basicConfig(
     level=logging.INFO,
@@ -20,7 +21,7 @@ logging.basicConfig(
 
 def main() -> None:
 
-    config = ScenarioConfig()
+    config = ScenarioConfig(load_mode=LoadMode.SUPPLIER_PAYMENT_ONLY)
 
     engine = ScenarioEngine(config)
 
