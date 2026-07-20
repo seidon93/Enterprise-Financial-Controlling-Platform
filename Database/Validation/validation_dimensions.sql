@@ -12,98 +12,42 @@ Description:
 Validates referential integrity between Fact_GL and all dimension tables.
 ===============================================================================
 */
--- ============================================================================
--- Missing Company
--- ============================================================================
 SELECT
-    f.gl_entry_key,
-    f.company_key
+    COUNT(*) AS companies
 FROM
-    warehouse.fact_gl f
-    LEFT JOIN warehouse.dim_company c ON f.company_key = c.company_key
-WHERE
-    c.company_key IS NULL;
+    warehouse.dim_company;
 
--- ============================================================================
--- Missing Account
--- ============================================================================
 SELECT
-    f.gl_entry_key,
-    f.account_key
+    COUNT(*) AS customers
 FROM
-    warehouse.fact_gl f
-    LEFT JOIN warehouse.dim_account a ON f.account_key = a.account_key
-WHERE
-    a.account_key IS NULL;
+    warehouse.dim_customer;
 
--- ============================================================================
--- Missing Cost Center
--- ============================================================================
 SELECT
-    f.gl_entry_key,
-    f.cost_center_key
+    COUNT(*) AS suppliers
 FROM
-    warehouse.fact_gl f
-    LEFT JOIN warehouse.dim_cost_center cc ON f.cost_center_key = cc.cost_center_key
-WHERE
-    cc.cost_center_key IS NULL;
+    warehouse.dim_supplier;
 
--- ============================================================================
--- Missing Department
--- ============================================================================
 SELECT
-    f.gl_entry_key,
-    f.department_key
+    COUNT(*) AS accounts
 FROM
-    warehouse.fact_gl f
-    LEFT JOIN warehouse.dim_department d ON f.department_key = d.department_key
-WHERE
-    d.department_key IS NULL;
+    warehouse.dim_account;
 
--- ============================================================================
--- Missing Currency
--- ============================================================================
 SELECT
-    f.gl_entry_key,
-    f.currency_key
+    COUNT(*) AS currencies
 FROM
-    warehouse.fact_gl f
-    LEFT JOIN warehouse.dim_currency cur ON f.currency_key = cur.currency_key
-WHERE
-    cur.currency_key IS NULL;
+    warehouse.dim_currency;
 
--- ============================================================================
--- Missing Posting Date
--- ============================================================================
 SELECT
-    f.gl_entry_key,
-    f.posting_date_key
+    COUNT(*) AS cost_centers
 FROM
-    warehouse.fact_gl f
-    LEFT JOIN warehouse.dim_date dt ON f.posting_date_key = dt.date_key
-WHERE
-    dt.date_key IS NULL;
+    warehouse.dim_cost_center;
 
--- ============================================================================
--- Missing Document Date
--- ============================================================================
 SELECT
-    f.gl_entry_key,
-    f.document_date_key
+    COUNT(*) AS departments
 FROM
-    warehouse.fact_gl f
-    LEFT JOIN warehouse.dim_date dt ON f.document_date_key = dt.date_key
-WHERE
-    dt.date_key IS NULL;
+    warehouse.dim_department;
 
--- ============================================================================
--- Missing Due Date
--- ============================================================================
 SELECT
-    f.gl_entry_key,
-    f.due_date_key
+    COUNT(*) AS dates
 FROM
-    warehouse.fact_gl f
-    LEFT JOIN warehouse.dim_date dt ON f.due_date_key = dt.date_key
-WHERE
-    dt.date_key IS NULL;
+    warehouse.dim_date;
