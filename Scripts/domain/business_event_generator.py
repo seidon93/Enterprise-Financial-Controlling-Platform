@@ -83,7 +83,7 @@ class BusinessEventGenerator:
         Generate one customer payment business event.
         """
 
-        transaction = self.provider.create_customer_payment()
+        transaction = self.provider.create_customer_payment_transaction()
 
         return BusinessEvent(
             event_type=BusinessEventType.CUSTOMER_PAYMENT,

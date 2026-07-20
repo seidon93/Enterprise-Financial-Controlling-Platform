@@ -176,6 +176,8 @@ class BusinessDataProvider:
 
         payment_date = self.random_invoice_date()
 
+        customer = self.customer_provider.random_customer()
+
         return BusinessTransaction(
             company_code=company.company_code,
             cost_center_code=self.random_cost_center(),
@@ -186,6 +188,7 @@ class BusinessDataProvider:
             amount=self.random_invoice_amount(company),
             vat_rate=Decimal("0.00"),
             description="Customer Payment",
+            customer_code=customer.customer_code,
         )
 
     def create_supplier_payment_transaction(self) -> BusinessTransaction:

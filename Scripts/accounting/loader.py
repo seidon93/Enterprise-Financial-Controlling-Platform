@@ -137,6 +137,15 @@ class FactGLLoader:
 
             for line in entry.lines:
 
+                logger.info(
+                        "Document=%s Line=%s Account=%s SupplierCode=%s SupplierKey=%s",
+                        entry.document.document_number,
+                        line.line_number,
+                        line.account_number,
+                        line.supplier_code,
+                        self.mapper.supplier_key(line.supplier_code),
+                    )
+
                 cursor.execute(
                     self.INSERT_SQL,
                     {

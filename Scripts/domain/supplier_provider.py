@@ -81,5 +81,5 @@ class SupplierProvider:
         Returns a random supplier.
         """
 
-        supplier_id = self.random.randint(1, 10_000)
+        supplier_id = self.random.randint(1, 5_000)
         return self.create_supplier(supplier_id)
