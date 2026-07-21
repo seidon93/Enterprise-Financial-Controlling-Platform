@@ -10,7 +10,8 @@ Status          : Development
 ===============================================================================
 """
 
-from enum import Enum
+from Scripts.Python.Generators import generate_dim_customer
+from enum import Enum, auto
 
 
 class BusinessEventType(str, Enum):
@@ -33,3 +34,17 @@ class BusinessEventType(str, Enum):
     DEPRECIATION = "DEPRECIATION"
 
     FX_REVALUATION = "FX_REVALUATION"
+
+    ASSET_ACQUISITION = auto()
+
+    ASSET_CAPITALIZATION = auto()
+
+    ASSET_DEPRECIATION = auto()
+
+    ASSET_IMPAIRMENT = auto()
+
+    ASSET_REVALUATION = auto()
+
+    ASSET_DISPOSAL = auto()
+
+    ASSET_SALE = auto()

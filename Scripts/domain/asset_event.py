@@ -2,14 +2,14 @@
 ===============================================================================
 Enterprise Financial Analytics Platform (EFAP)
 -------------------------------------------------------------------------------
-Object          : asset.py
-Object Type     : Asset Entity
+Object          : asset_event.py
+Object Type     : Asset Business Event
 Layer           : Domain
 Version         : 1.0.0
 Status          : Development
 -------------------------------------------------------------------------------
 Description:
-Enterprise fixed asset master data entity.
+Represents a business event related to enterprise fixed assets.
 ===============================================================================
 """
 
@@ -19,25 +19,30 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
+from domain.business_event_type import BusinessEventType
+
 
 @dataclass(slots=True, frozen=True)
-class Asset:
+class AssetEvent:
     """
-    Enterprise fixed asset master record.
+    Enterprise asset business event.
     """
 
-    asset_code: str
-    asset_name: str
-
-    asset_category: str
+    event_type: BusinessEventType
 
     company_code: str
 
+    asset_code: str
+    asset_name: str
+    asset_category: str
+
     supplier_code: str | None
 
-    acquisition_date: date
+    event_date: date
 
     acquisition_cost: Decimal
+
+    vat_rate: Decimal
 
     useful_life_months: int
 
@@ -50,7 +55,3 @@ class Asset:
     cost_center_code: str
 
     department_code: str
-
-    is_active: bool = True
-
-    vat_rate=Decimal("0.21"),

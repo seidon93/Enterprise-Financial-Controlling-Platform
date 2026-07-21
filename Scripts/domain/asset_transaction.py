@@ -2,14 +2,14 @@
 ===============================================================================
 Enterprise Financial Analytics Platform (EFAP)
 -------------------------------------------------------------------------------
-Object          : asset.py
-Object Type     : Asset Entity
+Object          : asset_transaction.py
+Object Type     : Asset Transaction
 Layer           : Domain
 Version         : 1.0.0
 Status          : Development
 -------------------------------------------------------------------------------
 Description:
-Enterprise fixed asset master data entity.
+Business transaction representing a fixed asset operation.
 ===============================================================================
 """
 
@@ -21,19 +21,18 @@ from decimal import Decimal
 
 
 @dataclass(slots=True, frozen=True)
-class Asset:
+class AssetTransaction:
     """
-    Enterprise fixed asset master record.
+    Enterprise asset business transaction.
     """
-
-    asset_code: str
-    asset_name: str
-
-    asset_category: str
 
     company_code: str
 
+    asset_code: str
     supplier_code: str | None
+
+    asset_name: str
+    asset_category: str
 
     acquisition_date: date
 
@@ -50,7 +49,3 @@ class Asset:
     cost_center_code: str
 
     department_code: str
-
-    is_active: bool = True
-
-    vat_rate=Decimal("0.21"),
