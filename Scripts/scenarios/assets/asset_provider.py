@@ -18,14 +18,14 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 import random
 
 from datetime import date
 from decimal import Decimal
 
-from domain.asset import Asset
+from scenarios.assets.asset import Asset
 from domain.supplier_provider import SupplierProvider
 from domain.business_data_provider import BusinessDataProvider
 

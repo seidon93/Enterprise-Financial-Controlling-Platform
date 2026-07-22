@@ -70,6 +70,12 @@ class JournalLine:
 
     customer_code: str | None = None
     supplier_code: str | None = None
+    
+    asset_code: str | None = None
+    employee_code: str | None = None
+    product_code: str | None = None
+    project_code: str | None = None
+    inventory_item_code: str | None = None
 
 # ============================================================================
 # Journal Entry
