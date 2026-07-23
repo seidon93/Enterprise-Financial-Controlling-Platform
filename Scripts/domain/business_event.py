@@ -12,6 +12,11 @@ Status          : Development
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -45,3 +50,30 @@ class BusinessEvent:
     customer_code: str | None = None
 
     supplier_code: str | None = None
+
+    asset_code: str | None = None
+    asset_name: str | None = None
+
+    asset_class: str | None = None
+
+    asset_group: str | None = None
+
+    acquisition_cost: Decimal | None = None
+
+    capitalization_date: date | None = None
+
+    depreciation_start_date: date | None = None
+
+    useful_life_months: int | None = None
+
+    depreciation_method: str | None = None
+
+    residual_value: Decimal | None = None
+
+    country_code: str | None = None
+
+    city: str | None = None
+
+    location: str | None = None
+
+    

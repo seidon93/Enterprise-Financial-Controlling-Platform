@@ -29,7 +29,6 @@ from accounting.enums import DocumentType
 from accounting.models import JournalEntry, JournalLine
 from scenarios.base import AccountingScenario
 
-
 @dataclass(slots=True, frozen=True)
 class AssetCapitalizationRequest:
     """
@@ -37,15 +36,30 @@ class AssetCapitalizationRequest:
     """
 
     company_code: str
-    cost_center_code: str
-    department_code: str
-    currency_code: str
 
     asset_code: str
+    asset_name: str
+    asset_class: str
+    asset_group: str
 
-    capitalization_date: date
+    supplier_code: str | None
+
+    acquisition_date: date
 
     acquisition_cost: Decimal
+
+    vat_rate: Decimal
+
+    useful_life_months: int
+
+    depreciation_method: str
+
+    residual_value: Decimal
+
+    currency_code: str
+
+    cost_center_code: str
+    department_code: str
 
     description: str = ""
 
@@ -62,9 +76,9 @@ class AssetCapitalizationScenario(AccountingScenario):
 
         document = self.document_generator.create(
             document_type=DocumentType.FA,
-            posting_date=request.capitalization_date,
-            document_date=request.capitalization_date,
-            due_date=request.capitalization_date,
+            posting_date=request.acquisition_date,
+            document_date=request.acquisition_date,
+            due_date=request.acquisition_date,
         )
 
         entry = JournalEntry(document=document)

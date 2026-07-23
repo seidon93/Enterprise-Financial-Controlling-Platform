@@ -27,7 +27,6 @@ from decimal import Decimal
 
 from scenarios.assets.asset import Asset
 from domain.supplier_provider import SupplierProvider
-from domain.business_data_provider import BusinessDataProvider
 
 
 class AssetProvider:
@@ -43,7 +42,8 @@ class AssetProvider:
         self.random = random.Random(seed)
 
         self.supplier_provider = SupplierProvider(seed)
-        self.business_provider = BusinessDataProvider(seed)
+        self._seed = seed
+        self._business_provider = None
 
         self.locations = [
             ("CZ", "Prague", "Head Office"),
@@ -143,6 +143,14 @@ class AssetProvider:
                 ],
             },
         }
+
+    @property
+    def business_provider(self):
+        """Lazy accessor – breaks circular import with BusinessDataProvider."""
+        if self._business_provider is None:
+            from domain.business_data_provider import BusinessDataProvider
+            self._business_provider = BusinessDataProvider(self._seed)
+        return self._business_provider
 
     def create_asset(
         self,

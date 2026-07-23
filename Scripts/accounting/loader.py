@@ -51,6 +51,7 @@ class FactGLLoader:
         department_key,
         currency_key,
         customer_key,
+        asset_key,
         supplier_key,
         debit_amount,
         credit_amount,
@@ -76,6 +77,7 @@ class FactGLLoader:
         %(currency_key)s,
         %(customer_key)s,
         %(supplier_key)s,
+        %(asset_key)s,
         %(debit_amount)s,
         %(credit_amount)s,
         %(amount_local)s,
@@ -98,6 +100,7 @@ class FactGLLoader:
         currency_key      = EXCLUDED.currency_key,
         customer_key      = EXCLUDED.customer_key,
         supplier_key      = EXCLUDED.supplier_key,
+        asset_key         = EXCLUDED.asset_key,
         debit_amount      = EXCLUDED.debit_amount,
         credit_amount     = EXCLUDED.credit_amount,
         amount_local      = EXCLUDED.amount_local,
@@ -137,15 +140,6 @@ class FactGLLoader:
 
             for line in entry.lines:
 
-                logger.info(
-                        "Document=%s Line=%s Account=%s SupplierCode=%s SupplierKey=%s",
-                        entry.document.document_number,
-                        line.line_number,
-                        line.account_number,
-                        line.supplier_code,
-                        self.mapper.supplier_key(line.supplier_code),
-                    )
-
                 cursor.execute(
                     self.INSERT_SQL,
                     {
@@ -184,7 +178,10 @@ class FactGLLoader:
                         "supplier_key": self.mapper.supplier_key(
                             line.supplier_code
                         ),
-
+                        "asset_key": self.mapper.asset_key(
+                            line.asset_code
+                        ),
+                        
                         "debit_amount": line.debit_amount,
                         "credit_amount": line.credit_amount,
                         "amount_local": line.amount_local,

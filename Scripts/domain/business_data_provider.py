@@ -27,6 +27,7 @@ from domain.business_calendar import BusinessCalendar
 
 from domain.customer_provider import CustomerProvider
 from domain.supplier_provider import SupplierProvider
+from scenarios.assets.asset_provider import AssetProvider
 
 class BusinessDataProvider:
     """
@@ -42,7 +43,10 @@ class BusinessDataProvider:
             seed=seed,
         )
         self.supplier_provider = SupplierProvider(seed)
-        self.customer_provider = CustomerProvider()
+        self.customer_provider = CustomerProvider(seed)
+        self.supplier_provider = SupplierProvider(seed)
+        self.customer_provider = CustomerProvider(seed)
+        self.asset_provider = AssetProvider(seed)
 
         self.company_profiles = [
 
@@ -281,3 +285,83 @@ class BusinessDataProvider:
         amount *= company.growth_factor
 
         return Decimal(str(round(amount, 2)))
+
+    def create_asset_acquisition_transaction(
+        self,
+    ):
+        """
+        Create business transaction for asset acquisition.
+        """
+
+        asset = self.asset_provider.random_asset()
+
+        return asset
+
+    def create_asset_capitalization_transaction(
+        self,
+    ):
+        """
+        Create business transaction for asset capitalization.
+        """
+
+        asset = self.asset_provider.random_asset()
+
+        return asset
+
+    def create_asset_depreciation_transaction(
+        self,
+    ):
+        """
+        Create business transaction for monthly depreciation.
+        """
+
+        asset = self.asset_provider.random_asset()
+
+        return asset
+
+    def create_asset_transfer_transaction(
+        self,
+    ):
+        """
+        Create business transaction for asset transfer.
+        """
+
+        asset = self.asset_provider.random_asset()
+
+        return asset
+
+    def create_asset_impairment_transaction(
+        self,
+    ):
+        """
+        Create business transaction for asset impairment.
+        """
+
+        asset = self.asset_provider.random_asset()
+
+        return asset
+
+        
+    def create_asset_disposal_transaction(
+        self,
+    ):
+        """
+        Create business transaction for asset disposal.
+        """
+
+        asset = self.asset_provider.random_asset()
+
+        return asset
+
+    def create_asset_sale_transaction(
+        self,
+    ):
+        """
+        Create business transaction for asset sale.
+        """
+
+        asset = self.asset_provider.random_asset()
+
+        customer = self.customer_provider.random_customer()
+
+        return asset, customer

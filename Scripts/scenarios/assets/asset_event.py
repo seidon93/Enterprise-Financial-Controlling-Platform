@@ -34,7 +34,8 @@ class AssetEvent:
 
     asset_code: str
     asset_name: str
-    asset_category: str
+    asset_class: str
+    asset_group: str
 
     supplier_code: str | None
 
@@ -48,10 +49,14 @@ class AssetEvent:
 
     depreciation_method: str
 
-    salvage_value: Decimal
+    residual_value: Decimal
 
-    currency_code: str
+    country_code: str | None = None
 
-    cost_center_code: str
+    city: str | None = None
 
-    department_code: str
+    location: str | None = None
+
+    capitalization_date: date | None = None
+
+    depreciation_start_date: date | None = None

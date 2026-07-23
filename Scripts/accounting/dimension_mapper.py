@@ -41,6 +41,7 @@ class DimensionMapper:
         self.currency_map: dict[str, int] = {}
         self.customer_map: dict[str, int] = {}
         self.supplier_map: dict[str, int] = {}
+        self.asset_map: dict[str, int] = {}
 
     def initialize(self) -> None:
 
@@ -86,6 +87,12 @@ class DimensionMapper:
             "warehouse.dim_supplier",
             "supplier_code",
             "supplier_key",
+        )
+
+        self.asset_map = self._load_dimension(
+            "warehouse.dim_asset",
+            "asset_code",
+            "asset_key",
         )
 
         logger.info("Dimension mappings loaded successfully.")
@@ -141,6 +148,19 @@ class DimensionMapper:
             return None
 
         return self.supplier_map.get(supplier_code)
+
+    def asset_key(
+        self,
+        asset_code: str | None,
+    ) -> int | None:
+        """
+        Returns surrogate key for asset.
+        """
+
+        if asset_code is None:
+            return None
+
+        return self.asset_map.get(asset_code)
 
     def account_key(self, account_number: str) -> int:
         return self.account_map[account_number]

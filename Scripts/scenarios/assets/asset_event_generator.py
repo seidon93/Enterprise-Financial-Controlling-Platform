@@ -18,12 +18,14 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from domain.asset_event import AssetEvent
-from domain.asset_provider import AssetProvider
+
 from domain.business_event_type import BusinessEventType
 
+from scenarios.assets.asset_event import AssetEvent
+from scenarios.assets.asset_provider import AssetProvider
+from domain.business_event_type import BusinessEventType
 
 class AssetEventGenerator:
     """
@@ -54,7 +56,8 @@ class AssetEventGenerator:
 
             asset_code=asset.asset_code,
             asset_name=asset.asset_name,
-            asset_category=asset.asset_category,
+            asset_class=asset.asset_class,
+            asset_group=asset.asset_group,
 
             supplier_code=asset.supplier_code,
 
@@ -68,11 +71,15 @@ class AssetEventGenerator:
 
             depreciation_method=asset.depreciation_method,
 
-            salvage_value=asset.salvage_value,
+            residual_value=asset.residual_value,
 
-            currency_code=asset.currency_code,
+            country_code=asset.country_code,
 
-            cost_center_code=asset.cost_center_code,
+            city=asset.city,
 
-            department_code=asset.department_code,
+            location=asset.location,
+
+            capitalization_date=asset.capitalization_date,
+
+            depreciation_start_date=asset.depreciation_start_date,
         )

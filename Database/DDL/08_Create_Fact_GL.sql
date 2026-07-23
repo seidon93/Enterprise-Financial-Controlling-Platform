@@ -36,6 +36,13 @@ CREATE TABLE IF NOT EXISTS warehouse.fact_gl (
     cost_center_key INTEGER NOT NULL,
     department_key INTEGER NOT NULL,
     currency_key INTEGER NOT NULL,
+    customer_key INTEGER,
+    supplier_key INTEGER,
+    asset_key INTEGER,
+    employee_key INTEGER,
+    product_key INTEGER,
+    project_key INTEGER,
+    inventory_item_key INTEGER,
     -- =====================================================================
     -- Measures
     -- =====================================================================
@@ -60,32 +67,62 @@ CREATE TABLE IF NOT EXISTS warehouse.fact_gl (
     CONSTRAINT chk_debit_positive CHECK (debit_amount >= 0),
     CONSTRAINT chk_credit_positive CHECK (credit_amount >= 0)
 );
+
 -- ============================================================================
 -- Foreign Keys
 -- ============================================================================
 ALTER TABLE warehouse.fact_gl
-ADD CONSTRAINT fk_fact_gl_posting_date FOREIGN KEY (posting_date_key) REFERENCES warehouse.dim_date(date_key);
+ADD CONSTRAINT fk_fact_gl_posting_date FOREIGN KEY (posting_date_key) REFERENCES warehouse.dim_date (date_key);
+
 ALTER TABLE warehouse.fact_gl
-ADD CONSTRAINT fk_fact_gl_document_date FOREIGN KEY (document_date_key) REFERENCES warehouse.dim_date(date_key);
+ADD CONSTRAINT fk_fact_gl_document_date FOREIGN KEY (document_date_key) REFERENCES warehouse.dim_date (date_key);
+
 ALTER TABLE warehouse.fact_gl
-ADD CONSTRAINT fk_fact_gl_due_date FOREIGN KEY (due_date_key) REFERENCES warehouse.dim_date(date_key);
+ADD CONSTRAINT fk_fact_gl_due_date FOREIGN KEY (due_date_key) REFERENCES warehouse.dim_date (date_key);
+
 ALTER TABLE warehouse.fact_gl
-ADD CONSTRAINT fk_fact_gl_company FOREIGN KEY (company_key) REFERENCES warehouse.dim_company(company_key);
+ADD CONSTRAINT fk_fact_gl_company FOREIGN KEY (company_key) REFERENCES warehouse.dim_company (company_key);
+
 ALTER TABLE warehouse.fact_gl
-ADD CONSTRAINT fk_fact_gl_account FOREIGN KEY (account_key) REFERENCES warehouse.dim_account(account_key);
+ADD CONSTRAINT fk_fact_gl_account FOREIGN KEY (account_key) REFERENCES warehouse.dim_account (account_key);
+
 ALTER TABLE warehouse.fact_gl
-ADD CONSTRAINT fk_fact_gl_cost_center FOREIGN KEY (cost_center_key) REFERENCES warehouse.dim_cost_center(cost_center_key);
+ADD CONSTRAINT fk_fact_gl_cost_center FOREIGN KEY (cost_center_key) REFERENCES warehouse.dim_cost_center (cost_center_key);
+
 ALTER TABLE warehouse.fact_gl
-ADD CONSTRAINT fk_fact_gl_department FOREIGN KEY (department_key) REFERENCES warehouse.dim_department(department_key);
+ADD CONSTRAINT fk_fact_gl_department FOREIGN KEY (department_key) REFERENCES warehouse.dim_department (department_key);
+
 ALTER TABLE warehouse.fact_gl
-ADD CONSTRAINT fk_fact_gl_currency FOREIGN KEY (currency_key) REFERENCES warehouse.dim_currency(currency_key);
+ADD CONSTRAINT fk_fact_gl_currency FOREIGN KEY (currency_key) REFERENCES warehouse.dim_currency (currency_key);
+
+ALTER TABLE warehouse.fact_gl
+ADD CONSTRAINT fk_fact_gl_customer FOREIGN KEY (customer_key) REFERENCES warehouse.dim_customer (customer_key);
+
+ALTER TABLE warehouse.fact_gl
+ADD CONSTRAINT fk_fact_gl_supplier FOREIGN KEY (supplier_key) REFERENCES warehouse.dim_supplier (supplier_key);
+
+ALTER TABLE warehouse.fact_gl
+ADD CONSTRAINT fk_fact_gl_asset FOREIGN KEY (asset_key) REFERENCES warehouse.dim_asset (asset_key);
+
 -- ============================================================================
 -- Indexes
 -- ============================================================================
-CREATE INDEX IF NOT EXISTS ix_fact_gl_posting_date ON warehouse.fact_gl(posting_date_key);
-CREATE INDEX IF NOT EXISTS ix_fact_gl_account ON warehouse.fact_gl(account_key);
-CREATE INDEX IF NOT EXISTS ix_fact_gl_company ON warehouse.fact_gl(company_key);
-CREATE INDEX IF NOT EXISTS ix_fact_gl_cost_center ON warehouse.fact_gl(cost_center_key);
-CREATE INDEX IF NOT EXISTS ix_fact_gl_department ON warehouse.fact_gl(department_key);
-CREATE INDEX IF NOT EXISTS ix_fact_gl_currency ON warehouse.fact_gl(currency_key);
-CREATE INDEX IF NOT EXISTS ix_fact_gl_document ON warehouse.fact_gl(document_number);
+CREATE INDEX IF NOT EXISTS ix_fact_gl_posting_date ON warehouse.fact_gl (posting_date_key);
+
+CREATE INDEX IF NOT EXISTS ix_fact_gl_account ON warehouse.fact_gl (account_key);
+
+CREATE INDEX IF NOT EXISTS ix_fact_gl_company ON warehouse.fact_gl (company_key);
+
+CREATE INDEX IF NOT EXISTS ix_fact_gl_cost_center ON warehouse.fact_gl (cost_center_key);
+
+CREATE INDEX IF NOT EXISTS ix_fact_gl_department ON warehouse.fact_gl (department_key);
+
+CREATE INDEX IF NOT EXISTS ix_fact_gl_currency ON warehouse.fact_gl (currency_key);
+
+CREATE INDEX IF NOT EXISTS ix_fact_gl_document ON warehouse.fact_gl (document_number);
+
+CREATE INDEX IF NOT EXISTS ix_fact_gl_customer ON warehouse.fact_gl (customer_key);
+
+CREATE INDEX IF NOT EXISTS ix_fact_gl_supplier ON warehouse.fact_gl (supplier_key);
+
+CREATE INDEX IF NOT EXISTS ix_fact_gl_asset ON warehouse.fact_gl (asset_key);

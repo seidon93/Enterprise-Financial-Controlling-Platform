@@ -13,7 +13,6 @@ Enterprise orchestration engine responsible for running accounting scenarios.
 ===============================================================================
 """
 
-
 from __future__ import annotations
 
 import sys
@@ -25,7 +24,7 @@ sys.path.insert(0, _scripts_root)
 sys.path.insert(0, _scripts_python)
 
 import logging
-
+from Python.Generators import purchase_generator
 
 from accounting.scenario_config import ScenarioConfig
 
@@ -53,6 +52,15 @@ from Python.Generators.customer_payment_generator import CustomerPaymentGenerato
 
 from scenarios.supplier_payment import SupplierPaymentScenario
 from Python.Generators.supplier_payment_generator import SupplierPaymentGenerator
+
+from scenarios.assets.asset_acquisition import AssetAcquisitionScenario
+from scenarios.assets.asset_capitalization import AssetCapitalizationScenario
+from scenarios.assets.asset_depreciation import AssetDepreciationScenario
+from scenarios.assets.asset_impairment import AssetImpairmentScenario
+from scenarios.assets.asset_disposal import AssetDisposalScenario
+from scenarios.assets.asset_sale import AssetSaleScenario
+from scenarios.assets.asset_transfer import AssetTransferScenario
+from Python.Generators.asset_generator import AssetGenerator
 
 from accounting.load_mode import LoadMode
 
@@ -131,7 +139,7 @@ class ScenarioEngine:
 
             case LoadMode.FULL:
 
-                self.run_sales()
+                self.run_full()
 
             case LoadMode.SALES_ONLY:
 
@@ -148,6 +156,10 @@ class ScenarioEngine:
             case LoadMode.SUPPLIER_PAYMENT_ONLY:
 
                 self.run_supplier_payment_only()
+
+            case LoadMode.ASSET_ONLY:
+
+                self.run_assets()
 
             case _:
 
@@ -194,13 +206,49 @@ class ScenarioEngine:
             DocumentGenerator(),
         )
 
+        asset_acquisition_scenario = AssetAcquisitionScenario(
+            DocumentGenerator(),
+        )
+
+        asset_capitalization_scenario = AssetCapitalizationScenario(
+            DocumentGenerator(),
+        )
+
+        asset_depreciation_scenario = AssetDepreciationScenario(
+            DocumentGenerator(),
+        )
+
+        asset_impairment_scenario = AssetImpairmentScenario(
+            DocumentGenerator(),
+        )
+
+        asset_disposal_scenario = AssetDisposalScenario(
+            DocumentGenerator(),
+        )
+
+        asset_sale_scenario = AssetSaleScenario(
+            DocumentGenerator(),
+        )
+
+        asset_transfer_scenario = AssetTransferScenario(
+            DocumentGenerator(),
+        )
+
+
         router = ScenarioRouter(
             sales_scenario=sales_scenario,
             purchase_scenario=purchase_scenario,
             customer_payment_scenario=customer_payment_scenario,
             supplier_payment_scenario=supplier_payment_scenario,
-        )
 
+            asset_acquisition_scenario=asset_acquisition_scenario,
+            asset_capitalization_scenario=asset_capitalization_scenario,
+            asset_depreciation_scenario=asset_depreciation_scenario,
+            asset_impairment_scenario=asset_impairment_scenario,
+            asset_disposal_scenario=asset_disposal_scenario,
+            asset_sale_scenario=asset_sale_scenario,
+        )
+        
         batch = BatchContext()
 
         return (
@@ -211,7 +259,7 @@ class ScenarioEngine:
             batch,
         )
 
-    def run_sales(self) -> None:
+    def run_full(self) -> None:
         """
         Execute complete accounting generation.
         """
@@ -256,6 +304,13 @@ class ScenarioEngine:
             loader,
         )
 
+        asset_generator = AssetGenerator(
+            provider,
+            event_generator,
+            router,
+            loader,
+        )
+
         sales_rows = sales_generator.generate(
             documents=self.config.sales_documents,
             batch=batch,
@@ -276,11 +331,17 @@ class ScenarioEngine:
             batch=batch,
         )
 
+        asset_rows = asset_generator.generate(
+            documents=self.config.asset_transactions,
+            batch=batch,
+        )
+
         inserted = (
             sales_rows
             + purchase_rows
             + customer_payment_rows
             + supplier_payment_rows
+            + asset_rows
         )
 
         logger.info(
@@ -301,6 +362,11 @@ class ScenarioEngine:
         logger.info(
             "Supplier payment rows inserted : %s",
             supplier_payment_rows,
+        )
+
+        logger.info(
+            "Asset rows inserted            : %s",
+            asset_rows,
         )
 
         logger.info(
@@ -471,6 +537,45 @@ class ScenarioEngine:
             batch.batch_id,
         )
 
+
+    def run_assets(self) -> None:
+        """
+        Generate only Asset transactions.
+        """
+
+        logger.info("=" * 70)
+        logger.info("Running ASSETS ONLY mode")
+        logger.info("=" * 70)
+
+        (
+            provider,
+            event_generator,
+            loader,
+            router,
+            batch,
+        ) = self.create_runtime()
+
+        generator = AssetGenerator(
+            provider,
+            event_generator,
+            router,
+            loader,
+        )
+
+        inserted = generator.generate(
+            documents=self.config.asset_transactions,
+            batch=batch,
+        )
+
+        logger.info(
+            "Asset rows inserted: %s",
+            inserted,
+        )
+
+        logger.info(
+            "Batch ID: %s",
+            batch.batch_id,
+        )
     def run_vendor(self) -> None:
         logger.info("Vendor scenario not implemented yet.")
 
@@ -483,5 +588,4 @@ class ScenarioEngine:
     def run_payroll(self) -> None:
         logger.info("Payroll scenario not implemented yet.")
 
-    def run_assets(self) -> None:
-        logger.info("Assets scenario not implemented yet.")
+  
