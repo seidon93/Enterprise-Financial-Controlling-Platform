@@ -24,7 +24,6 @@ sys.path.insert(0, _scripts_root)
 sys.path.insert(0, _scripts_python)
 
 import logging
-from Python.Generators import purchase_generator
 
 from accounting.scenario_config import ScenarioConfig
 
@@ -247,6 +246,7 @@ class ScenarioEngine:
             asset_impairment_scenario=asset_impairment_scenario,
             asset_disposal_scenario=asset_disposal_scenario,
             asset_sale_scenario=asset_sale_scenario,
+            asset_transfer_scenario=asset_transfer_scenario,
         )
         
         batch = BatchContext()

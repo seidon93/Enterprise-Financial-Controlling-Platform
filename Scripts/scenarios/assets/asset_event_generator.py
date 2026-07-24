@@ -39,18 +39,19 @@ class AssetEventGenerator:
 
         self.provider = provider
 
-    def asset_acquisition_event(
+    def _create_event(
         self,
+        event_type: BusinessEventType,
     ) -> AssetEvent:
         """
-        Generate one asset acquisition business event.
+        Creates one enterprise asset event.
         """
 
         asset = self.provider.random_asset()
 
         return AssetEvent(
 
-            event_type=BusinessEventType.ASSET_ACQUISITION,
+            event_type=event_type,
 
             company_code=asset.company_code,
 
@@ -73,6 +74,12 @@ class AssetEventGenerator:
 
             residual_value=asset.residual_value,
 
+            #currency_code=asset.currency_code,
+
+            #cost_center_code=asset.cost_center_code,
+
+            #department_code=asset.department_code,
+
             country_code=asset.country_code,
 
             city=asset.city,
@@ -82,4 +89,39 @@ class AssetEventGenerator:
             capitalization_date=asset.capitalization_date,
 
             depreciation_start_date=asset.depreciation_start_date,
+        )
+
+    def asset_acquisition_event(self) -> AssetEvent:
+        return self._create_event(
+            BusinessEventType.ASSET_ACQUISITION
+        )
+
+    def asset_capitalization_event(self) -> AssetEvent:
+        return self._create_event(
+            BusinessEventType.ASSET_CAPITALIZATION
+        )
+
+    def asset_depreciation_event(self) -> AssetEvent:
+        return self._create_event(
+            BusinessEventType.ASSET_DEPRECIATION
+        )
+
+    def asset_impairment_event(self) -> AssetEvent:
+        return self._create_event(
+            BusinessEventType.ASSET_IMPAIRMENT
+        )
+
+    def asset_disposal_event(self) -> AssetEvent:
+        return self._create_event(
+            BusinessEventType.ASSET_DISPOSAL
+        )
+
+    def asset_sale_event(self) -> AssetEvent:
+        return self._create_event(
+            BusinessEventType.ASSET_SALE
+        )
+
+    def asset_transfer_event(self) -> AssetEvent:
+        return self._create_event(
+            BusinessEventType.ASSET_TRANSFER
         )

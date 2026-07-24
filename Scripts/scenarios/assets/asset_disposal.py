@@ -35,13 +35,29 @@ class AssetDisposalRequest:
     company_code: str
 
     asset_code: str
+    asset_name: str
+    asset_class: str
+    asset_group: str
 
-    cost_center_code: str
-    department_code: str
+    supplier_code: str | None
+
+    acquisition_date: date
+
+    acquisition_cost: Decimal
+
+    vat_rate: Decimal
+
+    useful_life_months: int
+
+    depreciation_method: str
+
+    residual_value: Decimal
 
     currency_code: str
 
-    disposal_date: date
+    cost_center_code: str
+
+    department_code: str
 
     net_book_value: Decimal
 

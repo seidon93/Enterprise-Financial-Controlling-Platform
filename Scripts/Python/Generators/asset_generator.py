@@ -21,6 +21,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 import logging
+import random
 
 # pyrefly: ignore [missing-import]
 from common.batch_context import BatchContext
@@ -52,16 +53,34 @@ class AssetGenerator:
         batch: BatchContext,
     ) -> int:
         """
-        Generate asset accounting documents.
+        Generate enterprise asset accounting documents.
         """
 
         inserted = 0
 
+        event_factories = [
+
+            self.event_generator.asset_acquisition_event,
+            self.event_generator.asset_capitalization_event,
+            self.event_generator.asset_depreciation_event,
+            self.event_generator.asset_impairment_event,
+            self.event_generator.asset_disposal_event,
+            self.event_generator.asset_sale_event,
+            self.event_generator.asset_transfer_event,
+
+        ]
+
         for _ in range(documents):
 
-            event = self.event_generator.asset_acquisition_event()
+            event_factory = random.choice(
+                event_factories
+            )
 
-            journal = self.router.process(event)
+            event = event_factory()
+
+            journal = self.router.process(
+                event
+            )
 
             rows = self.loader.load(
                 journal,

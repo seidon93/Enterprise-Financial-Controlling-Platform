@@ -38,18 +38,29 @@ class AssetTransferRequest:
     company_code: str
 
     asset_code: str
+    asset_name: str
+    asset_class: str
+    asset_group: str
 
-    from_cost_center_code: str
-    to_cost_center_code: str
+    supplier_code: str | None
 
-    from_department_code: str
-    to_department_code: str
+    acquisition_date: date
+
+    acquisition_cost: Decimal
+
+    vat_rate: Decimal
+
+    useful_life_months: int
+
+    depreciation_method: str
+
+    residual_value: Decimal
 
     currency_code: str
 
-    transfer_date: date
+    cost_center_code: str
 
-    asset_value: Decimal
+    department_code: str
 
     description: str = "Asset Transfer"
 

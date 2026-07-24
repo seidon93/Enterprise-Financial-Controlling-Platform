@@ -29,20 +29,23 @@ class AssetTransaction:
     company_code: str
 
     asset_code: str
-    supplier_code: str | None
-
     asset_name: str
-    asset_category: str
+    asset_class: str
+    asset_group: str
+
+    supplier_code: str | None
 
     acquisition_date: date
 
     acquisition_cost: Decimal
 
+    vat_rate: Decimal
+
     useful_life_months: int
 
     depreciation_method: str
 
-    salvage_value: Decimal
+    residual_value: Decimal
 
     currency_code: str
 

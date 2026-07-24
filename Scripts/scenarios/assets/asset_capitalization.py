@@ -59,9 +59,8 @@ class AssetCapitalizationRequest:
     currency_code: str
 
     cost_center_code: str
-    department_code: str
 
-    description: str = ""
+    department_code: str
 
 
 class AssetCapitalizationScenario(AccountingScenario):
