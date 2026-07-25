@@ -29,6 +29,8 @@ from domain.customer_provider import CustomerProvider
 from domain.supplier_provider import SupplierProvider
 from scenarios.assets.asset_provider import AssetProvider
 
+from scenarios.inventory.inventory import Inventory
+
 class BusinessDataProvider:
     """
     Provides realistic enterprise business data.
@@ -94,6 +96,36 @@ class BusinessDataProvider:
                 active_from=2024,
                 active_to=2035,
             ),
+        ]
+
+        self.material_codes = [
+            "MAT-1001",
+            "MAT-1002",
+            "MAT-1003",
+            "MAT-1004",
+            "MAT-1005",
+        ]
+
+        self.material_names = [
+            "Steel Plate",
+            "Electric Motor",
+            "Bearing",
+            "Copper Cable",
+            "Hydraulic Pump",
+        ]
+
+        self.warehouses = [
+            "WH01",
+            "WH02",
+            "WH03",
+        ]
+
+        self.storage_locations = [
+            "A-01",
+            "A-02",
+            "B-01",
+            "B-02",
+            "C-01",
         ]
 
     def random_company(self) -> CompanyProfile:
@@ -365,3 +397,79 @@ class BusinessDataProvider:
         customer = self.customer_provider.random_customer()
 
         return asset, customer
+
+    def create_inventory_transaction(
+        self,
+    ) -> Inventory:
+        """
+        Create one inventory transaction.
+        """
+
+        company = self.random_company()
+
+        quantity = Decimal(str(self.random.randint(1, 100)))
+
+        unit_price = Decimal(
+            str(round(self.random.uniform(10, 500), 2))
+        )
+
+        total_amount = (quantity * unit_price).quantize(
+            Decimal("0.01")
+        )
+
+        material_index = self.random.randint(
+            0,
+            len(self.material_codes) - 1,
+        )
+
+        supplier = self.supplier_provider.random_supplier()
+        customer = self.customer_provider.random_customer()
+
+        return Inventory(
+
+            company_code=company.company_code,
+
+            material_code=self.material_codes[material_index],
+
+            material_name=self.material_names[material_index],
+
+            warehouse_code=self.random.choice(
+                self.warehouses
+            ),
+
+            storage_location=self.random.choice(
+                self.storage_locations
+            ),
+
+            movement_date=self.random_invoice_date(),
+
+            quantity=quantity,
+
+            unit_price=unit_price,
+
+            total_amount=total_amount,
+
+            currency_code=company.currency_code,
+
+            cost_center_code=self.random_cost_center(),
+
+            department_code=self.random_department(),
+
+            supplier_code=supplier.supplier_code,
+
+            customer_code=customer.customer_code,
+
+            source_warehouse=self.random.choice(
+                self.warehouses
+            ),
+
+            target_warehouse=self.random.choice(
+                self.warehouses
+            ),
+
+            country_code="CZ",
+
+            city="Brno",
+
+            location="Main Warehouse",
+        )

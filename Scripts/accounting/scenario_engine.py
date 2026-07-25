@@ -32,6 +32,7 @@ from accounting.dimension_mapper import DimensionMapper
 from accounting.loader import FactGLLoader
 
 from common.batch_context import BatchContext
+from common.batch_logger import BatchLogger
 
 from domain.business_data_provider import BusinessDataProvider
 from domain.business_event_generator import BusinessEventGenerator
@@ -276,6 +277,11 @@ class ScenarioEngine:
             batch,
         ) = self.create_runtime()
 
+        BatchLogger.start_batch(
+            batch=batch,
+            load_mode=self.config.load_mode.name,
+        )
+
         sales_generator = SalesGenerator(
             provider,
             event_generator,
@@ -342,6 +348,11 @@ class ScenarioEngine:
             + customer_payment_rows
             + supplier_payment_rows
             + asset_rows
+        )
+
+        BatchLogger.finish_batch(
+            batch=batch,
+            rows_inserted=inserted,
         )
 
         logger.info(

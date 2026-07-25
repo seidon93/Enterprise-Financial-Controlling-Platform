@@ -85,9 +85,9 @@ class AssetAcquisitionScenario(AccountingScenario):
 
         document = self.document_generator.create(
             document_type=DocumentType.FA,
-            posting_date=request.invoice_date,
-            document_date=request.invoice_date,
-            due_date=request.invoice_date,
+            posting_date=request.acquisition_date,
+            document_date=request.acquisition_date,
+            due_date=request.acquisition_date,
         )
 
         entry = JournalEntry(document=document)

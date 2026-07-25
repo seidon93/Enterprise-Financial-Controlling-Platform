@@ -62,6 +62,15 @@ class AssetTransferRequest:
 
     department_code: str
 
+    transfer_date: date
+
+    asset_value: Decimal
+
+    from_cost_center_code: str | None = None
+    from_department_code: str | None = None
+    to_cost_center_code: str | None = None
+    to_department_code: str | None = None
+
     description: str = "Asset Transfer"
 
 

@@ -243,6 +243,8 @@ class ScenarioRouter:
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
+                    depreciation_date=event.event_date,
+                    depreciation_amount=event.amount,
                 )
 
                 return self.asset_depreciation_scenario.create(request)
@@ -265,6 +267,8 @@ class ScenarioRouter:
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
+                    impairment_date=event.event_date,
+                    impairment_amount=event.amount,
                 )
 
                 return self.asset_impairment_scenario.create(request)
@@ -287,6 +291,8 @@ class ScenarioRouter:
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
+                    disposal_date=event.event_date,
+                    net_book_value=event.amount,
                 )
 
                 return self.asset_disposal_scenario.create(request)
@@ -309,6 +315,9 @@ class ScenarioRouter:
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
+                    sale_date=event.event_date,
+                    sale_amount=event.amount,
+                    customer_code=event.customer_code,
                 )
 
                 return self.asset_sale_scenario.create(request)
@@ -331,6 +340,12 @@ class ScenarioRouter:
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
+                    transfer_date=event.event_date,
+                    asset_value=event.amount,
+                    from_cost_center_code=event.cost_center_code,
+                    from_department_code=event.department_code,
+                    to_cost_center_code=event.cost_center_code,
+                    to_department_code=event.department_code,
                 )
 
                 return self.asset_transfer_scenario.create(request)

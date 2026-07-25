@@ -10,6 +10,7 @@ Status          : Development
 ===============================================================================
 """
 
+
 from __future__ import annotations
 from decimal import Decimal
 
@@ -275,4 +276,93 @@ class BusinessEventGenerator:
             event_type=BusinessEventType.ASSET_TRANSFER,
             asset=asset,
             description="Asset Transfer",
+        )
+
+    # -------------------------------------------------------------------------
+    # Inventory Events
+    # -------------------------------------------------------------------------
+
+    def _inventory_event(
+        self,
+        event_type: BusinessEventType,
+        inventory,
+        description: str,
+    ) -> BusinessEvent:
+        """
+        Helper: build BusinessEvent from Inventory object.
+        """
+
+        return BusinessEvent(
+            event_type=event_type,
+            company_code=inventory.company_code,
+            event_date=inventory.movement_date,
+            amount=inventory.total_amount,
+            currency_code=inventory.currency_code,
+            description=description,
+            cost_center_code=inventory.cost_center_code,
+            department_code=inventory.department_code,
+            vat_rate=Decimal("0"),
+            due_date=inventory.movement_date,
+
+            material_code=inventory.material_code,
+            material_name=inventory.material_name,
+
+            warehouse_code=inventory.warehouse_code,
+            storage_location=inventory.storage_location,
+
+            quantity=inventory.quantity,
+            unit_price=inventory.unit_price,
+
+            supplier_code=inventory.supplier_code,
+            customer_code=inventory.customer_code,
+
+            source_warehouse=inventory.source_warehouse,
+            target_warehouse=inventory.target_warehouse,
+
+            country_code=inventory.country_code,
+            city=inventory.city,
+            location=inventory.location,
+        )
+
+    def inventory_receipt_event(self) -> BusinessEvent:
+
+        inventory = self.provider.create_inventory_transaction()
+
+        return self._inventory_event(
+            BusinessEventType.INVENTORY_RECEIPT,
+            inventory,
+            "Inventory Receipt",
+        )
+
+
+    def inventory_issue_event(self) -> BusinessEvent:
+
+        inventory = self.provider.create_inventory_transaction()
+
+        return self._inventory_event(
+            BusinessEventType.INVENTORY_ISSUE,
+            inventory,
+            "Inventory Issue",
+        )
+
+
+    def inventory_transfer_event(self) -> BusinessEvent:
+
+        inventory = self.provider.create_inventory_transaction()
+
+        return self._inventory_event(
+            BusinessEventType.INVENTORY_TRANSFER,
+            inventory,
+            "Inventory Transfer",
+        )
+
+
+    def inventory_adjustment_event(self) -> BusinessEvent:
+
+        inventory = self.provider.create_inventory_transaction()
+
+        return self._inventory_event(
+            BusinessEventType.INVENTORY_ADJUSTMENT,
+            inventory,
+            "Inventory Adjustment",
         )

@@ -62,6 +62,12 @@ class AssetSaleRequest:
 
     department_code: str
 
+    sale_date: date
+
+    sale_amount: Decimal
+
+    customer_code: str | None = None
+
     description: str = "Asset Sale"
 
 

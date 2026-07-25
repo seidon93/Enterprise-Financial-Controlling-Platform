@@ -30,6 +30,8 @@ class DocumentType(str, Enum):
     SP = "SP"              # Supplier Payment
     FA = "FA"              # Fixed Assets
     JV = "JV"              # Journal Voucher
+    GR = "GR"              # Goods Receipt
+    GI = "GI"              # Goods Issue
 
 class ScenarioType(str, Enum):
     """Accounting scenario types."""

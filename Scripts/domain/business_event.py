@@ -76,4 +76,20 @@ class BusinessEvent:
 
     location: str | None = None
 
+    material_code: str | None = None
+
+    material_name: str | None = None
+
+    warehouse_code: str | None = None
+
+    storage_location: str | None = None
+
+    quantity: Decimal | None = None
+
+    unit_price: Decimal | None = None
+
+    source_warehouse: str | None = None
+
+    target_warehouse: str | None = None
+
     

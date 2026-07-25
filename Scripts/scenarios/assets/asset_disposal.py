@@ -59,6 +59,8 @@ class AssetDisposalRequest:
 
     department_code: str
 
+    disposal_date: date
+
     net_book_value: Decimal
 
     description: str = "Asset Disposal"
