@@ -15,6 +15,9 @@ Generates accounting entries for enterprise asset scenarios.
 
 from __future__ import annotations
 
+import logging
+import random
+
 import sys
 from pathlib import Path
 
@@ -56,10 +59,7 @@ class AssetGenerator:
         Generate enterprise asset accounting documents.
         """
 
-        inserted = 0
-
-        event_factories = [
-
+        asset_events = [
             self.event_generator.asset_acquisition_event,
             self.event_generator.asset_capitalization_event,
             self.event_generator.asset_depreciation_event,
@@ -67,31 +67,23 @@ class AssetGenerator:
             self.event_generator.asset_disposal_event,
             self.event_generator.asset_sale_event,
             self.event_generator.asset_transfer_event,
-
         ]
 
+
+        inserted = 0
         for _ in range(documents):
 
-            event_factory = random.choice(
-                event_factories
-            )
+            event_factory = random.choice(asset_events)
 
             event = event_factory()
 
-            journal = self.router.process(
-                event
-            )
+            journal = self.router.process(event)
 
             rows = self.loader.load(
                 journal,
-                batch.batch_id,
+                batch,
             )
 
             inserted += rows
-
-        logger.info(
-            "Generated %s asset accounting rows.",
-            inserted,
-        )
 
         return inserted
