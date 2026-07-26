@@ -1,49 +1,49 @@
 account_key,account_number,account_name,account_type,account_class,account_group,is_posting_account,is_active
-1,11,Intangible results of development,A,0,1,True,True
-2,12,Software,A,0,1,True,True
-3,13,Other valuable rights,A,0,1,True,True
-4,14,Goodwill,A,0,1,True,True
-5,15,Emission allowances,A,0,1,True,True
-6,16,Preferential limits,A,0,1,True,True
-7,19,Other intangible fixed assets,A,0,1,True,True
-8,21,Buildings and structures,A,0,2,True,True
-9,22,Tangible movable assets and their sets,A,0,2,True,True
-10,25,Perennial crops,A,0,2,True,True
-11,26,Adult animals and their groups,A,0,2,True,True
-12,29,Other tangible fixed assets,A,0,2,True,True
-13,31,Land,A,0,3,True,True
-14,32,Works of art and collections,A,0,3,True,True
-15,41,Incomplete intangible fixed assets (WIP),A,0,4,True,True
-16,42,Incomplete tangible fixed assets (WIP),A,0,4,True,True
-17,51,Advances paid for intangible fixed assets,A,0,5,True,True
-18,52,Advances paid for tangible fixed assets,A,0,5,True,True
-19,53,Advances paid for financial fixed assets,A,0,5,True,True
-20,61,Shares - controlled or controlling entity,A,0,6,True,True
-21,62,Shares - significant influence,A,0,6,True,True
-22,63,Other long-term securities and shares,A,0,6,True,True
-23,65,Long-term securities held to maturity,A,0,6,True,True
-24,66,Loans and borrowings - controlled or controlling entity,A,0,6,True,True
-25,67,Other loans and borrowings,A,0,6,True,True
-26,68,Loans and borrowings - significant influence,A,0,6,True,True
-27,69,Other long-term financial assets,A,0,6,True,True
-28,72,Accumulated amortization of intangible results of development,A,0,7,True,True
-29,73,Accumulated amortization of software,A,0,7,True,True
-30,74,Accumulated amortization of other valuable rights,A,0,7,True,True
-31,75,Accumulated amortization of goodwill,A,0,7,True,True
-32,79,Accumulated amortization of other intangible fixed assets,A,0,7,True,True
-33,81,Accumulated depreciation of buildings,A,0,8,True,True
-34,82,Accumulated depreciation of tangible movable assets,A,0,8,True,True
-35,85,Accumulated depreciation of perennial crops,A,0,8,True,True
-36,86,Accumulated depreciation of adult animals,A,0,8,True,True
-37,89,Accumulated depreciation of other tangible fixed assets,A,0,8,True,True
-38,91,Provisions for intangible fixed assets,A,0,9,True,True
-39,92,Provisions for tangible fixed assets,A,0,9,True,True
-40,93,Provisions for incomplete intangible fixed assets,A,0,9,True,True
-41,94,Provisions for incomplete tangible fixed assets,A,0,9,True,True
-42,95,Provisions for advances paid for fixed assets,A,0,9,True,True
-43,96,Provisions for long-term financial assets,A,0,9,True,True
-44,97,Valuation difference on acquired assets,A,0,9,True,True
-45,98,Accumulated amortization of valuation diff. on acquired assets,A,0,9,True,True
+1,011,Intangible results of development,A,0,1,True,True
+2,012,Software,A,0,1,True,True
+3,013,Other valuable rights,A,0,1,True,True
+4,014,Goodwill,A,0,1,True,True
+5,015,Emission allowances,A,0,1,True,True
+6,016,Preferential limits,A,0,1,True,True
+7,019,Other intangible fixed assets,A,0,1,True,True
+8,021,Buildings and structures,A,0,2,True,True
+9,022,Tangible movable assets and their sets,A,0,2,True,True
+10,025,Perennial crops,A,0,2,True,True
+11,026,Adult animals and their groups,A,0,2,True,True
+12,029,Other tangible fixed assets,A,0,2,True,True
+13,031,Land,A,0,3,True,True
+14,032,Works of art and collections,A,0,3,True,True
+15,041,Incomplete intangible fixed assets (WIP),A,0,4,True,True
+16,042,Incomplete tangible fixed assets (WIP),A,0,4,True,True
+17,051,Advances paid for intangible fixed assets,A,0,5,True,True
+18,052,Advances paid for tangible fixed assets,A,0,5,True,True
+19,053,Advances paid for financial fixed assets,A,0,5,True,True
+20,061,Shares - controlled or controlling entity,A,0,6,True,True
+21,062,Shares - significant influence,A,0,6,True,True
+22,063,Other long-term securities and shares,A,0,6,True,True
+23,065,Long-term securities held to maturity,A,0,6,True,True
+24,066,Loans and borrowings - controlled or controlling entity,A,0,6,True,True
+25,067,Other loans and borrowings,A,0,6,True,True
+26,068,Loans and borrowings - significant influence,A,0,6,True,True
+27,069,Other long-term financial assets,A,0,6,True,True
+28,072,Accumulated amortization of intangible results of development,A,0,7,True,True
+29,073,Accumulated amortization of software,A,0,7,True,True
+30,074,Accumulated amortization of other valuable rights,A,0,7,True,True
+31,075,Accumulated amortization of goodwill,A,0,7,True,True
+32,079,Accumulated amortization of other intangible fixed assets,A,0,7,True,True
+33,081,Accumulated depreciation of buildings,A,0,8,True,True
+34,082,Accumulated depreciation of tangible movable assets,A,0,8,True,True
+35,085,Accumulated depreciation of perennial crops,A,0,8,True,True
+36,086,Accumulated depreciation of adult animals,A,0,8,True,True
+37,089,Accumulated depreciation of other tangible fixed assets,A,0,8,True,True
+38,091,Provisions for intangible fixed assets,A,0,9,True,True
+39,092,Provisions for tangible fixed assets,A,0,9,True,True
+40,093,Provisions for incomplete intangible fixed assets,A,0,9,True,True
+41,094,Provisions for incomplete tangible fixed assets,A,0,9,True,True
+42,095,Provisions for advances paid for fixed assets,A,0,9,True,True
+43,096,Provisions for long-term financial assets,A,0,9,True,True
+44,097,Valuation difference on acquired assets,A,0,9,True,True
+45,098,Accumulated amortization of valuation diff. on acquired assets,A,0,9,True,True
 46,111,Material purchases,A,1,11,True,True
 47,112,Material in stock,A,1,11,True,True
 48,119,Material in transit,A,1,11,True,True

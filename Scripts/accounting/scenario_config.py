@@ -35,7 +35,7 @@ class ScenarioConfig:
     # Load Mode
     # -------------------------------------------------------------------------
 
-    load_mode: LoadMode = LoadMode.PURCHASE_ONLY
+    load_mode: LoadMode = LoadMode.INVENTORY_ONLY
 
     # -------------------------------------------------------------------------
     # Time Period

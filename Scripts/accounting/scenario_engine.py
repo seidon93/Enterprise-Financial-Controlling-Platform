@@ -168,6 +168,10 @@ class ScenarioEngine:
 
                 self.run_assets()
 
+            case LoadMode.INVENTORY_ONLY:
+
+                self.run_inventory()
+
             case _:
 
                 raise ValueError(
@@ -633,14 +637,53 @@ class ScenarioEngine:
             "Batch ID: %s",
             batch.batch_id,
         )
+        
+    def run_inventory(self) -> None:
+        """
+        Generate only Inventory transactions.
+        """
+
+        logger.info("=" * 70)
+        logger.info("Running INVENTORY ONLY mode")
+        logger.info("=" * 70)
+
+        (
+            provider,
+            event_generator,
+            loader,
+            router,
+            batch,
+        ) = self.create_runtime()
+
+        generator = InventoryGenerator(
+            provider,
+            event_generator,
+            router,
+            loader,
+        )
+
+        inserted = generator.generate(
+            documents=self.config.inventory_transactions,
+            batch=batch,
+        )
+
+        logger.info(
+            "Inventory rows inserted: %s",
+            inserted,
+        )
+
+        logger.info(
+            "Batch ID: %s",
+            batch.batch_id,
+        )
+
+
     def run_vendor(self) -> None:
         logger.info("Vendor scenario not implemented yet.")
 
     def run_bank(self) -> None:
         logger.info("Bank scenario not implemented yet.")
 
-    def run_inventory(self) -> None:
-        logger.info("Inventory scenario not implemented yet.")
 
     def run_payroll(self) -> None:
         logger.info("Payroll scenario not implemented yet.")

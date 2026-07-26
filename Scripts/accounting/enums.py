@@ -28,7 +28,12 @@ class DocumentType(str, Enum):
     VAT = "VAT"            # VAT Settlement
     CP = "CP"              # Customer Payment
     SP = "SP"              # Supplier Payment
-    FA = "FA"              # Fixed Assets
+    FA = "FA"              # Fixed Assets (Acquisition/Capitalization)
+    AD = "AD"              # Asset Depreciation
+    AI = "AI"              # Asset Impairment
+    AX = "AX"              # Asset Disposal
+    AS = "AS"              # Asset Sale
+    AT = "AT"              # Asset Transfer
     JV = "JV"              # Journal Voucher
     GR = "GR"              # Goods Receipt
     GI = "GI"              # Goods Issue
