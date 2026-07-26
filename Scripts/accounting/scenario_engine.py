@@ -64,6 +64,13 @@ from Python.Generators.asset_generator import AssetGenerator
 
 from accounting.load_mode import LoadMode
 
+from Python.Generators.inventory_generator import InventoryGenerator
+
+from scenarios.inventory.inventory_receipt import InventoryReceiptScenario
+from scenarios.inventory.inventory_issue import InventoryIssueScenario
+from scenarios.inventory.inventory_transfer import InventoryTransferScenario
+from scenarios.inventory.inventory_adjustment import InventoryAdjustmentScenario
+
 logger = logging.getLogger(__name__)
 
 
@@ -234,6 +241,22 @@ class ScenarioEngine:
             DocumentGenerator(),
         )
 
+        inventory_receipt_scenario = InventoryReceiptScenario(
+            DocumentGenerator(),
+        )
+
+        inventory_issue_scenario = InventoryIssueScenario(
+            DocumentGenerator(),
+        )
+
+        inventory_transfer_scenario = InventoryTransferScenario(
+            DocumentGenerator(),
+        )
+
+        inventory_adjustment_scenario = InventoryAdjustmentScenario(
+            DocumentGenerator(),
+        )
+
 
         router = ScenarioRouter(
             sales_scenario=sales_scenario,
@@ -248,6 +271,11 @@ class ScenarioEngine:
             asset_disposal_scenario=asset_disposal_scenario,
             asset_sale_scenario=asset_sale_scenario,
             asset_transfer_scenario=asset_transfer_scenario,
+
+            inventory_receipt_scenario=inventory_receipt_scenario,
+            inventory_issue_scenario=inventory_issue_scenario,
+            inventory_transfer_scenario=inventory_transfer_scenario,
+            inventory_adjustment_scenario=inventory_adjustment_scenario,
         )
         
         batch = BatchContext()
@@ -309,6 +337,12 @@ class ScenarioEngine:
             router,
             loader,
         )
+        inventory_generator = InventoryGenerator(
+            provider,
+            event_generator,
+            router,
+            loader,
+        )
 
         asset_generator = AssetGenerator(
             provider,
@@ -342,13 +376,20 @@ class ScenarioEngine:
             batch=batch,
         )
 
+        inventory_rows = inventory_generator.generate(
+            documents=self.config.inventory_transactions,
+            batch=batch,
+        )
+
         inserted = (
             sales_rows
             + purchase_rows
             + customer_payment_rows
             + supplier_payment_rows
             + asset_rows
+            + inventory_rows
         )
+
 
         BatchLogger.finish_batch(
             batch=batch,
@@ -388,6 +429,11 @@ class ScenarioEngine:
         logger.info(
             "Batch ID                       : %s",
             batch.batch_id,
+        )
+
+        logger.info(
+            "Inventory rows inserted       : %s",
+            inventory_rows,
         )
 
     def run_sales_only(self) -> None:
