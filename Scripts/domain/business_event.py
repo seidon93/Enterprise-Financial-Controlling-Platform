@@ -96,3 +96,7 @@ class BusinessEvent:
 
     unit_cost: Decimal | None = None
 
+    from_cost_center_code: str | None = None
+    from_department_code: str | None = None
+    to_cost_center_code: str | None = None
+    to_department_code: str | None = None

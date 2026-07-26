@@ -437,6 +437,8 @@ class ScenarioRouter:
                     quantity=event.quantity,
                     unit_cost=event.unit_cost,
                     currency_code=event.currency_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
                     from_cost_center_code=event.from_cost_center_code,
                     from_department_code=event.from_department_code,
                     to_cost_center_code=event.to_cost_center_code,

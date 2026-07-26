@@ -473,3 +473,42 @@ class BusinessDataProvider:
 
             location="Main Warehouse",
         )
+
+# -------------------------------------------------------------------------
+# Inventory Transactions
+# -------------------------------------------------------------------------
+
+    def create_inventory_receipt_transaction(
+        self,
+    ) -> Inventory:
+        """
+        Create inventory receipt transaction.
+        """
+        return self.create_inventory_transaction()
+
+
+    def create_inventory_issue_transaction(
+        self,
+    ) -> Inventory:
+        """
+        Create inventory issue transaction.
+        """
+        return self.create_inventory_transaction()
+
+
+    def create_inventory_transfer_transaction(
+        self,
+    ) -> Inventory:
+        """
+        Create inventory transfer transaction.
+        """
+        return self.create_inventory_transaction()
+
+
+    def create_inventory_adjustment_transaction(
+        self,
+    ) -> Inventory:
+        """
+        Create inventory adjustment transaction.
+        """
+        return self.create_inventory_transaction()

@@ -10,7 +10,6 @@ Status          : Development
 ===============================================================================
 """
 
-
 from __future__ import annotations
 from decimal import Decimal
 
@@ -22,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from domain.business_event import BusinessEvent
 from domain.business_event_type import BusinessEventType
 from domain.business_data_provider import BusinessDataProvider
-
+from Python.Generators import inventory_generator
 
 class BusinessEventGenerator:
     """
@@ -292,17 +291,30 @@ class BusinessEventGenerator:
         Helper: build BusinessEvent from Inventory object.
         """
 
+        unit_cost = getattr(inventory, "unit_cost", None)
+
+        if unit_cost is None:
+            unit_cost = getattr(inventory, "unit_price", Decimal("0"))
+
+        total_amount = getattr(
+            inventory,
+            "total_amount",
+            inventory.quantity * unit_cost,
+        )
+
         return BusinessEvent(
             event_type=event_type,
             company_code=inventory.company_code,
             event_date=inventory.movement_date,
-            amount=inventory.total_amount,
+            amount=total_amount,
             currency_code=inventory.currency_code,
             description=description,
             cost_center_code=inventory.cost_center_code,
             department_code=inventory.department_code,
             vat_rate=Decimal("0"),
             due_date=inventory.movement_date,
+
+            inventory_code=getattr(inventory, "inventory_code", None),
 
             material_code=inventory.material_code,
             material_name=inventory.material_name,
@@ -311,7 +323,7 @@ class BusinessEventGenerator:
             storage_location=inventory.storage_location,
 
             quantity=inventory.quantity,
-            unit_price=inventory.unit_price,
+            unit_cost=unit_cost,
 
             supplier_code=inventory.supplier_code,
             customer_code=inventory.customer_code,
@@ -324,7 +336,7 @@ class BusinessEventGenerator:
             location=inventory.location,
         )
 
-    # -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # Inventory Events
 # -------------------------------------------------------------------------
 
@@ -335,22 +347,10 @@ class BusinessEventGenerator:
 
         transaction = self.provider.create_inventory_receipt_transaction()
 
-        return BusinessEvent(
-            event_type=BusinessEventType.INVENTORY_RECEIPT,
-            company_code=transaction.company_code,
-            event_date=transaction.event_date,
-            amount=transaction.quantity * transaction.unit_cost,
-            currency_code=transaction.currency_code,
-            description=transaction.description,
-            cost_center_code=transaction.cost_center_code,
-            department_code=transaction.department_code,
-
-            inventory_code=transaction.inventory_code,
-            material_code=transaction.material_code,
-            material_name=transaction.material_name,
-
-            quantity=transaction.quantity,
-            unit_cost=transaction.unit_cost,
+        return self._inventory_event(
+            BusinessEventType.INVENTORY_RECEIPT,
+            transaction,
+            "Inventory Receipt",
         )
 
 
@@ -361,22 +361,10 @@ class BusinessEventGenerator:
 
         transaction = self.provider.create_inventory_issue_transaction()
 
-        return BusinessEvent(
-            event_type=BusinessEventType.INVENTORY_ISSUE,
-            company_code=transaction.company_code,
-            event_date=transaction.event_date,
-            amount=transaction.quantity * transaction.unit_cost,
-            currency_code=transaction.currency_code,
-            description=transaction.description,
-            cost_center_code=transaction.cost_center_code,
-            department_code=transaction.department_code,
-
-            inventory_code=transaction.inventory_code,
-            material_code=transaction.material_code,
-            material_name=transaction.material_name,
-
-            quantity=transaction.quantity,
-            unit_cost=transaction.unit_cost,
+        return self._inventory_event(
+            BusinessEventType.INVENTORY_ISSUE,
+            transaction,
+            "Inventory Issue",
         )
 
 
@@ -387,22 +375,10 @@ class BusinessEventGenerator:
 
         transaction = self.provider.create_inventory_transfer_transaction()
 
-        return BusinessEvent(
-            event_type=BusinessEventType.INVENTORY_TRANSFER,
-            company_code=transaction.company_code,
-            event_date=transaction.event_date,
-            amount=transaction.quantity * transaction.unit_cost,
-            currency_code=transaction.currency_code,
-            description=transaction.description,
-            cost_center_code=transaction.cost_center_code,
-            department_code=transaction.department_code,
-
-            inventory_code=transaction.inventory_code,
-            material_code=transaction.material_code,
-            material_name=transaction.material_name,
-
-            quantity=transaction.quantity,
-            unit_cost=transaction.unit_cost,
+        return self._inventory_event(
+            BusinessEventType.INVENTORY_TRANSFER,
+            transaction,
+            "Inventory Transfer",
         )
 
 
@@ -413,20 +389,8 @@ class BusinessEventGenerator:
 
         transaction = self.provider.create_inventory_adjustment_transaction()
 
-        return BusinessEvent(
-            event_type=BusinessEventType.INVENTORY_ADJUSTMENT,
-            company_code=transaction.company_code,
-            event_date=transaction.event_date,
-            amount=transaction.quantity * transaction.unit_cost,
-            currency_code=transaction.currency_code,
-            description=transaction.description,
-            cost_center_code=transaction.cost_center_code,
-            department_code=transaction.department_code,
-
-            inventory_code=transaction.inventory_code,
-            material_code=transaction.material_code,
-            material_name=transaction.material_name,
-
-            quantity=transaction.quantity,
-            unit_cost=transaction.unit_cost,
+        return self._inventory_event(
+            BusinessEventType.INVENTORY_ADJUSTMENT,
+            transaction,
+            "Inventory Adjustment",
         )

@@ -73,6 +73,8 @@ from scenarios.inventory.inventory_adjustment import InventoryAdjustmentScenario
 
 logger = logging.getLogger(__name__)
 
+print("Loaded ScenarioEngine from:")
+print(__file__)
 
 class ScenarioEngine:
     """
