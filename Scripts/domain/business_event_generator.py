@@ -324,45 +324,109 @@ class BusinessEventGenerator:
             location=inventory.location,
         )
 
+    # -------------------------------------------------------------------------
+# Inventory Events
+# -------------------------------------------------------------------------
+
     def inventory_receipt_event(self) -> BusinessEvent:
+        """
+        Generate one inventory receipt business event.
+        """
 
-        inventory = self.provider.create_inventory_transaction()
+        transaction = self.provider.create_inventory_receipt_transaction()
 
-        return self._inventory_event(
-            BusinessEventType.INVENTORY_RECEIPT,
-            inventory,
-            "Inventory Receipt",
+        return BusinessEvent(
+            event_type=BusinessEventType.INVENTORY_RECEIPT,
+            company_code=transaction.company_code,
+            event_date=transaction.event_date,
+            amount=transaction.quantity * transaction.unit_cost,
+            currency_code=transaction.currency_code,
+            description=transaction.description,
+            cost_center_code=transaction.cost_center_code,
+            department_code=transaction.department_code,
+
+            inventory_code=transaction.inventory_code,
+            material_code=transaction.material_code,
+            material_name=transaction.material_name,
+
+            quantity=transaction.quantity,
+            unit_cost=transaction.unit_cost,
         )
 
 
     def inventory_issue_event(self) -> BusinessEvent:
+        """
+        Generate one inventory issue business event.
+        """
 
-        inventory = self.provider.create_inventory_transaction()
+        transaction = self.provider.create_inventory_issue_transaction()
 
-        return self._inventory_event(
-            BusinessEventType.INVENTORY_ISSUE,
-            inventory,
-            "Inventory Issue",
+        return BusinessEvent(
+            event_type=BusinessEventType.INVENTORY_ISSUE,
+            company_code=transaction.company_code,
+            event_date=transaction.event_date,
+            amount=transaction.quantity * transaction.unit_cost,
+            currency_code=transaction.currency_code,
+            description=transaction.description,
+            cost_center_code=transaction.cost_center_code,
+            department_code=transaction.department_code,
+
+            inventory_code=transaction.inventory_code,
+            material_code=transaction.material_code,
+            material_name=transaction.material_name,
+
+            quantity=transaction.quantity,
+            unit_cost=transaction.unit_cost,
         )
 
 
     def inventory_transfer_event(self) -> BusinessEvent:
+        """
+        Generate one inventory transfer business event.
+        """
 
-        inventory = self.provider.create_inventory_transaction()
+        transaction = self.provider.create_inventory_transfer_transaction()
 
-        return self._inventory_event(
-            BusinessEventType.INVENTORY_TRANSFER,
-            inventory,
-            "Inventory Transfer",
+        return BusinessEvent(
+            event_type=BusinessEventType.INVENTORY_TRANSFER,
+            company_code=transaction.company_code,
+            event_date=transaction.event_date,
+            amount=transaction.quantity * transaction.unit_cost,
+            currency_code=transaction.currency_code,
+            description=transaction.description,
+            cost_center_code=transaction.cost_center_code,
+            department_code=transaction.department_code,
+
+            inventory_code=transaction.inventory_code,
+            material_code=transaction.material_code,
+            material_name=transaction.material_name,
+
+            quantity=transaction.quantity,
+            unit_cost=transaction.unit_cost,
         )
 
 
     def inventory_adjustment_event(self) -> BusinessEvent:
+        """
+        Generate one inventory adjustment business event.
+        """
 
-        inventory = self.provider.create_inventory_transaction()
+        transaction = self.provider.create_inventory_adjustment_transaction()
 
-        return self._inventory_event(
-            BusinessEventType.INVENTORY_ADJUSTMENT,
-            inventory,
-            "Inventory Adjustment",
+        return BusinessEvent(
+            event_type=BusinessEventType.INVENTORY_ADJUSTMENT,
+            company_code=transaction.company_code,
+            event_date=transaction.event_date,
+            amount=transaction.quantity * transaction.unit_cost,
+            currency_code=transaction.currency_code,
+            description=transaction.description,
+            cost_center_code=transaction.cost_center_code,
+            department_code=transaction.department_code,
+
+            inventory_code=transaction.inventory_code,
+            material_code=transaction.material_code,
+            material_name=transaction.material_name,
+
+            quantity=transaction.quantity,
+            unit_cost=transaction.unit_cost,
         )

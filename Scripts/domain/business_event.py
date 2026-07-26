@@ -92,4 +92,7 @@ class BusinessEvent:
 
     target_warehouse: str | None = None
 
-    
+    inventory_code: str | None = None
+
+    unit_cost: Decimal | None = None
+

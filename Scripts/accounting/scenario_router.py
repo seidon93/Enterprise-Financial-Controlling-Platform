@@ -13,12 +13,14 @@ Routes business events to accounting scenarios.
 ===============================================================================
 """
 
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 
 from domain.business_event import BusinessEvent
 from domain.business_event_type import BusinessEventType
@@ -80,6 +82,25 @@ from scenarios.assets.asset_transfer import (
     AssetTransferScenario,
 )
 
+from scenarios.inventory.inventory_receipt import (
+    InventoryReceiptRequest,
+    InventoryReceiptScenario,
+)
+
+from scenarios.inventory.inventory_issue import (
+    InventoryIssueRequest,
+    InventoryIssueScenario,
+)
+
+from scenarios.inventory.inventory_transfer import (
+    InventoryTransferRequest,
+    InventoryTransferScenario,
+)
+
+from scenarios.inventory.inventory_adjustment import (
+    InventoryAdjustmentRequest,
+    InventoryAdjustmentScenario,
+)
 
 class ScenarioRouter:
     """
@@ -99,6 +120,10 @@ class ScenarioRouter:
         asset_disposal_scenario: AssetDisposalScenario,
         asset_sale_scenario: AssetSaleScenario,
         asset_transfer_scenario: AssetTransferScenario,
+        inventory_receipt_scenario: InventoryReceiptScenario,
+        inventory_issue_scenario: InventoryIssueScenario,
+        inventory_transfer_scenario: InventoryTransferScenario,
+        inventory_adjustment_scenario: InventoryAdjustmentScenario,
     ) -> None:
 
         self.sales_scenario = sales_scenario
@@ -112,6 +137,11 @@ class ScenarioRouter:
         self.asset_disposal_scenario = asset_disposal_scenario
         self.asset_sale_scenario = asset_sale_scenario
         self.asset_transfer_scenario = asset_transfer_scenario
+        self.inventory_receipt_scenario = inventory_receipt_scenario
+        self.inventory_issue_scenario = inventory_issue_scenario
+        self.inventory_transfer_scenario = inventory_transfer_scenario
+        self.inventory_adjustment_scenario = inventory_adjustment_scenario
+
 
     def process(
         self,
@@ -349,6 +379,91 @@ class ScenarioRouter:
                 )
 
                 return self.asset_transfer_scenario.create(request)
+
+            
+            case BusinessEventType.INVENTORY_RECEIPT:
+
+                request = InventoryReceiptRequest(
+                company_code=event.company_code,
+                cost_center_code=event.cost_center_code,
+                department_code=event.department_code,
+                currency_code=event.currency_code,
+
+                material_code=event.material_code,
+                material_name=event.material_name,
+
+                warehouse_code=event.warehouse_code,
+                storage_location=event.storage_location,
+
+                receipt_date=event.event_date,
+
+                quantity=event.quantity,
+                unit_price=event.unit_price,
+                total_amount=event.amount,
+
+                supplier_code=event.supplier_code,
+                description=event.description,
+            )
+
+                return self.inventory_receipt_scenario.create(request)
+
+
+            case BusinessEventType.INVENTORY_ISSUE:
+
+                request = InventoryIssueRequest(
+                    company_code=event.company_code,
+                    inventory_code=event.inventory_code,
+                    material_code=event.material_code,
+                    material_name=event.material_name,
+                    event_date=event.event_date,
+                    quantity=event.quantity,
+                    unit_cost=event.unit_cost,
+                    currency_code=event.currency_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                    description=event.description,
+                )
+
+                return self.inventory_issue_scenario.create(request)
+
+            case BusinessEventType.INVENTORY_TRANSFER:
+
+                request = InventoryTransferRequest(
+                    company_code=event.company_code,
+                    inventory_code=event.inventory_code,
+                    material_code=event.material_code,
+                    material_name=event.material_name,
+                    event_date=event.event_date,
+                    quantity=event.quantity,
+                    unit_cost=event.unit_cost,
+                    currency_code=event.currency_code,
+                    from_cost_center_code=event.from_cost_center_code,
+                    from_department_code=event.from_department_code,
+                    to_cost_center_code=event.to_cost_center_code,
+                    to_department_code=event.to_department_code,
+                    description=event.description,
+                )
+
+                return self.inventory_transfer_scenario.create(request)
+
+            case BusinessEventType.INVENTORY_ADJUSTMENT:
+
+                request = InventoryAdjustmentRequest(
+                    company_code=event.company_code,
+                    inventory_code=event.inventory_code,
+                    material_code=event.material_code,
+                    material_name=event.material_name,
+                    event_date=event.event_date,
+                    quantity=event.quantity,
+                    unit_cost=event.unit_cost,
+                    currency_code=event.currency_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                    description=event.description,
+                )
+
+                return self.inventory_adjustment_scenario.create(request)
+
 
             case _:
 

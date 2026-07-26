@@ -64,6 +64,8 @@ class InventoryReceiptRequest:
     supplier_code: str | None = None
 
     description: str = ""
+    inventory_code: str | None = None
+
 
 
 class InventoryReceiptScenario(AccountingScenario):
