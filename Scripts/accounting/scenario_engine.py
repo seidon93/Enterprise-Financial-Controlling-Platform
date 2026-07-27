@@ -203,73 +203,85 @@ class ScenarioEngine:
             mapper,
         )
 
+        # ---------------------------------------------------------
+        # ONE shared document generator for the whole ETL batch
+        # ---------------------------------------------------------
+
+        document_generator = DocumentGenerator()
+
+        # ---------------------------------------------------------
+        # Accounting scenarios
+        # ---------------------------------------------------------
+
         sales_scenario = SalesInvoiceScenario(
-            DocumentGenerator(),
+            document_generator,
         )
 
         purchase_scenario = PurchaseInvoiceScenario(
-            DocumentGenerator(),
+            document_generator,
         )
 
         customer_payment_scenario = CustomerPaymentScenario(
-            DocumentGenerator(),
+            document_generator,
         )
 
         supplier_payment_scenario = SupplierPaymentScenario(
-            DocumentGenerator(),
+            document_generator,
         )
 
         asset_acquisition_scenario = AssetAcquisitionScenario(
-            DocumentGenerator(),
+            document_generator,
         )
 
         asset_capitalization_scenario = AssetCapitalizationScenario(
-            DocumentGenerator(),
+            document_generator,
         )
 
         asset_depreciation_scenario = AssetDepreciationScenario(
-            DocumentGenerator(),
+            document_generator,
         )
 
         asset_impairment_scenario = AssetImpairmentScenario(
-            DocumentGenerator(),
+            document_generator,
         )
 
         asset_disposal_scenario = AssetDisposalScenario(
-            DocumentGenerator(),
+            document_generator,
         )
 
         asset_sale_scenario = AssetSaleScenario(
-            DocumentGenerator(),
+            document_generator,
         )
 
         asset_transfer_scenario = AssetTransferScenario(
-            DocumentGenerator(),
+            document_generator,
         )
 
         inventory_receipt_scenario = InventoryReceiptScenario(
-            DocumentGenerator(),
+            document_generator,
         )
 
         inventory_issue_scenario = InventoryIssueScenario(
-            DocumentGenerator(),
+            document_generator,
         )
 
         inventory_transfer_scenario = InventoryTransferScenario(
-            DocumentGenerator(),
+            document_generator,
         )
 
         inventory_adjustment_scenario = InventoryAdjustmentScenario(
-            DocumentGenerator(),
+            document_generator,
         )
 
+        # ---------------------------------------------------------
+        # Router
+        # ---------------------------------------------------------
 
         router = ScenarioRouter(
             sales_scenario=sales_scenario,
             purchase_scenario=purchase_scenario,
             customer_payment_scenario=customer_payment_scenario,
             supplier_payment_scenario=supplier_payment_scenario,
-
             asset_acquisition_scenario=asset_acquisition_scenario,
             asset_capitalization_scenario=asset_capitalization_scenario,
             asset_depreciation_scenario=asset_depreciation_scenario,
@@ -277,13 +289,12 @@ class ScenarioEngine:
             asset_disposal_scenario=asset_disposal_scenario,
             asset_sale_scenario=asset_sale_scenario,
             asset_transfer_scenario=asset_transfer_scenario,
-
             inventory_receipt_scenario=inventory_receipt_scenario,
             inventory_issue_scenario=inventory_issue_scenario,
             inventory_transfer_scenario=inventory_transfer_scenario,
             inventory_adjustment_scenario=inventory_adjustment_scenario,
         )
-        
+
         batch = BatchContext()
 
         return (

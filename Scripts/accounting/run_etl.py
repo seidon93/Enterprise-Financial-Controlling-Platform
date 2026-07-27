@@ -21,7 +21,7 @@ logging.basicConfig(
 
 def main() -> None:
 
-    config = ScenarioConfig(load_mode=LoadMode.INVENTORY_ONLY)
+    config = ScenarioConfig(load_mode=LoadMode.FULL)
 
     engine = ScenarioEngine(config)
 

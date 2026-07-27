@@ -165,6 +165,19 @@ class DimensionMapper:
     def account_key(self, account_number: str) -> int:
         return self.account_map[account_number]
 
+    def account_key(self, account_number: str) -> int:
+        if account_number in self.account_map:
+            return self.account_map[account_number]
+            
+        try:
+            stripped_account = str(int(account_number))
+            if stripped_account in self.account_map:
+                return self.account_map[stripped_account]
+        except ValueError:
+            pass
+            
+        return self.account_map[account_number]
+
     def company_key(self, company_code: str) -> int:
         return self.company_map[company_code]
 
