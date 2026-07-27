@@ -426,6 +426,7 @@ class BusinessEventGenerator:
             vat_rate=Decimal("0"),
 
             due_date=payroll.payroll_date,
+            
 
             employee_code=payroll.employee_code,
 
@@ -440,6 +441,10 @@ class BusinessEventGenerator:
             overtime_amount=payroll.overtime_amount,
 
             vacation_accrual=payroll.vacation_accrual,
+
+            payroll_date=payroll.payroll_date,
+
+            payment_amount=payroll.net_salary,
         )
 
     def payroll_expense_event(self) -> BusinessEvent:

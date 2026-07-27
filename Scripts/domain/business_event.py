@@ -116,3 +116,8 @@ class BusinessEvent:
     vacation_accrual: Decimal | None = None
 
     payroll_date: date | None = None    
+
+    tax_amount: Decimal | None = None
+
+    payment_amount: Decimal | None = None
+

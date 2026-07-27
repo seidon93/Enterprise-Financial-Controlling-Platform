@@ -102,6 +102,11 @@ from scenarios.inventory.inventory_adjustment import (
     InventoryAdjustmentScenario,
 )
 
+from scenarios.payroll.payroll_expense import PayrollExpenseScenario
+from scenarios.payroll.employer_contribution import EmployerContributionScenario
+from scenarios.payroll.payroll_tax import PayrollTaxScenario
+from scenarios.payroll.payroll_payment import PayrollPaymentScenario
+
 class ScenarioRouter:
     """
     Converts BusinessEvents into JournalEntries.
@@ -124,6 +129,11 @@ class ScenarioRouter:
         inventory_issue_scenario: InventoryIssueScenario,
         inventory_transfer_scenario: InventoryTransferScenario,
         inventory_adjustment_scenario: InventoryAdjustmentScenario,
+        payroll_expense_scenario: PayrollExpenseScenario,
+        employer_contribution_scenario: EmployerContributionScenario,
+        payroll_tax_scenario: PayrollTaxScenario,
+        payroll_payment_scenario: PayrollPaymentScenario,
+
     ) -> None:
 
         self.sales_scenario = sales_scenario
@@ -141,6 +151,10 @@ class ScenarioRouter:
         self.inventory_issue_scenario = inventory_issue_scenario
         self.inventory_transfer_scenario = inventory_transfer_scenario
         self.inventory_adjustment_scenario = inventory_adjustment_scenario
+        self.payroll_expense_scenario = payroll_expense_scenario
+        self.employer_contribution_scenario = employer_contribution_scenario
+        self.payroll_tax_scenario = payroll_tax_scenario
+        self.payroll_payment_scenario = payroll_payment_scenario
 
 
     def process(
@@ -465,6 +479,22 @@ class ScenarioRouter:
                 )
 
                 return self.inventory_adjustment_scenario.create(request)
+
+            case BusinessEventType.PAYROLL_EXPENSE:
+
+                return self.payroll_expense_scenario.create(...)
+
+            case BusinessEventType.EMPLOYER_CONTRIBUTION:
+
+                return self.employer_contribution_scenario.create(...)
+
+            case BusinessEventType.PAYROLL_TAX:
+
+                return self.payroll_tax_scenario.create(...)
+
+            case BusinessEventType.PAYROLL_PAYMENT:
+
+                return self.payroll_payment_scenario.create(...)
 
 
             case _:
