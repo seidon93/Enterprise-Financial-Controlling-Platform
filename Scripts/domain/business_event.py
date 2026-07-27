@@ -100,3 +100,19 @@ class BusinessEvent:
     from_department_code: str | None = None
     to_cost_center_code: str | None = None
     to_department_code: str | None = None
+
+    employee_code: str | None = None
+
+    gross_salary: Decimal | None = None
+
+    employer_contribution: Decimal | None = None
+
+    employee_tax: Decimal | None = None
+
+    bonus_amount: Decimal | None = None
+
+    overtime_amount: Decimal | None = None
+
+    vacation_accrual: Decimal | None = None
+
+    payroll_date: date | None = None    

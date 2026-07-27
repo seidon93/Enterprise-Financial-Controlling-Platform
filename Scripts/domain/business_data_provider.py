@@ -30,6 +30,7 @@ from domain.supplier_provider import SupplierProvider
 from scenarios.assets.asset_provider import AssetProvider
 
 from scenarios.inventory.inventory import Inventory
+from domain.payroll import Payroll
 
 class BusinessDataProvider:
     """
@@ -512,3 +513,86 @@ class BusinessDataProvider:
         Create inventory adjustment transaction.
         """
         return self.create_inventory_transaction()
+
+    def create_payroll_transaction(
+        self,
+    ) -> Payroll:
+        """
+        Generate one payroll transaction.
+        """
+
+        gross_salary = Decimal(
+            str(
+                round(
+                    self.random.uniform(28000, 95000),
+                    2,
+                )
+            )
+        )
+
+        employer_contribution = (
+            gross_salary * Decimal("0.338")
+        ).quantize(Decimal("0.01"))
+
+        employee_tax = (
+            gross_salary * Decimal("0.15")
+        ).quantize(Decimal("0.01"))
+
+        bonus_amount = Decimal(
+            str(
+                round(
+                    self.random.uniform(0, 12000),
+                    2,
+                )
+            )
+        )
+
+        overtime_amount = Decimal(
+            str(
+                round(
+                    self.random.uniform(0, 6000),
+                    2,
+                )
+            )
+        )
+
+        vacation_accrual = Decimal(
+            str(
+                round(
+                    self.random.uniform(0, 4000),
+                    2,
+                )
+            )
+        )
+
+        return Payroll(
+
+            company_code=self.random_company(),
+
+            employee_code=self.random_employee(),
+
+            payroll_date=self.random_date(),
+
+            gross_salary=gross_salary,
+
+            employer_contribution=employer_contribution,
+
+            employee_tax=employee_tax,
+
+            bonus_amount=bonus_amount,
+
+            overtime_amount=overtime_amount,
+
+            vacation_accrual=vacation_accrual,
+
+            currency_code="CZK",
+
+            cost_center_code=self.random_cost_center(),
+
+            department_code=self.random_department(),
+
+            description="Monthly Payroll",
+        )
+
+    def random_employee(self) -> str:
+        return f"EMP{self.random.randint(1, 500):05d}"

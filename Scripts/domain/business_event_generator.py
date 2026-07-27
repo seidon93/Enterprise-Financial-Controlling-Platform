@@ -10,6 +10,7 @@ Status          : Development
 ===============================================================================
 """
 
+
 from __future__ import annotations
 from decimal import Decimal
 
@@ -21,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from domain.business_event import BusinessEvent
 from domain.business_event_type import BusinessEventType
 from domain.business_data_provider import BusinessDataProvider
-from Python.Generators import inventory_generator
+from Scripts.domain import payroll
 
 class BusinessEventGenerator:
     """
@@ -394,3 +395,131 @@ class BusinessEventGenerator:
             transaction,
             "Inventory Adjustment",
         )
+
+    def _build_payroll_event(
+        self,
+        event_type: BusinessEventType,
+        payroll,
+        description: str,
+    ) -> BusinessEvent:
+        """
+        Helper: build BusinessEvent from Payroll object.
+        """
+
+        return BusinessEvent(
+            event_type=event_type,
+
+            company_code=payroll.company_code,
+
+            event_date=payroll.payroll_date,
+
+            amount=payroll.gross_salary,
+
+            currency_code=payroll.currency_code,
+
+            description=description,
+
+            cost_center_code=payroll.cost_center_code,
+
+            department_code=payroll.department_code,
+
+            vat_rate=Decimal("0"),
+
+            due_date=payroll.payroll_date,
+
+            employee_code=payroll.employee_code,
+
+            gross_salary=payroll.gross_salary,
+
+            employer_contribution=payroll.employer_contribution,
+
+            employee_tax=payroll.employee_tax,
+
+            bonus_amount=payroll.bonus_amount,
+
+            overtime_amount=payroll.overtime_amount,
+
+            vacation_accrual=payroll.vacation_accrual,
+        )
+
+    def payroll_expense_event(self) -> BusinessEvent:
+
+        payroll = self.provider.create_payroll_transaction()
+
+        return self._build_payroll_event(
+            BusinessEventType.PAYROLL_EXPENSE,
+            payroll,
+            "Payroll Expense",
+        )
+
+    def employer_contribution_event(self) -> BusinessEvent:
+
+        payroll = self.provider.create_payroll_transaction()
+
+        return self._build_payroll_event(
+            BusinessEventType.EMPLOYER_CONTRIBUTION,
+            payroll,
+            "Employer Contribution",
+        )
+
+    def payroll_payment_event(self) -> BusinessEvent:
+
+        payroll = self.provider.create_payroll_transaction()
+
+        return self._build_payroll_event(
+            BusinessEventType.PAYROLL_PAYMENT,
+            payroll,
+            "Payroll Payment",
+        )
+
+    def payroll_tax_event(self) -> BusinessEvent:
+
+        payroll = self.provider.create_payroll_transaction()
+
+        return self._build_payroll_event(
+            BusinessEventType.PAYROLL_TAX,
+            payroll,
+            "Payroll Tax",
+        )
+
+    def payroll_bonus_event(self) -> BusinessEvent:
+
+        payroll = self.provider.create_payroll_transaction()
+
+        return self._build_payroll_event(
+            BusinessEventType.PAYROLL_BONUS,
+            payroll,
+            "Payroll Bonus",
+        )
+
+    def vacation_accrual_event(self) -> BusinessEvent:
+
+        payroll = self.provider.create_payroll_transaction()
+
+        return self._build_payroll_event(
+            BusinessEventType.VACATION_ACCRUAL,
+            payroll,
+            "Vacation Accrual",
+            )
+
+    def overtime_event(self) -> BusinessEvent:
+
+        payroll = self.provider.create_payroll_transaction()
+
+        return self._build_payroll_event(
+            BusinessEventType.OVERTIME,
+            payroll,
+            "Overtime",
+            )
+
+    def payroll_reversal_event(self) -> BusinessEvent:
+
+        payroll = self.provider.create_payroll_transaction()
+
+        return self._build_payroll_event(
+            BusinessEventType.PAYROLL_REVERSAL,
+            payroll,
+            "Payroll Reversal",
+            )
+
+            
