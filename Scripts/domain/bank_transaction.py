@@ -44,8 +44,12 @@ class BankTransaction:
 
     department_code: str
 
+    loan_term: str  # "SHORT" | "LONG"
+    
     customer_code: str | None = None
 
     supplier_code: str | None = None
 
     reference_number: str | None = None
+
+    
