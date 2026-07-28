@@ -32,6 +32,8 @@ from scenarios.assets.asset_provider import AssetProvider
 from scenarios.inventory.inventory import Inventory
 from domain.payroll import Payroll
 
+from domain.bank_transaction import BankTransaction
+
 class BusinessDataProvider:
     """
     Provides realistic enterprise business data.
@@ -598,3 +600,55 @@ class BusinessDataProvider:
 
     def random_employee(self) -> str:
         return f"EMP{self.random.randint(1, 500):05d}"
+
+    def create_bank_transaction(self) -> BankTransaction:
+        """
+        Creates one random bank transaction.
+        """
+
+        amount = self.random_decimal(
+            Decimal("100"),
+            Decimal("500000"),
+        )
+
+        transaction_types = [
+            "BANK_FEE",
+            "INTEREST_INCOME",
+            "INTEREST_EXPENSE",
+            "LOAN_DRAWDOWN",
+            "LOAN_REPAYMENT",
+            "FX_GAIN",
+            "FX_LOSS",
+            "CASH_DEPOSIT",
+            "CASH_WITHDRAWAL",
+            "INTERNAL_TRANSFER",
+        ]
+
+        return BankTransaction(
+            company_code=self.random_company(),
+
+            bank_account=self.random_bank_account(),
+
+            transaction_date=self.random_date(),
+
+            amount=amount,
+
+            currency_code=self.random_currency(),
+
+            description="Bank Transaction",
+
+            transaction_type=self.random.choice(
+                transaction_types
+            ),
+
+            cost_center_code=self.random_cost_center(),
+
+            department_code=self.random_department(),
+
+            customer_code=self.random_customer_code(),
+
+            supplier_code=self.random_supplier_code(),
+
+            reference_number=self.random_reference(),
+        )
+        

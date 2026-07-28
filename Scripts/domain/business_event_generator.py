@@ -527,4 +527,158 @@ class BusinessEventGenerator:
             "Payroll Reversal",
             )
 
-            
+# -------------------------------------------------------------------------
+# Bank Events
+# -------------------------------------------------------------------------
+
+    def _build_bank_event(
+        self,
+        event_type: BusinessEventType,
+        transaction,
+        description: str,
+    ) -> BusinessEvent:
+        """
+        Helper: build BusinessEvent from BankTransaction.
+        """
+
+        return BusinessEvent(
+            event_type=event_type,
+
+            company_code=transaction.company_code,
+
+            event_date=transaction.transaction_date,
+
+            amount=transaction.amount,
+
+            currency_code=transaction.currency_code,
+
+            description=description,
+
+            cost_center_code=transaction.cost_center_code,
+
+            department_code=transaction.department_code,
+
+            vat_rate=Decimal("0"),
+
+            due_date=transaction.transaction_date,
+
+            customer_code=transaction.customer_code,
+
+            supplier_code=transaction.supplier_code,
+
+            bank_account=transaction.bank_account,
+
+            transaction_type=transaction.transaction_type,
+
+            reference_number=transaction.reference_number,
+        )
+
+
+    def bank_fee_event(self) -> BusinessEvent:
+
+        transaction = self.provider.create_bank_transaction()
+
+        return self._build_bank_event(
+            BusinessEventType.BANK_FEE,
+            transaction,
+            "Bank Fee",
+        )
+
+
+    def interest_income_event(self) -> BusinessEvent:
+
+        transaction = self.provider.create_bank_transaction()
+
+        return self._build_bank_event(
+            BusinessEventType.INTEREST_INCOME,
+            transaction,
+            "Interest Income",
+        )
+
+
+    def interest_expense_event(self) -> BusinessEvent:
+
+        transaction = self.provider.create_bank_transaction()
+
+        return self._build_bank_event(
+            BusinessEventType.INTEREST_EXPENSE,
+            transaction,
+            "Interest Expense",
+        )
+
+
+    def fx_gain_event(self) -> BusinessEvent:
+
+        transaction = self.provider.create_bank_transaction()
+
+        return self._build_bank_event(
+            BusinessEventType.FX_GAIN,
+            transaction,
+            "Foreign Exchange Gain",
+        )
+
+
+    def fx_loss_event(self) -> BusinessEvent:
+
+        transaction = self.provider.create_bank_transaction()
+
+        return self._build_bank_event(
+            BusinessEventType.FX_LOSS,
+            transaction,
+            "Foreign Exchange Loss",
+        )
+
+
+    def loan_drawdown_event(self) -> BusinessEvent:
+
+        transaction = self.provider.create_bank_transaction()
+
+        return self._build_bank_event(
+            BusinessEventType.LOAN_DRAWDOWN,
+            transaction,
+            "Loan Drawdown",
+        )
+
+
+    def loan_repayment_event(self) -> BusinessEvent:
+
+        transaction = self.provider.create_bank_transaction()
+
+        return self._build_bank_event(
+            BusinessEventType.LOAN_REPAYMENT,
+            transaction,
+            "Loan Repayment",
+        )
+
+
+    def cash_deposit_event(self) -> BusinessEvent:
+
+        transaction = self.provider.create_bank_transaction()
+
+        return self._build_bank_event(
+            BusinessEventType.CASH_DEPOSIT,
+            transaction,
+            "Cash Deposit",
+        )
+
+
+    def cash_withdrawal_event(self) -> BusinessEvent:
+
+        transaction = self.provider.create_bank_transaction()
+
+        return self._build_bank_event(
+            BusinessEventType.CASH_WITHDRAWAL,
+            transaction,
+            "Cash Withdrawal",
+        )
+
+
+    def internal_transfer_event(self) -> BusinessEvent:
+
+        transaction = self.provider.create_bank_transaction()
+
+        return self._build_bank_event(
+            BusinessEventType.INTERNAL_TRANSFER,
+            transaction,
+            "Internal Transfer",
+        )

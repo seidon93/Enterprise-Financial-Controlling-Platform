@@ -121,3 +121,9 @@ class BusinessEvent:
 
     payment_amount: Decimal | None = None
 
+    bank_account: str | None = None
+
+    transaction_type: str | None = None
+
+    reference_number: str | None = None
+
