@@ -107,6 +107,21 @@ from scenarios.payroll.employer_contribution import EmployerContributionScenario
 from scenarios.payroll.payroll_tax import PayrollTaxScenario
 from scenarios.payroll.payroll_payment import PayrollPaymentScenario
 
+from scenarios.payroll.payroll_expense import (
+    PayrollExpenseRequest,
+)
+
+from scenarios.payroll.employer_contribution import (
+    EmployerContributionRequest,
+)
+
+from scenarios.payroll.payroll_tax import (
+    PayrollTaxRequest,
+)
+
+from scenarios.payroll.payroll_payment import (
+    PayrollPaymentRequest,
+)
 class ScenarioRouter:
     """
     Converts BusinessEvents into JournalEntries.
@@ -480,21 +495,72 @@ class ScenarioRouter:
 
                 return self.inventory_adjustment_scenario.create(request)
 
+
             case BusinessEventType.PAYROLL_EXPENSE:
 
-                return self.payroll_expense_scenario.create(...)
+                return self.payroll_expense_scenario.create(
+                    PayrollExpenseRequest(
+                        company_code=event.company_code,
+                        employee_code=event.employee_code,
+                        payroll_date=event.payroll_date or event.event_date,
+                        gross_salary=event.gross_salary,
+                        currency_code=event.currency_code,
+                        cost_center_code=event.cost_center_code,
+                        department_code=event.department_code,
+                    )
+                )
+
 
             case BusinessEventType.EMPLOYER_CONTRIBUTION:
 
-                return self.employer_contribution_scenario.create(...)
+                return self.employer_contribution_scenario.create(
+                    EmployerContributionRequest(
+                        company_code=event.company_code,
+                        employee_code=event.employee_code,
+                        payroll_date=event.payroll_date or event.event_date,
+                        contribution_amount=event.employer_contribution,
+                        currency_code=event.currency_code,
+                        cost_center_code=event.cost_center_code,
+                        department_code=event.department_code,
+                    )
+                )
+
 
             case BusinessEventType.PAYROLL_TAX:
 
-                return self.payroll_tax_scenario.create(...)
+                return self.payroll_tax_scenario.create(
+                    PayrollTaxRequest(
+                        company_code=event.company_code,
+                        employee_code=event.employee_code,
+                        payroll_date=event.payroll_date or event.event_date,
+                        tax_amount=event.employee_tax,
+                        currency_code=event.currency_code,
+                        cost_center_code=event.cost_center_code,
+                        department_code=event.department_code,
+                    )
+                )
+
 
             case BusinessEventType.PAYROLL_PAYMENT:
 
-                return self.payroll_payment_scenario.create(...)
+                    request = PayrollPaymentRequest(
+                        company_code=event.company_code,
+                        employee_code=event.employee_code,
+                        payment_date=event.event_date,
+
+                        payment_amount=(
+                            event.gross_salary
+                            - event.employee_tax
+                            + event.bonus_amount
+                            + event.overtime_amount
+                        ),
+
+                        currency_code=event.currency_code,
+                        cost_center_code=event.cost_center_code,
+                        department_code=event.department_code,
+                    )
+
+                    return self.payroll_payment_scenario.create(request)
 
 
             case _:

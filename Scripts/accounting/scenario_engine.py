@@ -71,6 +71,13 @@ from scenarios.inventory.inventory_issue import InventoryIssueScenario
 from scenarios.inventory.inventory_transfer import InventoryTransferScenario
 from scenarios.inventory.inventory_adjustment import InventoryAdjustmentScenario
 
+from Python.Generators.payroll_generator import PayrollGenerator
+
+from scenarios.payroll.payroll_expense import PayrollExpenseScenario
+from scenarios.payroll.employer_contribution import EmployerContributionScenario
+from scenarios.payroll.payroll_tax import PayrollTaxScenario
+from scenarios.payroll.payroll_payment import PayrollPaymentScenario
+
 logger = logging.getLogger(__name__)
 
 print("Loaded ScenarioEngine from:")
@@ -174,6 +181,10 @@ class ScenarioEngine:
 
                 self.run_inventory()
 
+            case LoadMode.PAYROLL_ONLY:
+
+                self.run_payroll()
+
             case _:
 
                 raise ValueError(
@@ -273,6 +284,22 @@ class ScenarioEngine:
             document_generator,
         )
 
+        payroll_expense_scenario = PayrollExpenseScenario(
+            document_generator,
+        )
+
+        employer_contribution_scenario = EmployerContributionScenario(
+            document_generator,
+        )
+
+        payroll_tax_scenario = PayrollTaxScenario(
+            document_generator,
+        )
+
+        payroll_payment_scenario = PayrollPaymentScenario(
+            document_generator,
+        )
+
         # ---------------------------------------------------------
         # Router
         # ---------------------------------------------------------
@@ -293,6 +320,10 @@ class ScenarioEngine:
             inventory_issue_scenario=inventory_issue_scenario,
             inventory_transfer_scenario=inventory_transfer_scenario,
             inventory_adjustment_scenario=inventory_adjustment_scenario,
+            payroll_expense_scenario=payroll_expense_scenario,
+            employer_contribution_scenario=employer_contribution_scenario,
+            payroll_tax_scenario=payroll_tax_scenario,
+            payroll_payment_scenario=payroll_payment_scenario,
         )
 
         batch = BatchContext()
@@ -361,6 +392,13 @@ class ScenarioEngine:
             loader,
         )
 
+        payroll_generator = PayrollGenerator(
+            provider,
+            event_generator,
+            router,
+            loader,
+        )
+
         asset_generator = AssetGenerator(
             provider,
             event_generator,
@@ -398,6 +436,11 @@ class ScenarioEngine:
             batch=batch,
         )
 
+        payroll_rows = payroll_generator.generate(
+            documents=self.config.payroll_documents,
+            batch=batch,
+        )
+
         inserted = (
             sales_rows
             + purchase_rows
@@ -405,6 +448,7 @@ class ScenarioEngine:
             + supplier_payment_rows
             + asset_rows
             + inventory_rows
+            + payroll_rows
         )
 
 
@@ -451,6 +495,11 @@ class ScenarioEngine:
         logger.info(
             "Inventory rows inserted       : %s",
             inventory_rows,
+        )
+
+        logger.info(
+            "Payroll rows inserted         : %s",
+            payroll_rows,
         )
 
     def run_sales_only(self) -> None:
@@ -691,14 +740,51 @@ class ScenarioEngine:
         )
 
 
+    def run_payroll(self) -> None:
+        """
+        Generate only Payroll transactions.
+        """
+
+        logger.info("=" * 70)
+        logger.info("Running PAYROLL ONLY mode")
+        logger.info("=" * 70)
+
+        (
+            provider,
+            event_generator,
+            loader,
+            router,
+            batch,
+        ) = self.create_runtime()
+
+        generator = PayrollGenerator(
+            provider,
+            event_generator,
+            router,
+            loader,
+        )
+
+        inserted = generator.generate(
+            documents=self.config.payroll_documents,
+            batch=batch,
+        )
+
+        logger.info(
+            "Payroll rows inserted: %s",
+            inserted,
+        )
+
+        logger.info(
+            "Batch ID: %s",
+            batch.batch_id,
+        )
+
+
     def run_vendor(self) -> None:
         logger.info("Vendor scenario not implemented yet.")
 
     def run_bank(self) -> None:
         logger.info("Bank scenario not implemented yet.")
 
-
-    def run_payroll(self) -> None:
-        logger.info("Payroll scenario not implemented yet.")
 
   

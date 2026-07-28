@@ -565,13 +565,15 @@ class BusinessDataProvider:
             )
         )
 
+        company = self.random_company()
+
         return Payroll(
 
-            company_code=self.random_company(),
+            company_code=company.company_code,
 
             employee_code=self.random_employee(),
 
-            payroll_date=self.random_date(),
+            payroll_date=self.random_invoice_date(),
 
             gross_salary=gross_salary,
 
@@ -585,7 +587,7 @@ class BusinessDataProvider:
 
             vacation_accrual=vacation_accrual,
 
-            currency_code="CZK",
+            currency_code=company.currency_code,
 
             cost_center_code=self.random_cost_center(),
 

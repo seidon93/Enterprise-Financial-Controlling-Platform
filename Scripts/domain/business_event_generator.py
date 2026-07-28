@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from domain.business_event import BusinessEvent
 from domain.business_event_type import BusinessEventType
 from domain.business_data_provider import BusinessDataProvider
-from Scripts.domain import payroll
+
 
 class BusinessEventGenerator:
     """
@@ -444,7 +444,7 @@ class BusinessEventGenerator:
 
             payroll_date=payroll.payroll_date,
 
-            payment_amount=payroll.net_salary,
+            payment_amount=payroll.gross_salary - payroll.employee_tax,
         )
 
     def payroll_expense_event(self) -> BusinessEvent:

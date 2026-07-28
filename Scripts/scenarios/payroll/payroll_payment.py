@@ -91,7 +91,7 @@ class PayrollPaymentScenario(AccountingScenario):
         entry.add_line(
             JournalLine(
                 line_number=2,
-                account_number=PayrollAccounts.BANK_ACCOUNT,
+                account_number=PayrollAccounts.BANK,
                 company_code=request.company_code,
                 cost_center_code=request.cost_center_code,
                 department_code=request.department_code,

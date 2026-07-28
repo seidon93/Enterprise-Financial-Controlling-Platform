@@ -47,3 +47,4 @@ class LoadMode(str, Enum):
     
     INVENTORY_ONLY = "INVENTORY_ONLY"
 
+    PAYROLL_ONLY = "PAYROLL_ONLY"
