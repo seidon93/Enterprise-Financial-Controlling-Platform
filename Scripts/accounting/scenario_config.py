@@ -35,7 +35,7 @@ class ScenarioConfig:
     # Load Mode
     # -------------------------------------------------------------------------
 
-    load_mode: LoadMode = LoadMode.PAYROLL_ONLY
+    load_mode: LoadMode = LoadMode.BANK_ONLY
 
     # -------------------------------------------------------------------------
     # Time Period

@@ -601,10 +601,89 @@ class BusinessDataProvider:
     def random_employee(self) -> str:
         return f"EMP{self.random.randint(1, 500):05d}"
 
+    def random_decimal(
+        self,
+        min_val: Decimal,
+        max_val: Decimal,
+    ) -> Decimal:
+        """
+        Returns a random Decimal between min_val and max_val,
+        rounded to 2 decimal places.
+        """
+
+        amount = self.random.uniform(
+            float(min_val),
+            float(max_val),
+        )
+
+        return Decimal(str(round(amount, 2)))
+
+    def random_bank_account(self) -> str:
+        """
+        Returns a random bank account code.
+        """
+
+        return self.random.choice(
+            [
+                "CZ-KB-001",
+                "CZ-CSOB-001",
+                "SK-SLSP-001",
+                "DE-DB-001",
+                "AT-RBI-001",
+                "PL-PKO-001",
+            ]
+        )
+
+    def random_date(self) -> date:
+        """
+        Returns a random business date.
+        """
+        return self.calendar.random_business_date()
+
+    def random_currency(self) -> str:
+        """
+        Returns a random currency code.
+        """
+
+        return self.random.choice(
+            [
+                "CZK",
+                "EUR",
+                "USD",
+                "PLN",
+                "GBP",
+            ]
+        )
+
+    def random_customer_code(self) -> str | None:
+        """
+        Returns a random customer code or None.
+        """
+
+        customer = self.customer_provider.random_customer()
+        return customer.customer_code
+
+    def random_supplier_code(self) -> str | None:
+        """
+        Returns a random supplier code or None.
+        """
+
+        supplier = self.supplier_provider.random_supplier()
+        return supplier.supplier_code
+
+    def random_reference(self) -> str:
+        """
+        Returns a random reference number.
+        """
+
+        return f"REF-{self.random.randint(100000, 999999)}"
+
     def create_bank_transaction(self) -> BankTransaction:
         """
         Creates one random bank transaction.
         """
+
+        company = self.random_company()
 
         amount = self.random_decimal(
             Decimal("100"),
@@ -625,7 +704,7 @@ class BusinessDataProvider:
         ]
 
         return BankTransaction(
-            company_code=self.random_company(),
+            company_code=company.company_code,
 
             bank_account=self.random_bank_account(),
 
@@ -633,7 +712,7 @@ class BusinessDataProvider:
 
             amount=amount,
 
-            currency_code=self.random_currency(),
+            currency_code=company.currency_code,
 
             description="Bank Transaction",
 
@@ -645,10 +724,13 @@ class BusinessDataProvider:
 
             department_code=self.random_department(),
 
+            loan_term=self.random.choice(["SHORT", "LONG"]),
+
             customer_code=self.random_customer_code(),
 
             supplier_code=self.random_supplier_code(),
 
             reference_number=self.random_reference(),
         )
+
         

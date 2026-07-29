@@ -76,6 +76,7 @@ class JournalLine:
     product_code: str | None = None
     project_code: str | None = None
     inventory_item_code: str | None = None
+    bank_account: str | None = None
 
 # ============================================================================
 # Journal Entry

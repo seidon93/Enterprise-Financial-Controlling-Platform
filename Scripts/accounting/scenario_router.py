@@ -122,6 +122,29 @@ from scenarios.payroll.payroll_tax import (
 from scenarios.payroll.payroll_payment import (
     PayrollPaymentRequest,
 )
+from scenarios.banking.bank_fee import BankFeeScenario
+from scenarios.banking.interest_income import InterestIncomeScenario
+from scenarios.banking.interest_expense import InterestExpenseScenario
+from scenarios.banking.fx_gain import FXGainScenario
+from scenarios.banking.fx_loss import FXLossScenario
+from scenarios.banking.loan_drawdown import LoanDrawdownScenario
+from scenarios.banking.loan_repayment import LoanRepaymentScenario
+from scenarios.banking.cash_deposit import CashDepositScenario
+from scenarios.banking.cash_withdrawal import CashWithdrawalScenario
+from scenarios.banking.internal_transfer import InternalTransferScenario
+from scenarios.banking.bank_fee import BankFeeRequest
+from scenarios.banking.interest_income import InterestIncomeRequest
+from scenarios.banking.interest_expense import InterestExpenseRequest
+from scenarios.banking.fx_gain import FXGainRequest
+from scenarios.banking.fx_loss import FXLossRequest
+from scenarios.banking.loan_drawdown import LoanDrawdownRequest
+from scenarios.banking.loan_repayment import LoanRepaymentRequest
+from scenarios.banking.cash_deposit import CashDepositRequest
+from scenarios.banking.cash_withdrawal import CashWithdrawalRequest
+from scenarios.banking.internal_transfer import InternalTransferRequest
+
+
+
 class ScenarioRouter:
     """
     Converts BusinessEvents into JournalEntries.
@@ -148,6 +171,16 @@ class ScenarioRouter:
         employer_contribution_scenario: EmployerContributionScenario,
         payroll_tax_scenario: PayrollTaxScenario,
         payroll_payment_scenario: PayrollPaymentScenario,
+        bank_fee_scenario: BankFeeScenario,
+        interest_income_scenario: InterestIncomeScenario,
+        interest_expense_scenario: InterestExpenseScenario,
+        fx_gain_scenario: FXGainScenario,
+        fx_loss_scenario: FXLossScenario,
+        loan_drawdown_scenario: LoanDrawdownScenario,
+        loan_repayment_scenario: LoanRepaymentScenario,
+        cash_deposit_scenario: CashDepositScenario,
+        cash_withdrawal_scenario: CashWithdrawalScenario,
+        internal_transfer_scenario: InternalTransferScenario,
 
     ) -> None:
 
@@ -171,6 +204,16 @@ class ScenarioRouter:
         self.payroll_tax_scenario = payroll_tax_scenario
         self.payroll_payment_scenario = payroll_payment_scenario
 
+        self.bank_fee_scenario = bank_fee_scenario
+        self.interest_income_scenario = interest_income_scenario
+        self.interest_expense_scenario = interest_expense_scenario
+        self.fx_gain_scenario = fx_gain_scenario
+        self.fx_loss_scenario = fx_loss_scenario
+        self.loan_drawdown_scenario = loan_drawdown_scenario
+        self.loan_repayment_scenario = loan_repayment_scenario
+        self.cash_deposit_scenario = cash_deposit_scenario
+        self.cash_withdrawal_scenario = cash_withdrawal_scenario
+        self.internal_transfer_scenario = internal_transfer_scenario
 
     def process(
         self,
@@ -561,6 +604,157 @@ class ScenarioRouter:
                     )
 
                     return self.payroll_payment_scenario.create(request)
+
+            case BusinessEventType.BANK_FEE:
+
+                request = BankFeeRequest(
+                    company_code=event.company_code,
+                    bank_account=event.bank_account,
+                    transaction_date=event.event_date,
+                    amount=event.amount,
+                    currency_code=event.currency_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                )
+
+                return self.bank_fee_scenario.create(request)
+
+
+            case BusinessEventType.INTEREST_INCOME:
+
+                request = InterestIncomeRequest(
+                    company_code=event.company_code,
+                    bank_account=event.bank_account,
+                    transaction_date=event.event_date,
+                    amount=event.amount,
+                    currency_code=event.currency_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                )
+
+                return self.interest_income_scenario.create(request)
+
+
+            case BusinessEventType.INTEREST_EXPENSE:
+
+                request = InterestExpenseRequest(
+                    company_code=event.company_code,
+                    bank_account=event.bank_account,
+                    transaction_date=event.event_date,
+                    amount=event.amount,
+                    currency_code=event.currency_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                )
+
+                return self.interest_expense_scenario.create(request)
+
+
+            case BusinessEventType.FX_GAIN:
+
+                request = FXGainRequest(
+                    company_code=event.company_code,
+                    bank_account=event.bank_account,
+                    transaction_date=event.event_date,
+                    amount=event.amount,
+                    currency_code=event.currency_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                )
+
+                return self.fx_gain_scenario.create(request)
+
+
+            case BusinessEventType.FX_LOSS:
+
+                request = FXLossRequest(
+                    company_code=event.company_code,
+                    bank_account=event.bank_account,
+                    transaction_date=event.event_date,
+                    amount=event.amount,
+                    currency_code=event.currency_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                )
+
+                return self.fx_loss_scenario.create(request)
+
+            case BusinessEventType.LOAN_DRAWDOWN:
+
+                request = LoanDrawdownRequest(
+                    company_code=event.company_code,
+                    bank_account=event.bank_account,
+                    transaction_date=event.event_date,
+                    amount=event.amount,
+                    loan_term=event.loan_term,
+                    currency_code=event.currency_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                )
+
+                return self.loan_drawdown_scenario.create(request)
+
+
+            case BusinessEventType.LOAN_REPAYMENT:
+
+                request = LoanRepaymentRequest(
+                    company_code=event.company_code,
+                    bank_account=event.bank_account,
+                    transaction_date=event.event_date,
+                    amount=event.amount,
+                    loan_term=event.loan_term,
+                    currency_code=event.currency_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                )
+
+                return self.loan_repayment_scenario.create(request)
+
+
+            case BusinessEventType.CASH_DEPOSIT:
+
+                request = CashDepositRequest(
+                    company_code=event.company_code,
+                    bank_account=event.bank_account,
+                    transaction_date=event.event_date,
+                    amount=event.amount,
+                    currency_code=event.currency_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                )
+
+                return self.cash_deposit_scenario.create(request)
+
+
+            case BusinessEventType.CASH_WITHDRAWAL:
+
+                request = CashWithdrawalRequest(
+                    company_code=event.company_code,
+                    bank_account=event.bank_account,
+                    transaction_date=event.event_date,
+                    amount=event.amount,
+                    currency_code=event.currency_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                )
+
+                return self.cash_withdrawal_scenario.create(request)
+
+
+            case BusinessEventType.INTERNAL_TRANSFER:
+
+                request = InternalTransferRequest(
+                    company_code=event.company_code,
+                    source_bank_account=event.source_bank_account,
+                    target_bank_account=event.target_bank_account,
+                    transaction_date=event.event_date,
+                    amount=event.amount,
+                    currency_code=event.currency_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                )
+
+                return self.internal_transfer_scenario.create(request)
 
 
             case _:

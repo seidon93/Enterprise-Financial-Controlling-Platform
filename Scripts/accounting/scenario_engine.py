@@ -78,6 +78,19 @@ from scenarios.payroll.employer_contribution import EmployerContributionScenario
 from scenarios.payroll.payroll_tax import PayrollTaxScenario
 from scenarios.payroll.payroll_payment import PayrollPaymentScenario
 
+from scenarios.banking.bank_fee import BankFeeScenario
+from scenarios.banking.interest_income import InterestIncomeScenario
+from scenarios.banking.interest_expense import InterestExpenseScenario
+from scenarios.banking.fx_gain import FXGainScenario
+from scenarios.banking.fx_loss import FXLossScenario
+from scenarios.banking.loan_drawdown import LoanDrawdownScenario
+from scenarios.banking.loan_repayment import LoanRepaymentScenario
+from scenarios.banking.cash_deposit import CashDepositScenario
+from scenarios.banking.cash_withdrawal import CashWithdrawalScenario
+from scenarios.banking.internal_transfer import InternalTransferScenario
+
+from Python.Generators.bank_generator import BankGenerator
+
 logger = logging.getLogger(__name__)
 
 print("Loaded ScenarioEngine from:")
@@ -184,6 +197,10 @@ class ScenarioEngine:
             case LoadMode.PAYROLL_ONLY:
 
                 self.run_payroll()
+
+            case LoadMode.BANK_ONLY:
+
+                self.run_banking()
 
             case _:
 
@@ -300,6 +317,46 @@ class ScenarioEngine:
             document_generator,
         )
 
+        bank_fee_scenario = BankFeeScenario(
+            DocumentGenerator(),
+        )
+
+        interest_income_scenario = InterestIncomeScenario(
+            DocumentGenerator(),
+        )
+
+        interest_expense_scenario = InterestExpenseScenario(
+            DocumentGenerator(),
+        )
+
+        fx_gain_scenario = FXGainScenario(
+            DocumentGenerator(),
+        )
+
+        fx_loss_scenario = FXLossScenario(
+            DocumentGenerator(),
+        )
+
+        loan_drawdown_scenario = LoanDrawdownScenario(
+            DocumentGenerator(),
+        )
+
+        loan_repayment_scenario = LoanRepaymentScenario(
+            DocumentGenerator(),
+        )
+
+        cash_deposit_scenario = CashDepositScenario(
+            DocumentGenerator(),
+        )
+
+        cash_withdrawal_scenario = CashWithdrawalScenario(
+            DocumentGenerator(),
+        )
+
+        internal_transfer_scenario = InternalTransferScenario(
+            DocumentGenerator(),
+        )
+
         # ---------------------------------------------------------
         # Router
         # ---------------------------------------------------------
@@ -324,6 +381,16 @@ class ScenarioEngine:
             employer_contribution_scenario=employer_contribution_scenario,
             payroll_tax_scenario=payroll_tax_scenario,
             payroll_payment_scenario=payroll_payment_scenario,
+            bank_fee_scenario=bank_fee_scenario,
+            interest_income_scenario=interest_income_scenario,
+            interest_expense_scenario=interest_expense_scenario,
+            fx_gain_scenario=fx_gain_scenario,
+            fx_loss_scenario=fx_loss_scenario,
+            loan_drawdown_scenario=loan_drawdown_scenario,
+            loan_repayment_scenario=loan_repayment_scenario,
+            cash_deposit_scenario=cash_deposit_scenario,
+            cash_withdrawal_scenario=cash_withdrawal_scenario,
+            internal_transfer_scenario=internal_transfer_scenario,
         )
 
         batch = BatchContext()
@@ -406,6 +473,14 @@ class ScenarioEngine:
             loader,
         )
 
+
+        bank_generator = BankGenerator(
+            provider,
+            event_generator,
+            router,
+            loader,
+        )
+
         sales_rows = sales_generator.generate(
             documents=self.config.sales_documents,
             batch=batch,
@@ -441,6 +516,11 @@ class ScenarioEngine:
             batch=batch,
         )
 
+        bank_rows = bank_generator.generate(
+            documents=self.config.bank_transactions,
+            batch=batch,
+        )
+
         inserted = (
             sales_rows
             + purchase_rows
@@ -449,6 +529,7 @@ class ScenarioEngine:
             + asset_rows
             + inventory_rows
             + payroll_rows
+            + bank_rows
         )
 
 
@@ -501,6 +582,13 @@ class ScenarioEngine:
             "Payroll rows inserted         : %s",
             payroll_rows,
         )
+
+        logger.info(
+            "Bank rows inserted            : %s",
+            bank_rows,
+        )
+
+
 
     def run_sales_only(self) -> None:
         """
@@ -779,12 +867,48 @@ class ScenarioEngine:
             batch.batch_id,
         )
 
+    def run_banking(self) -> None:
+        """
+        Generate only Banking & Treasury transactions.
+        """
+
+        logger.info("=" * 70)
+        logger.info("Running BANKING ONLY mode")
+        logger.info("=" * 70)
+
+        (
+            provider,
+            event_generator,
+            loader,
+            router,
+            batch,
+        ) = self.create_runtime()
+
+        generator = BankGenerator(
+            provider,
+            event_generator,
+            router,
+            loader,
+        )
+
+        inserted = generator.generate(
+            documents=self.config.bank_transactions,
+            batch=batch,
+        )
+
+        logger.info(
+            "Banking rows inserted: %s",
+            inserted,
+        )
+
+        logger.info(
+            "Batch ID: %s",
+            batch.batch_id,
+        )
 
     def run_vendor(self) -> None:
         logger.info("Vendor scenario not implemented yet.")
 
-    def run_bank(self) -> None:
-        logger.info("Bank scenario not implemented yet.")
 
 
   

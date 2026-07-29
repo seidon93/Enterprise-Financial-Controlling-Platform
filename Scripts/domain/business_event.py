@@ -127,3 +127,8 @@ class BusinessEvent:
 
     reference_number: str | None = None
 
+    source_bank_account: str | None = None
+
+    target_bank_account: str | None = None
+
+    loan_term: str | None = None
