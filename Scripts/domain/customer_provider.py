@@ -25,6 +25,7 @@ from decimal import Decimal
 from datetime import date
 
 from domain.customer import Customer
+from domain.closing_transaction import ClosingTransaction
 
 
 class CustomerProvider:
@@ -147,4 +148,44 @@ class CustomerProvider:
         """
 
         customer_id = self.random.randint(1, 10_000)
-        return self.create_customer(customer_id)
+        return self.create_customer(customer_id)
+
+
+    def create_closing_transaction(self) -> ClosingTransaction:
+        """
+        Creates one random Closing transaction.
+        """
+
+        amount = self.random_decimal(
+            Decimal("500"),
+            Decimal("200000"),
+        )
+
+        closing_types = [
+            "ACCRUAL",
+            "DEFERRAL",
+            "PROVISION",
+            "FX_REVALUATION",
+            "YEAR_END",
+            "PERIOD_CLOSE",
+        ]
+
+        return ClosingTransaction(
+            company_code=self.random_company(),
+
+            closing_date=self.random_date(),
+
+            amount=amount,
+
+            currency_code=self.random_currency(),
+
+            cost_center_code=self.random_cost_center(),
+
+            department_code=self.random_department(),
+
+            closing_type=self.random.choice(
+                closing_types
+            ),
+
+            description="Closing Transaction",
+        )
