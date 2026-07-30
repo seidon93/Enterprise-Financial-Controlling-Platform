@@ -683,3 +683,107 @@ class BusinessEventGenerator:
             transaction,
             "Internal Transfer",
         )
+
+    # -------------------------------------------------------------------------
+# Closing Events
+# -------------------------------------------------------------------------
+
+    def _build_closing_event(
+        self,
+        event_type: BusinessEventType,
+        closing,
+        description: str,
+    ) -> BusinessEvent:
+        """
+        Helper: build BusinessEvent from ClosingTransaction.
+        """
+
+        return BusinessEvent(
+            event_type=event_type,
+
+            company_code=closing.company_code,
+
+            event_date=closing.closing_date,
+
+            amount=closing.amount,
+
+            currency_code=closing.currency_code,
+
+            description=description,
+
+            cost_center_code=closing.cost_center_code,
+
+            department_code=closing.department_code,
+
+            vat_rate=Decimal("0"),
+
+            due_date=closing.closing_date,
+
+            closing_type=closing.closing_type,
+        )
+
+    def accrual_event(self) -> BusinessEvent:
+
+        closing = self.provider.create_closing_transaction()
+
+        return self._build_closing_event(
+            BusinessEventType.ACCRUAL,
+            closing,
+            "Accrual",
+        )
+
+
+    def deferral_event(self) -> BusinessEvent:
+
+        closing = self.provider.create_closing_transaction()
+
+        return self._build_closing_event(
+            BusinessEventType.DEFERRAL,
+            closing,
+            "Deferral",
+        )
+
+
+    def provision_event(self) -> BusinessEvent:
+
+        closing = self.provider.create_closing_transaction()
+
+        return self._build_closing_event(
+            BusinessEventType.PROVISION,
+            closing,
+            "Provision",
+        )
+
+
+    def fx_revaluation_event(self) -> BusinessEvent:
+
+        closing = self.provider.create_closing_transaction()
+
+        return self._build_closing_event(
+            BusinessEventType.FX_REVALUATION,
+            closing,
+            "FX Revaluation",
+        )
+
+
+    def year_end_event(self) -> BusinessEvent:
+
+        closing = self.provider.create_closing_transaction()
+
+        return self._build_closing_event(
+            BusinessEventType.YEAR_END,
+            closing,
+            "Year End Closing",
+        )
+
+
+    def period_close_event(self) -> BusinessEvent:
+
+        closing = self.provider.create_closing_transaction()
+
+        return self._build_closing_event(
+            BusinessEventType.PERIOD_CLOSE,
+            closing,
+            "Period Close",
+        )
+        

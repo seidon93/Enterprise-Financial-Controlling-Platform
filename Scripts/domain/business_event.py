@@ -132,3 +132,5 @@ class BusinessEvent:
     target_bank_account: str | None = None
 
     loan_term: str | None = None
+
+    closing_type: str | None = None
