@@ -426,7 +426,6 @@ class BusinessEventGenerator:
             vat_rate=Decimal("0"),
 
             due_date=payroll.payroll_date,
-            
 
             employee_code=payroll.employee_code,
 
@@ -569,6 +568,8 @@ class BusinessEventGenerator:
             bank_account=transaction.bank_account,
 
             transaction_type=transaction.transaction_type,
+
+            loan_term=transaction.loan_term,
 
             reference_number=transaction.reference_number,
         )
