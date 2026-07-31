@@ -33,6 +33,7 @@ from scenarios.inventory.inventory import Inventory
 from domain.payroll import Payroll
 
 from domain.bank_transaction import BankTransaction
+from domain.closing_transaction import ClosingTransaction
 
 class BusinessDataProvider:
     """
@@ -733,4 +734,81 @@ class BusinessDataProvider:
             reference_number=self.random_reference(),
         )
 
-        
+    def create_closing_transaction(
+        self,
+    ) -> ClosingTransaction:
+        """
+        Creates one random closing transaction.
+        """
+
+        company = self.random_company()
+
+        amount = self.random_decimal(
+            Decimal("5000"),
+            Decimal("500000"),
+        )
+
+        closing_types = [
+            "ACCRUED_EXPENSE",
+            "ACCRUED_REVENUE",
+            "PREPAID_EXPENSE",
+            "DEFERRED_REVENUE",
+            "PROVISION",
+            "FX_REVALUATION",
+        ]
+
+        expense_accounts = [
+            "502",
+            "511",
+            "518",
+            "521",
+            "524",
+        ]
+
+        revenue_accounts = [
+            "601",
+            "602",
+            "604",
+        ]
+
+        balance_accounts = [
+            "381",
+            "384",
+            "388",
+            "389",
+            "451",
+        ]
+
+        return ClosingTransaction(
+
+            company_code=company.company_code,
+
+            closing_date=self.random_date(),
+
+            amount=amount,
+
+            currency_code=company.currency_code,
+
+            cost_center_code=self.random_cost_center(),
+
+            department_code=self.random_department(),
+
+            closing_type=self.random.choice(
+                closing_types
+            ),
+
+            description="Period End Closing",
+
+            expense_account=self.random.choice(
+                expense_accounts
+            ),
+
+            revenue_account=self.random.choice(
+                revenue_accounts
+            ),
+
+            balance_account=self.random.choice(
+                balance_accounts
+            ),
+        )
+            

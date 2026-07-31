@@ -41,3 +41,9 @@ class ClosingTransaction:
     closing_type: str
 
     description: str
+
+    expense_account: str | None = None
+
+    revenue_account: str | None = None
+
+    balance_account: str | None = None
