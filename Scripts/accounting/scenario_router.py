@@ -102,12 +102,13 @@ from scenarios.inventory.inventory_adjustment import (
     InventoryAdjustmentScenario,
 )
 
-from scenarios.payroll.payroll_expense import PayrollExpenseScenario
+
 from scenarios.payroll.employer_contribution import EmployerContributionScenario
 from scenarios.payroll.payroll_tax import PayrollTaxScenario
 from scenarios.payroll.payroll_payment import PayrollPaymentScenario
 
 from scenarios.payroll.payroll_expense import (
+    PayrollExpenseScenario,
     PayrollExpenseRequest,
 )
 
@@ -143,7 +144,10 @@ from scenarios.banking.cash_deposit import CashDepositRequest
 from scenarios.banking.cash_withdrawal import CashWithdrawalRequest
 from scenarios.banking.internal_transfer import InternalTransferRequest
 
-
+from scenarios.closing.accrued_expense import (
+    AccruedExpenseRequest,
+    AccruedExpenseScenario,
+)
 
 class ScenarioRouter:
     """
@@ -180,8 +184,9 @@ class ScenarioRouter:
         loan_repayment_scenario: LoanRepaymentScenario,
         cash_deposit_scenario: CashDepositScenario,
         cash_withdrawal_scenario: CashWithdrawalScenario,
-        internal_transfer_scenario: InternalTransferScenario,
-
+        internal_transfer_scenario: InternalTransferScenario, 
+        accrued_expense_scenario: AccruedExpenseScenario,
+        
     ) -> None:
 
         self.sales_scenario = sales_scenario
@@ -214,6 +219,7 @@ class ScenarioRouter:
         self.cash_deposit_scenario = cash_deposit_scenario
         self.cash_withdrawal_scenario = cash_withdrawal_scenario
         self.internal_transfer_scenario = internal_transfer_scenario
+        self.accrued_expense_scenario = accrued_expense_scenario
 
     def process(
         self,
@@ -755,6 +761,22 @@ class ScenarioRouter:
                 )
 
                 return self.internal_transfer_scenario.create(request)
+
+            case BusinessEventType.ACCRUED_EXPENSE:
+
+                request = AccruedExpenseRequest(
+                    company_code=event.company_code,
+                    closing_date=event.event_date,
+                    amount=event.amount,
+                    currency_code=event.currency_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                    expense_account=event.expense_account,
+                )
+
+                return self.accrued_expense_scenario.create(
+                    request
+                )
 
 
             case _:
