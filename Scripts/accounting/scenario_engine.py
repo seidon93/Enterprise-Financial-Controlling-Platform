@@ -99,6 +99,10 @@ from scenarios.closing.accrued_revenue import (
 )
 from Python.Generators.closing_generator import ClosingGenerator
 
+from scenarios.closing.prepaid_expense import (
+    PrepaidExpenseScenario,
+)
+
 logger = logging.getLogger(__name__)
 
 print("Loaded ScenarioEngine from:")
@@ -376,6 +380,10 @@ class ScenarioEngine:
         accrued_revenue_scenario = AccruedRevenueScenario(
             document_generator,
         )
+
+        prepaid_expense_scenario = PrepaidExpenseScenario(
+            document_generator,
+        )
         
         # ---------------------------------------------------------
         # Router
@@ -413,6 +421,7 @@ class ScenarioEngine:
             internal_transfer_scenario=internal_transfer_scenario,
             accrued_expense_scenario=accrued_expense_scenario,
             accrued_revenue_scenario=accrued_revenue_scenario,
+            prepaid_expense_scenario=prepaid_expense_scenario,
         )
 
         batch = BatchContext()
