@@ -50,3 +50,5 @@ class LoadMode(str, Enum):
     PAYROLL_ONLY = "PAYROLL_ONLY"
 
     BANK_ONLY = "BANK_ONLY"
+
+    CLOSING_ONLY = "CLOSING_ONLY"

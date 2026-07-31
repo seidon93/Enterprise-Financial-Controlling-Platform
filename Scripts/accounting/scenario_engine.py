@@ -95,6 +95,7 @@ from scenarios.closing.accrued_expense import (
     AccruedExpenseScenario,
 )
 
+from Python.Generators.closing_generator import ClosingGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -206,6 +207,10 @@ class ScenarioEngine:
             case LoadMode.BANK_ONLY:
 
                 self.run_banking()
+
+            case LoadMode.CLOSING_ONLY:
+
+                self.run_closing()
 
             case _:
 
@@ -491,6 +496,13 @@ class ScenarioEngine:
             loader,
         )
 
+        closing_generator = ClosingGenerator(
+            provider,
+            event_generator,
+            router,
+            loader,
+        )
+
         sales_rows = sales_generator.generate(
             documents=self.config.sales_documents,
             batch=batch,
@@ -531,6 +543,11 @@ class ScenarioEngine:
             batch=batch,
         )
 
+        closing_rows = closing_generator.generate(
+            documents=self.config.closing_documents,
+            batch=batch,
+        )
+
         inserted = (
             sales_rows
             + purchase_rows
@@ -540,6 +557,7 @@ class ScenarioEngine:
             + inventory_rows
             + payroll_rows
             + bank_rows
+            + payroll_rows
         )
 
 
@@ -596,6 +614,11 @@ class ScenarioEngine:
         logger.info(
             "Bank rows inserted            : %s",
             bank_rows,
+        )
+
+        logger.info(
+            "Closing rows inserted         : %s",
+            closing_rows,
         )
 
 
