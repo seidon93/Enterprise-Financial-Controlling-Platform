@@ -94,7 +94,9 @@ from Python.Generators.bank_generator import BankGenerator
 from scenarios.closing.accrued_expense import (
     AccruedExpenseScenario,
 )
-
+from scenarios.closing.accrued_revenue import (
+    AccruedRevenueScenario,
+)
 from Python.Generators.closing_generator import ClosingGenerator
 
 logger = logging.getLogger(__name__)
@@ -370,6 +372,10 @@ class ScenarioEngine:
         accrued_expense_scenario = AccruedExpenseScenario(
             document_generator,
         )
+
+        accrued_revenue_scenario = AccruedRevenueScenario(
+            document_generator,
+        )
         
         # ---------------------------------------------------------
         # Router
@@ -406,6 +412,7 @@ class ScenarioEngine:
             cash_withdrawal_scenario=cash_withdrawal_scenario,
             internal_transfer_scenario=internal_transfer_scenario,
             accrued_expense_scenario=accrued_expense_scenario,
+            accrued_revenue_scenario=accrued_revenue_scenario,
         )
 
         batch = BatchContext()

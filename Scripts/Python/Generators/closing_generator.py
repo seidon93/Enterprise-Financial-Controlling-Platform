@@ -63,6 +63,7 @@ class ClosingGenerator:
         event_builders = [
 
             self.event_generator.accrued_expense_event,
+            self.event_generator.accrued_revenue_event,
 
         ]
 

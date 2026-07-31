@@ -13,7 +13,6 @@ Routes business events to accounting scenarios.
 ===============================================================================
 """
 
-
 from __future__ import annotations
 
 import sys
@@ -149,6 +148,11 @@ from scenarios.closing.accrued_expense import (
     AccruedExpenseScenario,
 )
 
+from scenarios.closing.accrued_revenue import (
+    AccruedRevenueRequest,
+    AccruedRevenueScenario,
+)
+
 class ScenarioRouter:
     """
     Converts BusinessEvents into JournalEntries.
@@ -186,6 +190,7 @@ class ScenarioRouter:
         cash_withdrawal_scenario: CashWithdrawalScenario,
         internal_transfer_scenario: InternalTransferScenario, 
         accrued_expense_scenario: AccruedExpenseScenario,
+        accrued_revenue_scenario: AccruedRevenueScenario,
         
     ) -> None:
 
@@ -220,6 +225,7 @@ class ScenarioRouter:
         self.cash_withdrawal_scenario = cash_withdrawal_scenario
         self.internal_transfer_scenario = internal_transfer_scenario
         self.accrued_expense_scenario = accrued_expense_scenario
+        self.accrued_revenue_scenario = accrued_revenue_scenario
 
     def process(
         self,
@@ -777,7 +783,19 @@ class ScenarioRouter:
                 return self.accrued_expense_scenario.create(
                     request
                 )
+            case BusinessEventType.ACCRUED_REVENUE:
 
+                request = AccruedRevenueRequest(
+                    company_code=event.company_code,
+                    closing_date=event.event_date,
+                    amount=event.amount,
+                    currency_code=event.currency_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                    revenue_account=event.revenue_account,
+                )
+
+                return self.accrued_revenue_scenario.create(request)
 
             case _:
 
