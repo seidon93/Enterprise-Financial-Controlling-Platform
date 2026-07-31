@@ -850,16 +850,10 @@ class BusinessEventGenerator:
 
     def prepaid_expense_event(self) -> BusinessEvent:
 
-        closing = self.provider.create_closing_transaction()
+        transaction = self.provider.create_closing_transaction()
 
-        return BusinessEvent(
-            event_type=BusinessEventType.PREPAID_EXPENSE,
-            event_date=closing.closing_date,
-            amount=closing.amount,
-            currency_code=closing.currency_code,
-            company_code=closing.company_code,
-            cost_center_code=closing.cost_center_code,
-            department_code=closing.department_code,
-            description=closing.description,
-            expense_account=closing.expense_account,
+        return self._build_closing_event(
+            BusinessEventType.PREPAID_EXPENSE,
+            transaction,
+            "Prepaid Expense",
         )

@@ -75,7 +75,7 @@ class PrepaidExpenseScenario(AccountingScenario):
         entry.add_line(
             JournalLine(
                 line_number=1,
-                account_number=ClosingAccounts.PREPAID_EXPENSE,
+                account_number=ClosingAccounts.PREPAID_EXPENSES,
                 company_code=request.company_code,
                 cost_center_code=request.cost_center_code,
                 department_code=request.department_code,
