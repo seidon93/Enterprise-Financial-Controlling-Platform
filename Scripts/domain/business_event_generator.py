@@ -10,7 +10,6 @@ Status          : Development
 ===============================================================================
 """
 
-
 from __future__ import annotations
 from decimal import Decimal
 
@@ -786,4 +785,52 @@ class BusinessEventGenerator:
             closing,
             "Period Close",
         )
-        
+
+# -------------------------------------------------------------------------
+# Closing Events
+# -------------------------------------------------------------------------
+
+    def _build_closing_event(
+        self,
+        event_type: BusinessEventType,
+        transaction,
+        description: str,
+    ) -> BusinessEvent:
+        """
+        Helper: build BusinessEvent from ClosingTransaction.
+        """
+
+        return BusinessEvent(
+
+            event_type=event_type,
+
+            company_code=transaction.company_code,
+
+            event_date=transaction.closing_date,
+
+            amount=transaction.amount,
+
+            currency_code=transaction.currency_code,
+
+            description=description,
+
+            cost_center_code=transaction.cost_center_code,
+
+            department_code=transaction.department_code,
+
+            expense_account=transaction.expense_account,
+
+            revenue_account=transaction.revenue_account,
+
+            balance_account=transaction.balance_account,
+        )
+
+    def accrued_expense_event(self) -> BusinessEvent:
+
+        transaction = self.provider.create_closing_transaction()
+
+        return self._build_closing_event(
+            BusinessEventType.ACCRUED_EXPENSE,
+            transaction,
+            "Accrued Expense",
+        )
