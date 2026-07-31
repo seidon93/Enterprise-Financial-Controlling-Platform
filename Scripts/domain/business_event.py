@@ -134,3 +134,9 @@ class BusinessEvent:
     loan_term: str | None = None
 
     closing_type: str | None = None
+
+    expense_account: str | None = None
+
+    revenue_account: str | None = None
+
+    balance_account: str | None = None
