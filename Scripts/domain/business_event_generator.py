@@ -818,6 +818,10 @@ class BusinessEventGenerator:
 
             department_code=transaction.department_code,
 
+            vat_rate=Decimal(0),
+
+            due_date=transaction.closing_date,
+
             expense_account=transaction.expense_account,
 
             revenue_account=transaction.revenue_account,

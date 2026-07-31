@@ -39,6 +39,7 @@ class DocumentType(str, Enum):
     GI = "GI"              # Goods Issue
     ST = "ST"              # Stock Transfer
     IA = "IA"              # Inventory Adjustment
+    CLOSING = "CLOSING"    # Period Closing
 
 class ScenarioType(str, Enum):
     """Accounting scenario types."""

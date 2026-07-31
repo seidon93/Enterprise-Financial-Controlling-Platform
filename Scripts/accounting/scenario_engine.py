@@ -939,6 +939,46 @@ class ScenarioEngine:
             batch.batch_id,
         )
 
+    def run_closing(self) -> None:
+        """
+        Generate only Closing transactions.
+        """
+
+        logger.info("=" * 70)
+        logger.info("Running CLOSING ONLY mode")
+        logger.info("=" * 70)
+
+        (
+            provider,
+            event_generator,
+            loader,
+            router,
+            batch,
+        ) = self.create_runtime()
+
+        generator = ClosingGenerator(
+            provider,
+            event_generator,
+            router,
+            loader,
+        )
+
+        inserted = generator.generate(
+            documents=self.config.closing_documents,
+            batch=batch,
+        )
+
+        logger.info(
+            "Closing rows inserted: %s",
+            inserted,
+        )
+
+        logger.info(
+            "Batch ID: %s",
+            batch.batch_id,
+        )
+
+
     def run_vendor(self) -> None:
         logger.info("Vendor scenario not implemented yet.")
 

@@ -18,7 +18,8 @@ from __future__ import annotations
 import logging
 import random
 
-from Scripts.common.batch_context import BatchContext
+# pyrefly: ignore [missing-import]
+from common.batch_context import BatchContext
 
 logger = logging.getLogger(__name__)
 
