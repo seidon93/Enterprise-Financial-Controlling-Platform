@@ -183,6 +183,10 @@ from scenarios.closing.bad_debt_allowance import (
     BadDebtAllowanceRequest,
 )
 
+from scenarios.closing.foreign_currency_revaluation import (
+    ForeignCurrencyRevaluationScenario,
+    ForeignCurrencyRevaluationRequest,
+)
 class ScenarioRouter:
     """
     Converts BusinessEvents into JournalEntries.
@@ -227,6 +231,7 @@ class ScenarioRouter:
         inventory_writeoff_scenario: InventoryWriteoffScenario,
         inventory_revaluation_scenario: InventoryRevaluationScenario,
         bad_debt_allowance_scenario: BadDebtAllowanceScenario,
+        foreign_currency_revaluation_scenario: ForeignCurrencyRevaluationScenario,
 
     ) -> None:
 
@@ -268,6 +273,9 @@ class ScenarioRouter:
         self.inventory_writeoff_scenario = inventory_writeoff_scenario
         self.inventory_revaluation_scenario = inventory_revaluation_scenario
         self.bad_debt_allowance_scenario = bad_debt_allowance_scenario
+        self.foreign_currency_revaluation_scenario = (
+            foreign_currency_revaluation_scenario
+        )
 
     def process(
         self,
@@ -960,6 +968,31 @@ class ScenarioRouter:
                 )
 
                 return self.bad_debt_allowance_scenario.create(
+                    request
+                )
+
+            case BusinessEventType.FOREIGN_CURRENCY_REVALUATION:
+
+                request = ForeignCurrencyRevaluationRequest(
+
+                    company_code=event.company_code,
+
+                    closing_date=event.event_date,
+
+                    amount=event.amount,
+
+                    currency_code=event.currency_code,
+
+                    cost_center_code=event.cost_center_code,
+
+                    department_code=event.department_code,
+
+                    debit_account=event.debit_account,
+
+                    credit_account=event.credit_account,
+                )
+
+                return self.foreign_currency_revaluation_scenario.create(
                     request
                 )
 

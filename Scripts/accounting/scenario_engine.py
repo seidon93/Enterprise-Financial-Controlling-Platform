@@ -123,6 +123,10 @@ from scenarios.closing.bad_debt_allowance import (
     BadDebtAllowanceScenario,
 )
 
+from scenarios.closing.foreign_currency_revaluation import (
+    ForeignCurrencyRevaluationScenario,
+)
+
 logger = logging.getLogger(__name__)
 
 print("Loaded ScenarioEngine from:")
@@ -425,6 +429,12 @@ class ScenarioEngine:
             document_generator,
         )
 
+        foreign_currency_revaluation_scenario = (
+            ForeignCurrencyRevaluationScenario(
+                document_generator,
+            )
+        )
+
         # ---------------------------------------------------------
         # Router
         # ---------------------------------------------------------
@@ -467,6 +477,7 @@ class ScenarioEngine:
             inventory_writeoff_scenario=inventory_writeoff_scenario,
             inventory_revaluation_scenario=inventory_revaluation_scenario,
             bad_debt_allowance_scenario=bad_debt_allowance_scenario,
+            foreign_currency_revaluation_scenario=foreign_currency_revaluation_scenario,
         )
 
         batch = BatchContext()
