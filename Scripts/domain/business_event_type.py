@@ -75,4 +75,6 @@ class BusinessEventType(str, Enum):
     FX_REVALUATION = "FX_REVALUATION"
     YEAR_END = "YEAR_END"
     PERIOD_CLOSE = "PERIOD_CLOSE"
+    BAD_DEBT_ALLOWANCE = "BAD_DEBT_ALLOWANCE"
+
    
