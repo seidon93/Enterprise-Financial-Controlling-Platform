@@ -142,3 +142,5 @@ class BusinessEvent:
     balance_account: str | None = None
 
     provision_account: str | None = None
+
+    inventory_account: str | None = None

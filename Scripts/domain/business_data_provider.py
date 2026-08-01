@@ -897,3 +897,50 @@ class BusinessDataProvider:
                 ]
             ),
         )
+
+    def create_inventory_writeoff_transaction(
+        self,
+    ) -> ClosingTransaction:
+        """
+        Creates inventory write-off transaction.
+        """
+
+        company = self.random_company()
+
+        return ClosingTransaction(
+
+            company_code=company.company_code,
+
+            closing_date=self.random_date(),
+
+            amount=self.random_decimal(
+                Decimal("5000"),
+                Decimal("300000"),
+            ),
+
+            currency_code=company.currency_code,
+
+            cost_center_code=self.random_cost_center(),
+
+            department_code=self.random_department(),
+
+            closing_type="INVENTORY_WRITEOFF",
+
+            description="Inventory Write-off",
+
+            expense_account=self.random.choice(
+                [
+                    "549",
+                    "548",
+                    "582",
+                ]
+            ),
+
+            inventory_account=self.random.choice(
+                [
+                    "112",
+                    "123",
+                    "132",
+                ]
+            ),
+        )

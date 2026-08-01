@@ -829,7 +829,10 @@ class BusinessEventGenerator:
             balance_account=transaction.balance_account,
 
             provision_account=transaction.provision_account,
+
+            inventory_account=transaction.inventory_account,
         )
+
 
     def accrued_expense_event(self) -> BusinessEvent:
 
@@ -880,4 +883,16 @@ class BusinessEventGenerator:
             BusinessEventType.PROVISION,
             transaction,
             "Provision",
+        )
+
+    def inventory_writeoff_event(
+        self,
+    ) -> BusinessEvent:
+
+        transaction = self.provider.create_inventory_writeoff_transaction()
+
+        return self._build_closing_event(
+            BusinessEventType.INVENTORY_WRITEOFF,
+            transaction,
+            "Inventory Write-off",
         )
