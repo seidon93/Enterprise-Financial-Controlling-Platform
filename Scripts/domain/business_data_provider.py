@@ -1014,3 +1014,50 @@ class BusinessDataProvider:
 
             allowance_account="391",
         )
+
+    def create_foreign_currency_revaluation_transaction(
+        self,
+    ) -> ClosingTransaction:
+        """
+        Creates foreign currency revaluation transaction.
+        """
+
+        company = self.random_company()
+
+        gain = self.random.choice([True, False])
+
+        if gain:
+
+            debit_account = "311"
+            credit_account = "663"
+
+        else:
+
+            debit_account = "563"
+            credit_account = "311"
+
+        return ClosingTransaction(
+
+            company_code=company.company_code,
+
+            closing_date=self.random_date(),
+
+            amount=self.random_decimal(
+                Decimal("500"),
+                Decimal("350000"),
+            ),
+
+            currency_code=company.currency_code,
+
+            cost_center_code=self.random_cost_center(),
+
+            department_code=self.random_department(),
+
+            closing_type="FOREIGN_CURRENCY_REVALUATION",
+
+            description="Foreign Currency Revaluation",
+
+            debit_account=debit_account,
+
+            credit_account=credit_account,
+        )
