@@ -915,3 +915,20 @@ class BusinessEventGenerator:
 
             "Inventory Revaluation",
         )
+
+    def bad_debt_allowance_event(
+        self,
+    ) -> BusinessEvent:
+
+        transaction = (
+            self.provider.create_bad_debt_allowance_transaction()
+        )
+
+        return self._build_closing_event(
+
+            BusinessEventType.BAD_DEBT_ALLOWANCE,
+
+            transaction,
+
+            "Bad Debt Allowance",
+        )
