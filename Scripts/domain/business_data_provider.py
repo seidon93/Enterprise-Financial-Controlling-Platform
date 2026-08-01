@@ -944,3 +944,38 @@ class BusinessDataProvider:
                 ]
             ),
         )
+
+    def create_inventory_revaluation_transaction(
+        self,
+    ) -> ClosingTransaction:
+        """
+        Creates Inventory Revaluation transaction.
+        """
+
+        company = self.random_company()
+
+        return ClosingTransaction(
+
+            company_code=company.company_code,
+
+            closing_date=self.random_date(),
+
+            amount=self.random_decimal(
+                Decimal("5000"),
+                Decimal("600000"),
+            ),
+
+            currency_code=company.currency_code,
+
+            cost_center_code=self.random_cost_center(),
+
+            department_code=self.random_department(),
+
+            closing_type="INVENTORY_REVALUATION",
+
+            description="Inventory Revaluation",
+
+            expense_account="549",
+
+            balance_account="112",
+        )
