@@ -187,6 +187,13 @@ from scenarios.closing.foreign_currency_revaluation import (
     ForeignCurrencyRevaluationScenario,
     ForeignCurrencyRevaluationRequest,
 )
+
+from scenarios.closing.income_tax_accrual import (
+    IncomeTaxAccrualScenario,
+    IncomeTaxAccrualRequest,
+)
+
+
 class ScenarioRouter:
     """
     Converts BusinessEvents into JournalEntries.
@@ -232,6 +239,7 @@ class ScenarioRouter:
         inventory_revaluation_scenario: InventoryRevaluationScenario,
         bad_debt_allowance_scenario: BadDebtAllowanceScenario,
         foreign_currency_revaluation_scenario: ForeignCurrencyRevaluationScenario,
+        income_tax_accrual_scenario: IncomeTaxAccrualScenario,
 
     ) -> None:
 
@@ -276,6 +284,7 @@ class ScenarioRouter:
         self.foreign_currency_revaluation_scenario = (
             foreign_currency_revaluation_scenario
         )
+        self.income_tax_accrual_scenario = income_tax_accrual_scenario
 
     def process(
         self,
@@ -993,6 +1002,31 @@ class ScenarioRouter:
                 )
 
                 return self.foreign_currency_revaluation_scenario.create(
+                    request
+                )
+
+            case BusinessEventType.INCOME_TAX_ACCRUAL:
+
+                request = IncomeTaxAccrualRequest(
+
+                    company_code=event.company_code,
+
+                    closing_date=event.event_date,
+
+                    amount=event.amount,
+
+                    currency_code=event.currency_code,
+
+                    cost_center_code=event.cost_center_code,
+
+                    department_code=event.department_code,
+
+                    tax_expense_account=event.tax_expense_account,
+
+                    tax_liability_account=event.tax_liability_account,
+                )
+
+                return self.income_tax_accrual_scenario.create(
                     request
                 )
 
