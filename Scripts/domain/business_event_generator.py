@@ -831,6 +831,8 @@ class BusinessEventGenerator:
             provision_account=transaction.provision_account,
 
             inventory_account=transaction.inventory_account,
+
+            allowance_account=transaction.allowance_account,
         )
 
 
