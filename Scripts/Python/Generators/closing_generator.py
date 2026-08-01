@@ -66,6 +66,7 @@ class ClosingGenerator:
             self.event_generator.accrued_revenue_event,
             self.event_generator.prepaid_expense_event,
             self.event_generator.deferred_revenue_event,
+            self.event_generator.provision_event,
         ]
 
         for _ in range(documents):
