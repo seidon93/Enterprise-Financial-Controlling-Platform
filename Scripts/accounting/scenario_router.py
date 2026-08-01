@@ -163,6 +163,10 @@ from scenarios.closing.deferred_revenue import (
     DeferredRevenueRequest,
 )
 
+from scenarios.closing.provision import (
+    ProvisionScenario,
+    ProvisionRequest,
+)
 
 class ScenarioRouter:
     """
@@ -204,7 +208,8 @@ class ScenarioRouter:
         accrued_revenue_scenario: AccruedRevenueScenario,
         prepaid_expense_scenario: PrepaidExpenseScenario,
         deferred_revenue_scenario: DeferredRevenueScenario,
-        
+        provision_scenario: ProvisionScenario,
+
     ) -> None:
 
         self.sales_scenario = sales_scenario
@@ -241,6 +246,7 @@ class ScenarioRouter:
         self.accrued_revenue_scenario = accrued_revenue_scenario
         self.prepaid_expense_scenario = prepaid_expense_scenario
         self.deferred_revenue_scenario = deferred_revenue_scenario
+        self.provision_scenario = provision_scenario
 
     def process(
         self,
@@ -841,6 +847,23 @@ class ScenarioRouter:
                 )
 
                 return self.deferred_revenue_scenario.create(
+                    request
+                )
+
+            case BusinessEventType.PROVISION:
+
+                request = ProvisionRequest(
+                    company_code=event.company_code,
+                    closing_date=event.event_date,
+                    amount=event.amount,
+                    currency_code=event.currency_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                    expense_account=event.expense_account,
+                    provision_account=event.provision_account,
+                )
+
+                return self.provision_scenario.create(
                     request
                 )
 
