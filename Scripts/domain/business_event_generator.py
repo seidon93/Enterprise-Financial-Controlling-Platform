@@ -936,3 +936,20 @@ class BusinessEventGenerator:
 
             "Bad Debt Allowance",
         )
+
+    def foreign_currency_revaluation_event(
+        self,
+    ) -> BusinessEvent:
+
+        transaction = (
+            self.provider.create_foreign_currency_revaluation_transaction()
+        )
+
+        return self._build_closing_event(
+
+            BusinessEventType.FOREIGN_CURRENCY_REVALUATION,
+
+            transaction,
+
+            "Foreign Currency Revaluation",
+        )
