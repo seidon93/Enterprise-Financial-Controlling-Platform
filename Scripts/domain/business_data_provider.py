@@ -979,3 +979,38 @@ class BusinessDataProvider:
 
             balance_account="112",
         )
+
+    def create_bad_debt_allowance_transaction(
+        self,
+    ) -> ClosingTransaction:
+        """
+        Creates bad debt allowance transaction.
+        """
+
+        company = self.random_company()
+
+        return ClosingTransaction(
+
+            company_code=company.company_code,
+
+            closing_date=self.random_date(),
+
+            amount=self.random_decimal(
+                Decimal("1000"),
+                Decimal("250000"),
+            ),
+
+            currency_code=company.currency_code,
+
+            cost_center_code=self.random_cost_center(),
+
+            department_code=self.random_department(),
+
+            closing_type="BAD_DEBT_ALLOWANCE",
+
+            description="Bad Debt Allowance",
+
+            expense_account="558",
+
+            allowance_account="391",
+        )
