@@ -957,3 +957,22 @@ class BusinessEventGenerator:
 
             "Foreign Currency Revaluation",
         )
+
+    def income_tax_accrual_event(
+        self,
+    ) -> BusinessEvent:
+
+        transaction = (
+            self.provider.create_income_tax_accrual_transaction()
+        )
+
+        return self._build_closing_event(
+
+            BusinessEventType.INCOME_TAX_ACCRUAL,
+
+            transaction,
+
+            "Income Tax Accrual",
+        )
+
+        
