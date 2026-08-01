@@ -860,7 +860,7 @@ class BusinessEventGenerator:
 
     def deferred_revenue_event(self) -> BusinessEvent:
 
-        transaction = self.provider.create_deferred_revenue_transaction()
+        transaction = self.provider.create_closing_transaction()
 
         return self._build_closing_event(
             BusinessEventType.DEFERRED_REVENUE,

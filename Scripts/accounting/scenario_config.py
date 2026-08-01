@@ -71,7 +71,7 @@ class ScenarioConfig:
     asset_transactions: int = 3_000
     journal_entries: int = 20_000
     supplier_payments: int = 30_000
-    closing_documents: int = 5_000
+    closing_documents: int = 500
 
     # -------------------------------------------------------------------------
     # Random Seed
