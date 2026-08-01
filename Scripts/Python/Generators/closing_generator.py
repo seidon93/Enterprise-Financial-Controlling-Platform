@@ -68,6 +68,7 @@ class ClosingGenerator:
             self.event_generator.deferred_revenue_event,
             self.event_generator.provision_event,
             self.event_generator.inventory_writeoff_event,
+            self.event_generator.inventory_revaluation_event,
         ]
 
         for _ in range(documents):

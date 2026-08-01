@@ -115,6 +115,10 @@ from scenarios.closing.inventory_writeoff import (
     InventoryWriteoffScenario,
 )
 
+from scenarios.closing.inventory_revaluation import (
+    InventoryRevaluationScenario,
+)
+
 logger = logging.getLogger(__name__)
 
 print("Loaded ScenarioEngine from:")
@@ -409,6 +413,10 @@ class ScenarioEngine:
             document_generator,
         )
 
+        inventory_revaluation_scenario = InventoryRevaluationScenario(
+            document_generator,
+        )
+
         # ---------------------------------------------------------
         # Router
         # ---------------------------------------------------------
@@ -449,6 +457,7 @@ class ScenarioEngine:
             deferred_revenue_scenario=deferred_revenue_scenario,
             provision_scenario=provision_scenario,
             inventory_writeoff_scenario=inventory_writeoff_scenario,
+            inventory_revaluation_scenario=inventory_revaluation_scenario,
         )
 
         batch = BatchContext()

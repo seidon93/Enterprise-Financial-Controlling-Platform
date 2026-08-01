@@ -173,6 +173,11 @@ from scenarios.closing.inventory_writeoff import (
     InventoryWriteoffRequest,
 )
 
+from scenarios.closing.inventory_revaluation import (
+    InventoryRevaluationScenario,
+    InventoryRevaluationRequest,
+)
+
 class ScenarioRouter:
     """
     Converts BusinessEvents into JournalEntries.
@@ -215,6 +220,7 @@ class ScenarioRouter:
         deferred_revenue_scenario: DeferredRevenueScenario,
         provision_scenario: ProvisionScenario,
         inventory_writeoff_scenario: InventoryWriteoffScenario,
+        inventory_revaluation_scenario: InventoryRevaluationScenario,
 
     ) -> None:
 
@@ -254,6 +260,7 @@ class ScenarioRouter:
         self.deferred_revenue_scenario = deferred_revenue_scenario
         self.provision_scenario = provision_scenario
         self.inventory_writeoff_scenario = inventory_writeoff_scenario
+        self.inventory_revaluation_scenario = inventory_revaluation_scenario
 
     def process(
         self,
@@ -896,6 +903,31 @@ class ScenarioRouter:
                 )
 
                 return self.inventory_writeoff_scenario.create(
+                    request
+                )
+
+            case BusinessEventType.INVENTORY_REVALUATION:
+
+                request = InventoryRevaluationRequest(
+
+                    company_code=event.company_code,
+
+                    closing_date=event.event_date,
+
+                    amount=event.amount,
+
+                    currency_code=event.currency_code,
+
+                    cost_center_code=event.cost_center_code,
+
+                    department_code=event.department_code,
+
+                    expense_account=event.expense_account,
+
+                    inventory_account=event.balance_account,
+                )
+
+                return self.inventory_revaluation_scenario.create(
                     request
                 )
 
