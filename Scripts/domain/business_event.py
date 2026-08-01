@@ -150,3 +150,11 @@ class BusinessEvent:
     debit_account: str | None = None
 
     credit_account: str | None = None
+
+    tax_expense_account: str | None = None
+
+    tax_liability_account: str | None = None
+
+    tax_expense_account: str | None = None
+
+    tax_liability_account: str | None = None

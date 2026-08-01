@@ -683,7 +683,7 @@ class BusinessEventGenerator:
             "Internal Transfer",
         )
 
-    # -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # Closing Events
 # -------------------------------------------------------------------------
 
@@ -837,6 +837,10 @@ class BusinessEventGenerator:
             debit_account=transaction.debit_account,
 
             credit_account=transaction.credit_account,
+
+            tax_expense_account=transaction.tax_expense_account,
+
+            tax_liability_account=transaction.tax_liability_account,
         )
 
 
