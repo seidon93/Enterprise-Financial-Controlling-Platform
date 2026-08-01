@@ -111,6 +111,9 @@ from scenarios.closing.provision import (
     ProvisionScenario,
 )
 
+from scenarios.closing.inventory_writeoff import (
+    InventoryWriteoffScenario,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -402,6 +405,10 @@ class ScenarioEngine:
             document_generator,
         )
 
+        inventory_writeoff_scenario = InventoryWriteoffScenario(
+            document_generator,
+        )
+
         # ---------------------------------------------------------
         # Router
         # ---------------------------------------------------------
@@ -441,6 +448,7 @@ class ScenarioEngine:
             prepaid_expense_scenario=prepaid_expense_scenario,
             deferred_revenue_scenario=deferred_revenue_scenario,
             provision_scenario=provision_scenario,
+            inventory_writeoff_scenario=inventory_writeoff_scenario,
         )
 
         batch = BatchContext()
