@@ -163,9 +163,6 @@ class DimensionMapper:
         return self.asset_map.get(asset_code)
 
     def account_key(self, account_number: str) -> int:
-        return self.account_map[account_number]
-
-    def account_key(self, account_number: str) -> int:
         if account_number in self.account_map:
             return self.account_map[account_number]
             
