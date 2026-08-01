@@ -127,6 +127,10 @@ from scenarios.closing.foreign_currency_revaluation import (
     ForeignCurrencyRevaluationScenario,
 )
 
+from scenarios.closing.income_tax_accrual import (
+    IncomeTaxAccrualScenario,
+)
+
 logger = logging.getLogger(__name__)
 
 print("Loaded ScenarioEngine from:")
@@ -431,6 +435,12 @@ class ScenarioEngine:
 
         foreign_currency_revaluation_scenario = (
             ForeignCurrencyRevaluationScenario(
+                document_generator,
+            )
+        )
+
+        income_tax_accrual_scenario = (
+            IncomeTaxAccrualScenario(
                 document_generator,
             )
         )
