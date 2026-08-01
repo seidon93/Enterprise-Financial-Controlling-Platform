@@ -811,4 +811,42 @@ class BusinessDataProvider:
                 balance_accounts
             ),
         )
-            
+
+        def create_deferred_revenue_transaction(
+            self,
+        ) -> ClosingTransaction:
+            """
+            Creates deferred revenue transaction.
+            """
+
+            company = self.random_company()
+
+            return ClosingTransaction(
+
+                company_code=company.company_code,
+
+                closing_date=self.random_date(),
+
+                amount=self.random_decimal(
+                    Decimal("5000"),
+                    Decimal("250000"),
+                ),
+
+                currency_code=company.currency_code,
+
+                cost_center_code=self.random_cost_center(),
+
+                department_code=self.random_department(),
+
+                closing_type="DEFERRED_REVENUE",
+
+                description="Deferred Revenue",
+
+                revenue_account=self.random.choice(
+                    [
+                        "602",
+                        "604",
+                        "648",
+                    ]
+                ),
+            )   
