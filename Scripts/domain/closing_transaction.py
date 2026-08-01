@@ -51,3 +51,5 @@ class ClosingTransaction:
     provision_account: str | None = None
 
     inventory_account: str | None = None
+
+    allowance_account: str | None = None
