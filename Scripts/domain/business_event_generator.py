@@ -857,3 +857,13 @@ class BusinessEventGenerator:
             transaction,
             "Prepaid Expense",
         )
+
+    def deferred_revenue_event(self) -> BusinessEvent:
+
+        transaction = self.provider.create_deferred_revenue_transaction()
+
+        return self._build_closing_event(
+            BusinessEventType.DEFERRED_REVENUE,
+            transaction,
+            "Deferred Revenue",
+        )
