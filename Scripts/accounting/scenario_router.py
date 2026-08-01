@@ -178,6 +178,11 @@ from scenarios.closing.inventory_revaluation import (
     InventoryRevaluationRequest,
 )
 
+from scenarios.closing.bad_debt_allowance import (
+    BadDebtAllowanceScenario,
+    BadDebtAllowanceRequest,
+)
+
 class ScenarioRouter:
     """
     Converts BusinessEvents into JournalEntries.
@@ -221,6 +226,7 @@ class ScenarioRouter:
         provision_scenario: ProvisionScenario,
         inventory_writeoff_scenario: InventoryWriteoffScenario,
         inventory_revaluation_scenario: InventoryRevaluationScenario,
+        bad_debt_allowance_scenario: BadDebtAllowanceScenario,
 
     ) -> None:
 
@@ -261,6 +267,7 @@ class ScenarioRouter:
         self.provision_scenario = provision_scenario
         self.inventory_writeoff_scenario = inventory_writeoff_scenario
         self.inventory_revaluation_scenario = inventory_revaluation_scenario
+        self.bad_debt_allowance_scenario = bad_debt_allowance_scenario
 
     def process(
         self,
@@ -928,6 +935,31 @@ class ScenarioRouter:
                 )
 
                 return self.inventory_revaluation_scenario.create(
+                    request
+                )
+
+            case BusinessEventType.BAD_DEBT_ALLOWANCE:
+
+                request = BadDebtAllowanceRequest(
+
+                    company_code=event.company_code,
+
+                    closing_date=event.event_date,
+
+                    amount=event.amount,
+
+                    currency_code=event.currency_code,
+
+                    cost_center_code=event.cost_center_code,
+
+                    department_code=event.department_code,
+
+                    expense_account=event.expense_account,
+
+                    allowance_account=event.allowance_account,
+                )
+
+                return self.bad_debt_allowance_scenario.create(
                     request
                 )
 
