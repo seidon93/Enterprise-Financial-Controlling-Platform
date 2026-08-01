@@ -488,6 +488,7 @@ class ScenarioEngine:
             inventory_revaluation_scenario=inventory_revaluation_scenario,
             bad_debt_allowance_scenario=bad_debt_allowance_scenario,
             foreign_currency_revaluation_scenario=foreign_currency_revaluation_scenario,
+            income_tax_accrual_scenario=income_tax_accrual_scenario,
         )
 
         batch = BatchContext()

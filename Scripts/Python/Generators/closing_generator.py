@@ -71,6 +71,7 @@ class ClosingGenerator:
             self.event_generator.inventory_revaluation_event,
             self.event_generator.bad_debt_allowance_event,
             self.event_generator.foreign_currency_revaluation_event,
+            self.event_generator.income_tax_accrual_event,
         ]
 
         for _ in range(documents):
