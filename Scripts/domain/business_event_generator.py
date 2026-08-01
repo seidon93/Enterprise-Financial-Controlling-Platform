@@ -827,6 +827,8 @@ class BusinessEventGenerator:
             revenue_account=transaction.revenue_account,
 
             balance_account=transaction.balance_account,
+
+            provision_account=transaction.provision_account,
         )
 
     def accrued_expense_event(self) -> BusinessEvent:
