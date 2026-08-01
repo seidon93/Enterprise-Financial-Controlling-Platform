@@ -1061,3 +1061,38 @@ class BusinessDataProvider:
 
             credit_account=credit_account,
         )
+
+    def create_income_tax_accrual_transaction(
+        self,
+    ) -> ClosingTransaction:
+        """
+        Creates income tax accrual transaction.
+        """
+
+        company = self.random_company()
+
+        return ClosingTransaction(
+
+            company_code=company.company_code,
+
+            closing_date=self.random_date(),
+
+            amount=self.random_decimal(
+                Decimal("10000"),
+                Decimal("2000000"),
+            ),
+
+            currency_code=company.currency_code,
+
+            cost_center_code=self.random_cost_center(),
+
+            department_code=self.random_department(),
+
+            closing_type="INCOME_TAX_ACCRUAL",
+
+            description="Income Tax Accrual",
+
+            tax_expense_account="591",
+
+            tax_liability_account="341",
+        )
