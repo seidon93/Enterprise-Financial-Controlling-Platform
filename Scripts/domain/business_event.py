@@ -146,3 +146,7 @@ class BusinessEvent:
     inventory_account: str | None = None
 
     allowance_account: str | None = None
+
+    debit_account: str | None = None
+
+credit_account: str | None = None
