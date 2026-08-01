@@ -149,4 +149,4 @@ class BusinessEvent:
 
     debit_account: str | None = None
 
-credit_account: str | None = None
+    credit_account: str | None = None

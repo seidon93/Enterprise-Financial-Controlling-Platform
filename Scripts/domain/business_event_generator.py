@@ -833,6 +833,10 @@ class BusinessEventGenerator:
             inventory_account=transaction.inventory_account,
 
             allowance_account=transaction.allowance_account,
+
+            debit_account=transaction.debit_account,
+
+            credit_account=transaction.credit_account,
         )
 
 
