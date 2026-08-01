@@ -896,3 +896,20 @@ class BusinessEventGenerator:
             transaction,
             "Inventory Write-off",
         )
+
+    def inventory_revaluation_event(
+        self,
+    ) -> BusinessEvent:
+
+        transaction = (
+            self.provider.create_inventory_revaluation_transaction()
+        )
+
+        return self._build_closing_event(
+
+            BusinessEventType.INVENTORY_REVALUATION,
+
+            transaction,
+
+            "Inventory Revaluation",
+        )
