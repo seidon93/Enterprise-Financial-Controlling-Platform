@@ -1096,3 +1096,38 @@ class BusinessDataProvider:
 
             tax_liability_account="341",
         )
+
+    def create_deferred_tax_transaction(
+        self,
+    ) -> ClosingTransaction:
+        """
+        Creates deferred tax transaction.
+        """
+
+        company = self.random_company()
+
+        return ClosingTransaction(
+
+            company_code=company.company_code,
+
+            closing_date=self.random_date(),
+
+            amount=self.random_decimal(
+                Decimal("5000"),
+                Decimal("500000"),
+            ),
+
+            currency_code=company.currency_code,
+
+            cost_center_code=self.random_cost_center(),
+
+            department_code=self.random_department(),
+
+            closing_type="DEFERRED_TAX",
+
+            description="Deferred Tax",
+
+            deferred_tax_expense_account="592",
+
+            deferred_tax_balance_account="481",
+        )
