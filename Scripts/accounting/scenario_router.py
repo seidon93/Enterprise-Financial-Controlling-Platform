@@ -193,6 +193,10 @@ from scenarios.closing.income_tax_accrual import (
     IncomeTaxAccrualRequest,
 )
 
+from scenarios.closing.deferred_tax import (
+    DeferredTaxScenario,
+    DeferredTaxRequest,
+)
 
 class ScenarioRouter:
     """
@@ -240,6 +244,7 @@ class ScenarioRouter:
         bad_debt_allowance_scenario: BadDebtAllowanceScenario,
         foreign_currency_revaluation_scenario: ForeignCurrencyRevaluationScenario,
         income_tax_accrual_scenario: IncomeTaxAccrualScenario,
+        deferred_tax_scenario: DeferredTaxScenario,
 
     ) -> None:
 
@@ -285,7 +290,7 @@ class ScenarioRouter:
             foreign_currency_revaluation_scenario
         )
         self.income_tax_accrual_scenario = income_tax_accrual_scenario
-
+        self.deferred_tax_scenario = deferred_tax_scenario
     def process(
         self,
         event: BusinessEvent,
@@ -1027,6 +1032,31 @@ class ScenarioRouter:
                 )
 
                 return self.income_tax_accrual_scenario.create(
+                    request
+                )
+
+            case BusinessEventType.DEFERRED_TAX:
+
+                request = DeferredTaxRequest(
+
+                    company_code=event.company_code,
+
+                    closing_date=event.event_date,
+
+                    amount=event.amount,
+
+                    currency_code=event.currency_code,
+
+                    cost_center_code=event.cost_center_code,
+
+                    department_code=event.department_code,
+
+                    deferred_tax_expense_account=event.deferred_tax_expense_account,
+
+                    deferred_tax_balance_account=event.deferred_tax_balance_account,
+                )
+
+                return self.deferred_tax_scenario.create(
                     request
                 )
 
