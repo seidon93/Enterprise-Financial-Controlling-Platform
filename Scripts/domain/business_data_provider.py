@@ -1166,3 +1166,38 @@ class BusinessDataProvider:
 
             retained_earnings_account="702",
         )
+
+    def create_opening_balance_transaction(
+        self,
+    ) -> ClosingTransaction:
+        """
+        Creates opening balance transaction.
+        """
+
+        company = self.random_company()
+
+        return ClosingTransaction(
+
+            company_code=company.company_code,
+
+            closing_date=self.random_date(),
+
+            amount=self.random_decimal(
+                Decimal("100000"),
+                Decimal("50000000"),
+            ),
+
+            currency_code=company.currency_code,
+
+            cost_center_code=self.random_cost_center(),
+
+            department_code=self.random_department(),
+
+            closing_type="OPENING_BALANCE",
+
+            description="Opening Balance",
+
+            opening_account="701",
+
+            balance_account="702",
+        )

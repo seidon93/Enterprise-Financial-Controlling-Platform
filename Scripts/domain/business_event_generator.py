@@ -849,6 +849,10 @@ class BusinessEventGenerator:
             profit_account=transaction.profit_account,
 
             retained_earnings_account=transaction.retained_earnings_account,
+
+            opening_account=transaction.opening_account,
+
+            
         )
 
 
