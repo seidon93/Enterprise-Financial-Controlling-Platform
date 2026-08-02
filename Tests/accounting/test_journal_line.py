@@ -12,11 +12,8 @@ Description:
 Unit tests for JournalLine.
 ===============================================================================
 """
-
 from decimal import Decimal
-
-# pyrefly: ignore [missing-import]
-from accounting.models import JournalLine
+from Scripts.accounting.models import JournalLine
 
 def test_create_journal_line():
 

@@ -1,4 +1,7 @@
 {
+    "python.analysis.extraPaths": [
+        "./Scripts"
+    ],
     "sqltools.connections": [
         {
             "ssh": "Disabled",

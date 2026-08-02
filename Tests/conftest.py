@@ -23,9 +23,9 @@ import pytest
 
 # ---------------------------------------------------------------------------
 # Make the Scripts directory importable so tests can use
-# ``from accounting.models import ...`` etc.
+# ``from Scripts.accounting.models import ...`` etc.
 # ---------------------------------------------------------------------------
-_SCRIPTS_DIR = str(Path(__file__).resolve().parent.parent / "Scripts")
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent.parent)
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
