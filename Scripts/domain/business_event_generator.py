@@ -1000,3 +1000,20 @@ class BusinessEventGenerator:
 
             "Deferred Tax",
         )
+
+    def profit_transfer_event(
+        self,
+    ) -> BusinessEvent:
+
+        transaction = (
+            self.provider.create_profit_transfer_transaction()
+        )
+
+        return self._build_closing_event(
+
+            BusinessEventType.PROFIT_TRANSFER,
+
+            transaction,
+
+            "Year-End Profit Transfer",
+        )
