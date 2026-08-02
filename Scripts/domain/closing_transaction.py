@@ -69,3 +69,7 @@ class ClosingTransaction:
     profit_account: str | None = None
 
     retained_earnings_account: str | None = None
+
+    opening_account: str | None = None
+
+    balance_account: str | None = None
