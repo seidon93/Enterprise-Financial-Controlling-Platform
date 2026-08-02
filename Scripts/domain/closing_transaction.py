@@ -65,3 +65,7 @@ class ClosingTransaction:
     deferred_tax_expense_account: str | None = None
 
     deferred_tax_balance_account: str | None = None
+
+    profit_account: str | None = None
+
+    retained_earnings_account: str | None = None
