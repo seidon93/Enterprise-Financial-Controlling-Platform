@@ -291,6 +291,8 @@ class ScenarioRouter:
         )
         self.income_tax_accrual_scenario = income_tax_accrual_scenario
         self.deferred_tax_scenario = deferred_tax_scenario
+
+        
     def process(
         self,
         event: BusinessEvent,
