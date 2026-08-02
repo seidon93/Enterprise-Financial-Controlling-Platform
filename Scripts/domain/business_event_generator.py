@@ -980,3 +980,19 @@ class BusinessEventGenerator:
         )
 
         
+    def deferred_tax_event(
+        self,
+    ) -> BusinessEvent:
+
+        transaction = (
+            self.provider.create_deferred_tax_transaction()
+        )
+
+        return self._build_closing_event(
+
+            BusinessEventType.DEFERRED_TAX,
+
+            transaction,
+
+            "Deferred Tax",
+        )
