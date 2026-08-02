@@ -203,6 +203,11 @@ from scenarios.closing.profit_transfer import (
     ProfitTransferRequest,
 )
 
+from scenarios.closing.opening_balance import (
+    OpeningBalanceScenario,
+    OpeningBalanceRequest,
+)
+
 class ScenarioRouter:
     """
     Converts BusinessEvents into JournalEntries.
@@ -251,6 +256,7 @@ class ScenarioRouter:
         income_tax_accrual_scenario: IncomeTaxAccrualScenario,
         deferred_tax_scenario: DeferredTaxScenario,
         profit_transfer_scenario: ProfitTransferScenario,
+        opening_balance_scenario: OpeningBalanceScenario,
 
     ) -> None:
 
@@ -298,6 +304,7 @@ class ScenarioRouter:
         self.income_tax_accrual_scenario = income_tax_accrual_scenario
         self.deferred_tax_scenario = deferred_tax_scenario
         self.profit_transfer_scenario = profit_transfer_scenario
+        self.opening_balance_scenario = opening_balance_scenario
 
         
     def process(
@@ -1091,6 +1098,31 @@ class ScenarioRouter:
                 )
 
                 return self.profit_transfer_scenario.create(
+                    request
+                )
+
+            case BusinessEventType.OPENING_BALANCE:
+
+                request = OpeningBalanceRequest(
+
+                    company_code=event.company_code,
+
+                    closing_date=event.event_date,
+
+                    amount=event.amount,
+
+                    currency_code=event.currency_code,
+
+                    cost_center_code=event.cost_center_code,
+
+                    department_code=event.department_code,
+
+                    opening_account=event.opening_account,
+
+                    balance_account=event.balance_account,
+                )
+
+                return self.opening_balance_scenario.create(
                     request
                 )
 

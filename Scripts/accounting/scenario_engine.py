@@ -139,6 +139,10 @@ from scenarios.closing.profit_transfer import (
     ProfitTransferScenario,
 )
 
+from scenarios.closing.opening_balance import (
+    OpeningBalanceScenario,
+)
+
 logger = logging.getLogger(__name__)
 
 print("Loaded ScenarioEngine from:")
@@ -461,6 +465,10 @@ class ScenarioEngine:
             document_generator,
         )
 
+        opening_balance_scenario = OpeningBalanceScenario(
+            document_generator,
+        )
+
         # ---------------------------------------------------------
         # Router
         # ---------------------------------------------------------
@@ -507,6 +515,7 @@ class ScenarioEngine:
             income_tax_accrual_scenario=income_tax_accrual_scenario,
             deferred_tax_scenario=deferred_tax_scenario,
             profit_transfer_scenario=profit_transfer_scenario,
+            opening_balance_scenario=opening_balance_scenario,
         )
 
         batch = BatchContext()

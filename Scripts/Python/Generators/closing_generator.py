@@ -74,6 +74,7 @@ class ClosingGenerator:
             self.event_generator.income_tax_accrual_event,
             self.event_generator.deferred_tax_event,
             self.event_generator.profit_transfer_event,
+            self.event_generator.opening_balance_event,
         ]
 
         for _ in range(documents):
