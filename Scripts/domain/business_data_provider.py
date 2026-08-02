@@ -1131,3 +1131,38 @@ class BusinessDataProvider:
 
             deferred_tax_balance_account="481",
         )
+
+    def create_profit_transfer_transaction(
+        self,
+    ) -> ClosingTransaction:
+        """
+        Creates year-end profit transfer transaction.
+        """
+
+        company = self.random_company()
+
+        return ClosingTransaction(
+
+            company_code=company.company_code,
+
+            closing_date=self.random_date(),
+
+            amount=self.random_decimal(
+                Decimal("50000"),
+                Decimal("10000000"),
+            ),
+
+            currency_code=company.currency_code,
+
+            cost_center_code=self.random_cost_center(),
+
+            department_code=self.random_department(),
+
+            closing_type="PROFIT_TRANSFER",
+
+            description="Year-End Profit Transfer",
+
+            profit_account="710",
+
+            retained_earnings_account="702",
+        )
