@@ -841,6 +841,10 @@ class BusinessEventGenerator:
             tax_expense_account=transaction.tax_expense_account,
 
             tax_liability_account=transaction.tax_liability_account,
+
+            deferred_tax_expense_account=transaction.deferred_tax_expense_account,
+
+            deferred_tax_balance_account=transaction.deferred_tax_balance_account,
         )
 
 

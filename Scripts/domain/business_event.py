@@ -158,3 +158,7 @@ class BusinessEvent:
     tax_expense_account: str | None = None
 
     tax_liability_account: str | None = None
+
+    deferred_tax_expense_account: str | None = None
+
+    deferred_tax_balance_account: str | None = None
