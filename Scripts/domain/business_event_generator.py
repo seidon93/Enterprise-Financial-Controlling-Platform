@@ -1021,3 +1021,20 @@ class BusinessEventGenerator:
 
             "Year-End Profit Transfer",
         )
+
+    def opening_balance_event(
+        self,
+    ) -> BusinessEvent:
+
+        transaction = (
+            self.provider.create_opening_balance_transaction()
+        )
+
+        return self._build_closing_event(
+
+            BusinessEventType.OPENING_BALANCE,
+
+            transaction,
+
+            "Opening Balance",
+        )
