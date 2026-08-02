@@ -140,3 +140,56 @@ def test_add_two_lines():
     )
 
     assert len(entry.lines) == 2
+
+def test_total_debit():
+
+    entry = JournalEntry(
+        document=create_document(),
+    )
+
+    entry.add_line(create_debit_line())
+    entry.add_line(create_credit_line())
+
+    assert entry.total_debit == Decimal("1000")
+
+def test_total_credit():
+
+    entry = JournalEntry(
+        document=create_document(),
+    )
+
+    entry.add_line(create_debit_line())
+    entry.add_line(create_credit_line())
+
+    assert entry.total_credit == Decimal("1000")
+
+def test_balanced_entry():
+
+    entry = JournalEntry(
+        document=create_document(),
+    )
+
+    entry.add_line(create_debit_line())
+    entry.add_line(create_credit_line())
+
+    assert entry.is_balanced is True
+
+def test_unbalanced_entry():
+
+    entry = JournalEntry(
+        document=create_document(),
+    )
+
+    entry.add_line(create_debit_line())
+
+    assert entry.is_balanced is False
+
+def test_empty_journal():
+
+    entry = JournalEntry(
+        document=create_document(),
+    )
+
+    assert entry.total_debit == Decimal("0")
+    assert entry.total_credit == Decimal("0")
+    assert entry.is_balanced is True
