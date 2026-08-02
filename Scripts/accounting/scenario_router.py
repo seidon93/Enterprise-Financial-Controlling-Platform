@@ -198,6 +198,11 @@ from scenarios.closing.deferred_tax import (
     DeferredTaxRequest,
 )
 
+from scenarios.closing.profit_transfer import (
+    ProfitTransferScenario,
+    ProfitTransferRequest,
+)
+
 class ScenarioRouter:
     """
     Converts BusinessEvents into JournalEntries.
@@ -245,6 +250,7 @@ class ScenarioRouter:
         foreign_currency_revaluation_scenario: ForeignCurrencyRevaluationScenario,
         income_tax_accrual_scenario: IncomeTaxAccrualScenario,
         deferred_tax_scenario: DeferredTaxScenario,
+        profit_transfer_scenario: ProfitTransferScenario,
 
     ) -> None:
 
@@ -291,6 +297,7 @@ class ScenarioRouter:
         )
         self.income_tax_accrual_scenario = income_tax_accrual_scenario
         self.deferred_tax_scenario = deferred_tax_scenario
+        self.profit_transfer_scenario = profit_transfer_scenario
 
         
     def process(
@@ -1059,6 +1066,31 @@ class ScenarioRouter:
                 )
 
                 return self.deferred_tax_scenario.create(
+                    request
+                )
+
+            case BusinessEventType.PROFIT_TRANSFER:
+
+                request = ProfitTransferRequest(
+
+                    company_code=event.company_code,
+
+                    closing_date=event.event_date,
+
+                    amount=event.amount,
+
+                    currency_code=event.currency_code,
+
+                    cost_center_code=event.cost_center_code,
+
+                    department_code=event.department_code,
+
+                    profit_account=event.profit_account,
+
+                    retained_earnings_account=event.retained_earnings_account,
+                )
+
+                return self.profit_transfer_scenario.create(
                     request
                 )
 
