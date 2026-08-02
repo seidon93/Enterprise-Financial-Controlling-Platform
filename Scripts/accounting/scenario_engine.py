@@ -131,6 +131,10 @@ from scenarios.closing.income_tax_accrual import (
     IncomeTaxAccrualScenario,
 )
 
+from scenarios.closing.deferred_tax import (
+    DeferredTaxScenario,
+)
+
 logger = logging.getLogger(__name__)
 
 print("Loaded ScenarioEngine from:")
@@ -445,6 +449,10 @@ class ScenarioEngine:
             )
         )
 
+        deferred_tax_scenario = DeferredTaxScenario(
+            document_generator,
+        )
+
         # ---------------------------------------------------------
         # Router
         # ---------------------------------------------------------
@@ -489,6 +497,7 @@ class ScenarioEngine:
             bad_debt_allowance_scenario=bad_debt_allowance_scenario,
             foreign_currency_revaluation_scenario=foreign_currency_revaluation_scenario,
             income_tax_accrual_scenario=income_tax_accrual_scenario,
+            deferred_tax_scenario=deferred_tax_scenario,
         )
 
         batch = BatchContext()
