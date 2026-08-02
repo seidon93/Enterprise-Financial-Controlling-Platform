@@ -73,6 +73,7 @@ class ClosingGenerator:
             self.event_generator.foreign_currency_revaluation_event,
             self.event_generator.income_tax_accrual_event,
             self.event_generator.deferred_tax_event,
+            self.event_generator.profit_transfer_event,
         ]
 
         for _ in range(documents):
