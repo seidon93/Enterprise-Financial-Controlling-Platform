@@ -146,3 +146,75 @@ class FinancialRatios:
             raise ZeroDivisionError("Equity cannot be zero.")
 
         return net_profit / equity
+
+    @staticmethod
+    def inventory_turnover(
+        cost_of_goods_sold: Decimal,
+        average_inventory: Decimal,
+    ) -> Decimal:
+        """
+        Inventory Turnover = COGS / Average Inventory
+        """
+
+        if average_inventory == Decimal("0"):
+            raise ZeroDivisionError("Average inventory cannot be zero.")
+
+        return cost_of_goods_sold / average_inventory
+
+    @staticmethod
+    def receivables_turnover(
+        revenue: Decimal,
+        average_receivables: Decimal,
+    ) -> Decimal:
+        """
+        Receivables Turnover = Revenue / Average Receivables
+        """
+
+        if average_receivables == Decimal("0"):
+            raise ZeroDivisionError("Average receivables cannot be zero.")
+
+        return revenue / average_receivables
+
+    @staticmethod
+    def payables_turnover(
+        purchases: Decimal,
+        average_payables: Decimal,
+    ) -> Decimal:
+        """
+        Payables Turnover = Purchases / Average Payables
+        """
+
+        if average_payables == Decimal("0"):
+            raise ZeroDivisionError("Average payables cannot be zero.")
+
+        return purchases / average_payables
+
+    @staticmethod
+    def asset_turnover(
+        revenue: Decimal,
+        average_assets: Decimal,
+    ) -> Decimal:
+        """
+        Asset Turnover = Revenue / Average Assets
+        """
+
+        if average_assets == Decimal("0"):
+            raise ZeroDivisionError("Average assets cannot be zero.")
+
+        return revenue / average_assets
+
+    @staticmethod
+    def inventory_days(
+        cost_of_goods_sold: Decimal,
+        average_inventory: Decimal,
+    ) -> Decimal:
+        """
+        Days Inventory Outstanding (DIO)
+        """
+
+        turnover = FinancialRatios.inventory_turnover(
+            cost_of_goods_sold,
+            average_inventory,
+        )
+
+        return Decimal("365") / turnover
