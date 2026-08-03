@@ -13,8 +13,13 @@ Status          : Development
 from __future__ import annotations
 
 from decimal import Decimal
+import sys
+from pathlib import Path
 
-from income_statement import IncomeStatement
+_project_root = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(_project_root))
+
+from Scripts.reporting.income_statement import IncomeStatement
 
 
 class CashFlowStatement:
