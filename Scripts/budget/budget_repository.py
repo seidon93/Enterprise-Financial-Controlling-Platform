@@ -82,3 +82,44 @@ class BudgetRepository:
             )
             is not None
         )
+
+    def remove(
+        self,
+        *,
+        fiscal_year: int,
+        version,
+    ) -> None:
+
+        budget = self.get(
+            fiscal_year=fiscal_year,
+            version=version,
+        )
+
+        if budget is None:
+            raise ValueError(
+                "Budget does not exist."
+            )
+
+        self._budgets.remove(budget)
+
+    def replace(
+        self,
+        budget: Budget,
+    ) -> None:
+
+        if self.exists(
+            fiscal_year=budget.fiscal_year,
+            version=budget.version,
+        ):
+            self.remove(
+                fiscal_year=budget.fiscal_year,
+                version=budget.version,
+            )
+
+        self._budgets.append(budget)
+
+    def count(self) -> int:
+
+        return len(self._budgets)
+
+        

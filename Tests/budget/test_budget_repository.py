@@ -82,3 +82,46 @@ def test_duplicate_budget():
     with pytest.raises(ValueError):
 
         repository.add(create_budget())
+
+
+def test_remove_budget():
+
+    repository = BudgetRepository()
+
+    budget = create_budget()
+
+    repository.add(budget)
+
+    repository.remove(
+        fiscal_year=2025,
+        version=BudgetVersion.ORIGINAL,
+    )
+
+    assert repository.get_all() == []
+
+def test_replace_budget():
+
+    repository = BudgetRepository()
+
+    old_budget = create_budget()
+
+    repository.add(old_budget)
+
+    new_budget = create_budget()
+
+    repository.replace(new_budget)
+
+    result = repository.get(
+        fiscal_year=2025,
+        version=BudgetVersion.ORIGINAL,
+    )
+
+    assert result is new_budget
+
+def test_count():
+
+    repository = BudgetRepository()
+
+    repository.add(create_budget())
+
+    assert repository.count() == 1
