@@ -4,6 +4,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from decimal import Decimal
+import pytest
 
 from Scripts.budget.budget import Budget
 from Scripts.budget.budget_line import BudgetLine
@@ -43,3 +44,41 @@ def test_add_budget():
     repository.add(budget)
 
     assert len(repository.get_all()) == 1
+
+
+def test_get_budget():
+
+    repository = BudgetRepository()
+
+    budget = create_budget()
+
+    repository.add(budget)
+
+    result = repository.get(
+        fiscal_year=2025,
+        version=BudgetVersion.ORIGINAL,
+    )
+
+    assert result is budget
+
+def test_exists():
+
+    repository = BudgetRepository()
+
+    repository.add(create_budget())
+
+    assert repository.exists(
+        fiscal_year=2025,
+        version=BudgetVersion.ORIGINAL,
+    )
+
+
+def test_duplicate_budget():
+
+    repository = BudgetRepository()
+
+    repository.add(create_budget())
+
+    with pytest.raises(ValueError):
+
+        repository.add(create_budget())

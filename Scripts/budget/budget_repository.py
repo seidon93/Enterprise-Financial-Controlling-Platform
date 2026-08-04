@@ -15,12 +15,15 @@ Stores Budget objects in memory.
 
 from __future__ import annotations
 
+
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from Scripts.budget.budget import Budget
+from Scripts.budget import budget_version
+from Scripts import budget
 
 
 class BudgetRepository:
@@ -34,8 +37,48 @@ class BudgetRepository:
 
     def add(self, budget: Budget) -> None:
 
+        if self.exists(
+            fiscal_year=budget.fiscal_year,
+            version=budget.version,
+        ):
+            raise ValueError(
+                "Budget already exists."
+            )
+
         self._budgets.append(budget)
 
     def get_all(self) -> list[Budget]:
 
         return list(self._budgets)
+
+    def get(
+        self,
+        *,
+        fiscal_year: int,
+        version,
+    ):
+
+        for budget in self._budgets:
+
+            if (
+                budget.fiscal_year == fiscal_year
+                and budget.version == version
+            ):
+                return budget
+
+        return None
+
+    def exists(
+        self,
+        *,
+        fiscal_year: int,
+        version,
+    ) -> bool:
+
+        return (
+            self.get(
+                fiscal_year=fiscal_year,
+                version=version,
+            )
+            is not None
+        )
