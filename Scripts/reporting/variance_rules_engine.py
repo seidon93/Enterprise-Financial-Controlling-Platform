@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from domain.variance_rule import VarianceRule
+from Scripts.domain.variance_rule import VarianceRule
 
 
 class VarianceRulesEngine:
