@@ -14,6 +14,7 @@ Loads budgets from external sources.
 """
 
 from __future__ import annotations
+import csv
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
@@ -27,3 +28,12 @@ class BudgetLoader:
 
         if not path.exists():
             raise FileNotFoundError(path)
+
+        with path.open(
+            newline="",
+            encoding="utf-8",
+        ) as file:
+
+            reader = csv.DictReader(file)
+
+            return list(reader)
