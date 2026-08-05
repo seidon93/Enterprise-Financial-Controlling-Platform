@@ -62,3 +62,41 @@ class BudgetEngine:
             result[line.company_code] += line.amount
 
         return dict(result)
+
+    @staticmethod
+    def budget_by_account(
+        budget_lines: list[BudgetLine],
+    ) -> dict[str, Decimal]:
+
+        result = defaultdict(lambda: Decimal("0"))
+
+        for line in budget_lines:
+            result[line.account_code] += line.amount
+
+        return dict(result)
+
+    @staticmethod
+    def budget_by_cost_center(
+        budget_lines: list[BudgetLine],
+    ):
+
+        result = defaultdict(lambda: Decimal("0"))
+
+        for line in budget_lines:
+            result[line.cost_center_code] += line.amount
+
+        return dict(result)
+
+    @staticmethod
+    def budget_by_company(
+        budget_lines: list[BudgetLine],
+    ):
+
+        result = defaultdict(lambda: Decimal("0"))
+
+        for line in budget_lines:
+            result[line.company_code] += line.amount
+
+        return dict(result)
+
+        
