@@ -9,13 +9,16 @@ Version         : 1.0.0
 ===============================================================================
 """
 
+from Scripts.reporting import variance_result
 from dataclasses import dataclass
+from decimal import Decimal
 
 try:
     from Scripts.reporting.trial_balance import TrialBalance
     from Scripts.reporting.income_statement import IncomeStatement
     from Scripts.reporting.balance_sheet import BalanceSheet
     from Scripts.reporting.variance_result import VarianceResult
+    from Scripts.reporting.financial_ratios import FinancialRatios
 except ModuleNotFoundError:
     import sys
     from pathlib import Path
@@ -24,6 +27,7 @@ except ModuleNotFoundError:
     from reporting.income_statement import IncomeStatement
     from reporting.balance_sheet import BalanceSheet
     from reporting.variance_result import VarianceResult
+    from reporting.financial_ratios import FinancialRatios
 
 
 @dataclass(slots=True)
@@ -36,3 +40,9 @@ class FinancialControllerReport:
     balance_sheet: BalanceSheet
 
     variances: list[VarianceResult]
+
+    financial_ratios: FinancialRatios
+
+    ratios: dict[str, Decimal]
+
+    executive_summary: str
