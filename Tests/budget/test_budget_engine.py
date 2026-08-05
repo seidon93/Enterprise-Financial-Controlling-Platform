@@ -147,6 +147,9 @@ def test_budget_by_account():
             company_code="1000",
             cost_center_code="100",
             account_number="601",
+            department_code="D01",
+            fiscal_year=2026,
+            fiscal_period=1,
             amount=Decimal("100000"),
         ),
 
@@ -154,6 +157,9 @@ def test_budget_by_account():
             company_code="1000",
             cost_center_code="100",
             account_number="601",
+            department_code="D01",
+            fiscal_year=2026,
+            fiscal_period=1,
             amount=Decimal("50000"),
         ),
 
@@ -161,6 +167,9 @@ def test_budget_by_account():
             company_code="1000",
             cost_center_code="100",
             account_number="602",
+            department_code="D01",
+            fiscal_year=2026,
+            fiscal_period=1,
             amount=Decimal("30000"),
         ),
     ]
@@ -179,6 +188,9 @@ def test_budget_by_cost_center():
             company_code="1000",
             cost_center_code="100",
             account_number="601",
+            department_code="D01",
+            fiscal_year=2026,
+            fiscal_period=1,
             amount=Decimal("100000"),
         ),
 
@@ -186,6 +198,9 @@ def test_budget_by_cost_center():
             company_code="1000",
             cost_center_code="200",
             account_number="601",
+            department_code="D01",
+            fiscal_year=2026,
+            fiscal_period=1,
             amount=Decimal("50000"),
         ),
     ]
@@ -204,6 +219,9 @@ def test_budget_by_company():
             company_code="1000",
             cost_center_code="100",
             account_number="601",
+            department_code="D01",
+            fiscal_year=2026,
+            fiscal_period=1,
             amount=Decimal("120000"),
         ),
 
@@ -211,6 +229,9 @@ def test_budget_by_company():
             company_code="2000",
             cost_center_code="100",
             account_number="601",
+            department_code="D01",
+            fiscal_year=2026,
+            fiscal_period=1,
             amount=Decimal("80000"),
         ),
     ]

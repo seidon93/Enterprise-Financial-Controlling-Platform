@@ -71,7 +71,7 @@ class BudgetEngine:
         result = defaultdict(lambda: Decimal("0"))
 
         for line in budget_lines:
-            result[line.account_code] += line.amount
+            result[line.account_number] += line.amount
 
         return dict(result)
 
