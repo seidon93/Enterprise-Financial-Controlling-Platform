@@ -19,19 +19,13 @@ except ImportError:
 
 
 try:
-    from accounting.models import JournalEntry
+    from Scripts.accounting.models import JournalEntry
 except ModuleNotFoundError:
-    import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from accounting.models import JournalEntry
 
 try:
-    from budget.budget_line import BudgetLine
+    from Scripts.budget.budget_line import BudgetLine
 except ModuleNotFoundError:
-    from pathlib import Path
-    import sys
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from budget.budget_line import BudgetLine
 
 
