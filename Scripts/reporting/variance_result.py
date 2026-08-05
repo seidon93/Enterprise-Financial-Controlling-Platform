@@ -19,8 +19,15 @@ class VarianceResult:
     """
     Budget vs Actual comparison result.
     """
+    
+    account_code: str
 
     budget: Decimal
+
     actual: Decimal
+
     variance: Decimal
+
     variance_percent: Decimal
+
+    favorable: bool
