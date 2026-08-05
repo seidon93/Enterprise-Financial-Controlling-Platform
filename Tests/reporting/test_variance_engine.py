@@ -4,6 +4,7 @@ from decimal import Decimal
 from Scripts.accounting.models import DocumentInfo, JournalEntry, JournalLine
 from Scripts.budget.budget_line import BudgetLine
 from Scripts.reporting.variance_engine import VarianceEngine
+from Scripts.reporting.variance_result import VarianceResult
 
 
 def test_variance_positive():
@@ -161,3 +162,95 @@ def test_budget_for_account():
         )
         == Decimal("150000")
     )
+
+def test_compare_multiple_accounts():
+
+    budget_lines = [
+
+        BudgetLine(
+            company_code="1000",
+            cost_center_code="100",
+            account_number="601",
+            department_code="D01",
+            fiscal_year=2026,
+            fiscal_period=1,
+            amount=Decimal("100000"),
+        ),
+
+        BudgetLine(
+            company_code="1000",
+            cost_center_code="100",
+            account_number="602",
+            department_code="D01",
+            fiscal_year=2026,
+            fiscal_period=1,
+            amount=Decimal("50000"),
+        ),
+    ]
+
+    journal = [
+        create_sales_invoice(),
+    ]
+
+    results = VarianceEngine.compare_accounts(
+        ["601", "602"],
+        budget_lines,
+        journal,
+    )
+
+    assert len(results) == 2
+
+def test_total_variance():
+
+    results = [
+
+        VarianceResult(
+            account_code="601",
+            budget=Decimal("100"),
+            actual=Decimal("120"),
+            variance=Decimal("20"),
+            variance_percent=Decimal("20"),
+            favorable=True,
+        ),
+
+        VarianceResult(
+            account_code="602",
+            budget=Decimal("100"),
+            actual=Decimal("90"),
+            variance=Decimal("-10"),
+            variance_percent=Decimal("-10"),
+            favorable=False,
+        ),
+    ]
+
+    assert (
+        VarianceEngine.total_variance(results)
+        == Decimal("10")
+    )
+
+def test_largest_variance():
+
+    results = [
+
+        VarianceResult(
+            account_code="601",
+            budget=Decimal("100"),
+            actual=Decimal("110"),
+            variance=Decimal("10"),
+            variance_percent=Decimal("10"),
+            favorable=True,
+        ),
+
+        VarianceResult(
+            account_code="521",
+            budget=Decimal("100"),
+            actual=Decimal("170"),
+            variance=Decimal("70"),
+            variance_percent=Decimal("70"),
+            favorable=False,
+        ),
+    ]
+
+    result = VarianceEngine.largest_variance(results)
+
+    assert result.account_code == "521"

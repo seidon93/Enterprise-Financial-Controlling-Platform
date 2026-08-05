@@ -117,3 +117,54 @@ class VarianceEngine:
                 total += line.amount
 
         return total
+
+    @staticmethod
+    def compare_accounts(
+        account_codes: list[str],
+        budget_lines: list[BudgetLine],
+        journal_entries: list[JournalEntry],
+    ) -> list[VarianceResult]:
+
+        results = []
+
+        for account in account_codes:
+
+            budget = VarianceEngine.budget_for_account(
+                account,
+                budget_lines,
+            )
+
+            actual = VarianceEngine.actual_for_account(
+                account,
+                journal_entries,
+            )
+
+            results.append(
+                VarianceEngine.compare_account(
+                    account_code=account,
+                    budget=budget,
+                    actual=actual,
+                )
+            )
+
+        return results
+
+    @staticmethod
+    def total_variance(
+        results: list[VarianceResult],
+    ) -> Decimal:
+
+        return sum(
+            (r.variance for r in results),
+            start=Decimal("0"),
+        )
+
+    @staticmethod
+    def largest_variance(
+        results: list[VarianceResult],
+    ) -> VarianceResult:
+
+        return max(
+            results,
+            key=lambda r: abs(r.variance),
+        )
