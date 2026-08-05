@@ -12,7 +12,10 @@ Status          : Development
 
 from decimal import Decimal
 
-from reporting.variance_result import VarianceResult
+try:
+    from .variance_result import VarianceResult
+except ImportError:
+    from variance_result import VarianceResult
 
 
 class VarianceEngine:
