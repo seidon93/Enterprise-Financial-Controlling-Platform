@@ -75,3 +75,10 @@ class TrialBalance:
     def is_balanced(self) -> bool:
 
         return self.total_debit == self.total_credit
+
+    @classmethod
+    def from_ledger(cls, ledger) -> TrialBalance:
+        tb = cls()
+        for entry in ledger.entries:
+            tb.add_entry(entry)
+        return tb

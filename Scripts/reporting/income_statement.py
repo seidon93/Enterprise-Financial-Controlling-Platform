@@ -60,3 +60,7 @@ class IncomeStatement:
     def net_profit(self) -> Decimal:
 
         return self.operating_profit
+
+    @classmethod
+    def from_ledger(cls, ledger) -> IncomeStatement:
+        return cls(TrialBalance.from_ledger(ledger))

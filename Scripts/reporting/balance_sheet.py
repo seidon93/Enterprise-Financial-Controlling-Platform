@@ -62,3 +62,7 @@ class BalanceSheet:
     def is_balanced(self) -> bool:
 
         return self.assets == self.total_liabilities_equity
+
+    @classmethod
+    def from_ledger(cls, ledger) -> BalanceSheet:
+        return cls(TrialBalance.from_ledger(ledger))
