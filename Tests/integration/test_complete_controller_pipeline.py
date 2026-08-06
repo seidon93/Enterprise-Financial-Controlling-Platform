@@ -39,15 +39,8 @@ def test_complete_controller_pipeline():
     for entry in repository.get_all():
         ledger.post(entry)
 
-    trial_balance = TrialBalance.from_ledger(ledger)
-    income_statement = IncomeStatement.from_ledger(ledger)
-    balance_sheet = BalanceSheet.from_ledger(ledger)
-
     report = FinancialControllerService.create_report(
-        trial_balance=trial_balance,
-        income_statement=income_statement,
-        balance_sheet=balance_sheet,
-        variances=[]
+        general_ledger=ledger
     )
 
     assert (
