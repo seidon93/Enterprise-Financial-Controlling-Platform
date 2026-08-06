@@ -3,62 +3,43 @@
 Enterprise Financial Analytics Platform (EFAP)
 -------------------------------------------------------------------------------
 Object          : financial_controller_service.py
-Object Type     : Service Layer
-Layer           : Services
+Object Type     : Service
+Layer           : Service Layer
 Version         : 1.0.0
+Status          : Development
 ===============================================================================
 """
 
-try:
-    from Scripts.services.models import FinancialControllerReport
-except ModuleNotFoundError:
-    from .models import FinancialControllerReport
+import sys, os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from accounting.general_ledger_engine import GeneralLedgerEngine
+
+from reporting.trial_balance import TrialBalance
+from reporting.income_statement import IncomeStatement
+from reporting.balance_sheet import BalanceSheet
+
+from services.financial_controller_report import (
+    FinancialControllerReport,
+)
 
 
 class FinancialControllerService:
 
     @staticmethod
     def create_report(
-        *,
-        trial_balance,
-        income_statement,
-        balance_sheet,
-        variances,
+        general_ledger: GeneralLedgerEngine,
     ) -> FinancialControllerReport:
 
-        executive_summary = f"Report contains {len(variances)} variances."
-
         return FinancialControllerReport(
-            trial_balance=trial_balance,
-            income_statement=income_statement,
-            balance_sheet=balance_sheet,
-            variances=variances,
-            financial_ratios=None,
-            ratios={},
-            executive_summary=executive_summary,
-        )
-
-    @staticmethod
-    def create_monthly_report(
-        *,
-        trial_balance,
-        income_statement,
-        balance_sheet,
-        variances,
-        ratios,
-    ):
-
-        executive_summary = (
-            f"Monthly report contains "
-            f"{len(variances)} variances."
-        )
-
-        return FinancialControllerReport(
-            trial_balance=trial_balance,
-            income_statement=income_statement,
-            balance_sheet=balance_sheet,
-            variances=variances,
-            financial_ratios=None,
-            ratios=ratios,
-            executive_summary=executive_summary,
+            trial_balance=TrialBalance.from_ledger(
+                general_ledger
+            ),
+            income_statement=IncomeStatement.from_ledger(
+                general_ledger
+            ),
+            balance_sheet=BalanceSheet.from_ledger(
+                general_ledger
+            ),
+            financial_ratios={},
         )
