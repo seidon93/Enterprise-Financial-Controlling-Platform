@@ -12,7 +12,7 @@ Status          : Development
 
 from dataclasses import dataclass
 
-from services.financial_controller_report import (
+from Scripts.services.financial_controller_report import (
     FinancialControllerReport,
 )
 
