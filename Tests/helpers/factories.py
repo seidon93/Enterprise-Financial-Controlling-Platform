@@ -249,3 +249,45 @@ def create_asset_purchase() -> JournalEntry:
         )
     )
     return entry
+
+
+def create_bank_payment() -> JournalEntry:
+    document = DocumentInfo(
+        document_number="BP-001",
+        document_type="BP",
+        posting_date=date(2026, 1, 15),
+        document_date=date(2026, 1, 15),
+        due_date=date(2026, 1, 15),
+        fiscal_year=2026,
+        fiscal_period=1,
+    )
+    entry = JournalEntry(document=document)
+    entry.add_line(
+        JournalLine(
+            line_number=1,
+            account_number="321",
+            company_code="1000",
+            cost_center_code="100",
+            department_code="D01",
+            currency_code="CZK",
+            debit_amount=Decimal("20000"),
+            credit_amount=Decimal("0"),
+            amount_local=Decimal("20000"),
+            description="Supplier Payment",
+        )
+    )
+    entry.add_line(
+        JournalLine(
+            line_number=2,
+            account_number="221",
+            company_code="1000",
+            cost_center_code="100",
+            department_code="D01",
+            currency_code="CZK",
+            debit_amount=Decimal("0"),
+            credit_amount=Decimal("20000"),
+            amount_local=Decimal("-20000"),
+            description="Bank Payment",
+        )
+    )
+    return entry
