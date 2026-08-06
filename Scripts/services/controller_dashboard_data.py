@@ -2,28 +2,25 @@
 ===============================================================================
 Enterprise Financial Analytics Platform (EFAP)
 -------------------------------------------------------------------------------
-Object          : controller_dashboard.py
-Object Type     : Service
+Object          : controller_dashboard_data.py
+Object Type     : DTO
 Layer           : Service Layer
 Version         : 1.0.0
 Status          : Development
 ===============================================================================
 """
 
-import sys, os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 from dataclasses import dataclass
-
-from Scripts.services.financial_controller_report import (
-    FinancialControllerReport,
-)
 
 
 @dataclass(slots=True)
-class ControllerDashboard:
+class ControllerDashboardData:
     """
-    Enterprise Financial Controller Dashboard.
+    Dashboard data prepared for presentation layer.
     """
 
-    report: FinancialControllerReport
+    revenue: float
+    expenses: float
+    net_profit: float
+    current_ratio: float
+    net_margin: float

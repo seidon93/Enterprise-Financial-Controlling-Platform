@@ -12,10 +12,12 @@ from Scripts.services.financial_controller_report import (
 )
 def test_controller_dashboard_creation():
 
+    tb = TrialBalance()
+
     report = FinancialControllerReport(
-        trial_balance=TrialBalance(),
-        income_statement=IncomeStatement(),
-        balance_sheet=BalanceSheet(),
+        trial_balance=tb,
+        income_statement=IncomeStatement(tb),
+        balance_sheet=BalanceSheet(tb),
         financial_ratios={},
     )
 
