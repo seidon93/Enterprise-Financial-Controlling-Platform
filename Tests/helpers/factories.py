@@ -194,3 +194,58 @@ def create_inventory_issue() -> JournalEntry:
         )
     )
     return entry
+
+def create_asset_purchase() -> JournalEntry:
+    document = DocumentInfo(
+        document_number="FA-001",
+        document_type="FA",
+        posting_date=date(2026, 1, 15),
+        document_date=date(2026, 1, 15),
+        due_date=date(2026, 1, 15),
+        fiscal_year=2026,
+        fiscal_period=1,
+    )
+    entry = JournalEntry(document=document)
+    entry.add_line(
+        JournalLine(
+            line_number=1,
+            account_number="042",
+            company_code="1000",
+            cost_center_code="100",
+            department_code="D01",
+            currency_code="CZK",
+            debit_amount=Decimal("100000"),
+            credit_amount=Decimal("0"),
+            amount_local=Decimal("100000"),
+            description="Asset in Progress",
+        )
+    )
+    entry.add_line(
+        JournalLine(
+            line_number=2,
+            account_number="343",
+            company_code="1000",
+            cost_center_code="100",
+            department_code="D01",
+            currency_code="CZK",
+            debit_amount=Decimal("21000"),
+            credit_amount=Decimal("0"),
+            amount_local=Decimal("21000"),
+            description="Input VAT",
+        )
+    )
+    entry.add_line(
+        JournalLine(
+            line_number=3,
+            account_number="321",
+            company_code="1000",
+            cost_center_code="100",
+            department_code="D01",
+            currency_code="CZK",
+            debit_amount=Decimal("0"),
+            credit_amount=Decimal("121000"),
+            amount_local=Decimal("-121000"),
+            description="Trade Payables",
+        )
+    )
+    return entry
