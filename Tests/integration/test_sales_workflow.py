@@ -1,5 +1,10 @@
+import sys, os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', 'Scripts')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 from Scripts.repositories.journal_repository import JournalRepository
-from tests.reporting.test_variance_engine import create_sales_invoice
+from tests.helpers.factories import create_sales_invoice
+from tests.helpers.workflow__helper import build_general_ledger
+from tests.helpers.assertions import assert_trial_balance_balanced
 from Scripts.accounting.general_ledger_engine import GeneralLedgerEngine
 
 
@@ -54,3 +59,20 @@ def test_sales_invoice_to_income_statement():
     )
 
     assert statement is not None
+
+def test_sales_invoice_to_trial_balance(
+    journal_repository,
+    sales_invoice,
+):
+
+    journal_repository.save(sales_invoice)
+
+    ledger = build_general_ledger(
+        journal_repository
+    )
+
+    tb = TrialBalance.from_ledger(
+        ledger
+    )
+
+    assert_trial_balance_balanced(tb)
