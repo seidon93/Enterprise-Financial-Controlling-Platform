@@ -33,6 +33,11 @@ def test_prepare_controller_dashboard_data():
             "net_margin": 20.0,
             "gross_margin": 35.0,
             "operating_margin": 22.0,
+            "inventory_turnover": 4.0,
+            "receivables_turnover": 6.0,
+            "payables_turnover": 5.0,
+            "asset_turnover": 0.5,
+            "inventory_days": 91.25,
         },
     )
 

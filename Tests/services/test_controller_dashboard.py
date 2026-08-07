@@ -25,6 +25,11 @@ def test_controller_dashboard_creation():
         net_margin=0.5,
         gross_margin=0.6,
         operating_margin=0.4,
+        inventory_turnover=4.0,
+        receivables_turnover=6.0,
+        payables_turnover=5.0,
+        asset_turnover=0.5,
+        inventory_days=91.25,
     )
 
     dashboard = ControllerDashboard(

@@ -61,6 +61,22 @@ class IncomeStatement:
 
         return self.operating_profit
 
+    @property
+    def revenue(self) -> Decimal:
+        return self.revenues
+
+    @property
+    def gross_profit(self) -> Decimal:
+        return self.operating_profit
+
+    @property
+    def cost_of_goods_sold(self) -> Decimal:
+        return self.expenses
+
+    @property
+    def purchases(self) -> Decimal:
+        return self.expenses
+
     @classmethod
     def from_ledger(cls, ledger) -> IncomeStatement:
         return cls(TrialBalance.from_ledger(ledger))
