@@ -5,7 +5,7 @@ Enterprise Financial Analytics Platform (EFAP)
 Object          : controller_dashboard_service.py
 Object Type     : Service
 Layer           : Service Layer
-Version         : 2.7.0
+Version         : 2.8.0
 Status          : Development
 ===============================================================================
 """
@@ -15,6 +15,9 @@ from services.budget_variance_service import (
 )
 from services.controller_dashboard import ControllerDashboard
 from services.controller_dashboard_data import ControllerDashboardData
+from services.controller_dashboard_summary_service import (
+    ControllerDashboardSummaryService,
+)
 from services.cost_variance_service import (
     CostVarianceService,
 )
@@ -40,9 +43,14 @@ class ControllerDashboardService:
             report
         )
 
+        summary = ControllerDashboardSummaryService.create(
+            data
+        )
+
         return ControllerDashboard(
             report=report,
             data=data,
+            summary=summary,
         )
 
     @staticmethod
