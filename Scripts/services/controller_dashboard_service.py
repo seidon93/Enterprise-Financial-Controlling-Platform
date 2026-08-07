@@ -5,7 +5,7 @@ Enterprise Financial Analytics Platform (EFAP)
 Object          : controller_dashboard_service.py
 Object Type     : Service
 Layer           : Service Layer
-Version         : 1.4.0
+Version         : 1.5.0
 Status          : Development
 ===============================================================================
 """
