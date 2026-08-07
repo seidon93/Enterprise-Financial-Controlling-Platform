@@ -67,3 +67,12 @@ class ControllerDashboardData:
     net_profit_yoy_change: float
     net_profit_yoy_change_pct: float
     net_profit_yoy_status: str
+
+    previous_price: float
+    current_price: float
+    previous_volume: float
+    current_volume: float
+
+    price_effect: float
+    volume_effect: float
+    total_revenue_change: float
