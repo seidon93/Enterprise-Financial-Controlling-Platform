@@ -1,19 +1,23 @@
-from tests.services.financial_controller_report import FinancialControllerReport
+from reporting.balance_sheet import BalanceSheet
+from reporting.income_statement import IncomeStatement
+from reporting.trial_balance import TrialBalance
 
-from Scripts.reporting.trial_balance import TrialBalance
-from Scripts.reporting.income_statement import IncomeStatement
-from Scripts.reporting.balance_sheet import BalanceSheet
+from services.financial_controller_report import (
+    FinancialControllerReport,
+)
 
 
-def test_financial_controller_report_creation():
+def test_financial_controller_report_budget_values():
 
     tb = TrialBalance()
     report = FinancialControllerReport(
         trial_balance=tb,
         income_statement=IncomeStatement(tb),
         balance_sheet=BalanceSheet(tb),
+        financial_ratios={},
+        revenue_budget=950000.0,
+        expense_budget=750000.0,
     )
 
-    assert report.trial_balance is not None
-    assert report.income_statement is not None
-    assert report.balance_sheet is not None
+    assert report.revenue_budget == 950000.0
+    assert report.expense_budget == 750000.0

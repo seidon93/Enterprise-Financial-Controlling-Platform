@@ -30,6 +30,9 @@ def test_controller_dashboard_data_creation():
         expense_budget=750000.0,
         expense_variance=50000.0,
         expense_variance_pct=6.6666666667,
+        budget_net_profit=200000.0,
+        net_profit_variance=0.0,
+        net_profit_variance_pct=0.0,
     )
 
     assert data.revenue == 1000000.0
@@ -63,3 +66,7 @@ def test_controller_dashboard_data_creation():
     assert data.expense_budget == 750000.0
     assert data.expense_variance == 50000.0
     assert data.expense_variance_pct == 6.6666666667
+
+    assert data.budget_net_profit == 200000.0
+    assert data.net_profit_variance == 0.0
+    assert data.net_profit_variance_pct == 0.0

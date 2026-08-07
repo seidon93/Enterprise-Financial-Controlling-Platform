@@ -34,6 +34,17 @@ def test_controller_dashboard_creation():
         working_capital_ratio=1.5,
         cash_ratio=0.8,
         quick_ratio=2.0,
+        return_on_assets=9.0,
+        return_on_equity=20.0,
+        revenue_budget=950000.0,
+        revenue_variance=50000.0,
+        revenue_variance_pct=5.26,
+        expense_budget=750000.0,
+        expense_variance=50000.0,
+        expense_variance_pct=6.66,
+        budget_net_profit=200000.0,
+        net_profit_variance=0.0,
+        net_profit_variance_pct=0.0,
     )
 
     dashboard = ControllerDashboard(

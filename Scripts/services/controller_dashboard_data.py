@@ -5,7 +5,7 @@ Enterprise Financial Analytics Platform (EFAP)
 Object          : controller_dashboard_data.py
 Object Type     : DTO
 Layer           : Service Layer
-Version         : 1.8.0
+Version         : 1.9.0
 Status          : Development
 ===============================================================================
 """
@@ -50,3 +50,7 @@ class ControllerDashboardData:
     expense_budget: float
     expense_variance: float
     expense_variance_pct: float
+
+    budget_net_profit: float
+    net_profit_variance: float
+    net_profit_variance_pct: float

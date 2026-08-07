@@ -5,7 +5,7 @@ Enterprise Financial Analytics Platform (EFAP)
 Object          : controller_dashboard_service.py
 Object Type     : Service
 Layer           : Service Layer
-Version         : 2.0.0
+Version         : 2.2.0
 Status          : Development
 ===============================================================================
 """
@@ -40,14 +40,10 @@ class ControllerDashboardService:
 
         revenue = float(report.income_statement.revenue)
         expenses = float(report.income_statement.expenses)
+        net_profit = float(report.income_statement.net_profit)
 
-        revenue_budget = float(
-            getattr(report, "revenue_budget", 0.0)
-        )
-
-        expense_budget = float(
-            getattr(report, "expense_budget", 0.0)
-        )
+        revenue_budget = float(report.revenue_budget)
+        expense_budget = float(report.expense_budget)
 
         revenue_variance = revenue - revenue_budget
         expense_variance = expenses - expense_budget
@@ -64,18 +60,44 @@ class ControllerDashboardService:
             else 0.0
         )
 
+        budget_net_profit = (
+            revenue_budget - expense_budget
+        )
+
+        net_profit_variance = (
+            net_profit - budget_net_profit
+        )
+
+        net_profit_variance_pct = (
+            net_profit_variance / budget_net_profit * 100.0
+            if budget_net_profit
+            else 0.0
+        )
+
         return ControllerDashboardData(
             revenue=revenue,
             expenses=expenses,
-            net_profit=float(report.income_statement.net_profit),
+            net_profit=net_profit,
 
-            current_ratio=float(ratios["current_ratio"]),
-            quick_ratio=float(ratios["quick_ratio"]),
-            cash_ratio=float(ratios["cash_ratio"]),
+            current_ratio=float(
+                ratios["current_ratio"]
+            ),
+            quick_ratio=float(
+                ratios["quick_ratio"]
+            ),
+            cash_ratio=float(
+                ratios["cash_ratio"]
+            ),
 
-            net_margin=float(ratios["net_margin"]),
-            gross_margin=float(ratios["gross_margin"]),
-            operating_margin=float(ratios["operating_margin"]),
+            net_margin=float(
+                ratios["net_margin"]
+            ),
+            gross_margin=float(
+                ratios["gross_margin"]
+            ),
+            operating_margin=float(
+                ratios["operating_margin"]
+            ),
 
             return_on_assets=float(
                 ratios["return_on_assets"]
@@ -114,4 +136,8 @@ class ControllerDashboardService:
             expense_budget=expense_budget,
             expense_variance=expense_variance,
             expense_variance_pct=expense_variance_pct,
+
+            budget_net_profit=budget_net_profit,
+            net_profit_variance=net_profit_variance,
+            net_profit_variance_pct=net_profit_variance_pct,
         )

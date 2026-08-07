@@ -1,28 +1,22 @@
-"""
-===============================================================================
-Enterprise Financial Analytics Platform (EFAP)
--------------------------------------------------------------------------------
-Object          : financial_controller_report.py
-Object Type     : Service
-Layer           : Service Layer
-Version         : 1.0.0
-Status          : Development
-===============================================================================
-"""
+from reporting.balance_sheet import BalanceSheet
+from reporting.income_statement import IncomeStatement
+from reporting.trial_balance import TrialBalance
 
-from dataclasses import dataclass
-
-from Scripts.reporting.trial_balance import TrialBalance
-from Scripts.reporting.income_statement import IncomeStatement
-from Scripts.reporting.balance_sheet import BalanceSheet
+from services.financial_controller_report import (
+    FinancialControllerReport,
+)
 
 
-@dataclass(slots=True)
-class FinancialControllerReport:
-    """
-    Aggregated financial controller report.
-    """
+def test_financial_controller_report_budget_values():
 
-    trial_balance: TrialBalance
-    income_statement: IncomeStatement
-    balance_sheet: BalanceSheet
+    report = FinancialControllerReport(
+        trial_balance=TrialBalance(),
+        income_statement=IncomeStatement(),
+        balance_sheet=BalanceSheet(),
+        financial_ratios={},
+        revenue_budget=950000.0,
+        expense_budget=750000.0,
+    )
+
+    assert report.revenue_budget == 950000.0
+    assert report.expense_budget == 750000.0

@@ -30,3 +30,5 @@ class FinancialControllerReport:
     income_statement: IncomeStatement
     balance_sheet: BalanceSheet
     financial_ratios: dict[str, float]
+    revenue_budget: float = 0.0
+    expense_budget: float = 0.0

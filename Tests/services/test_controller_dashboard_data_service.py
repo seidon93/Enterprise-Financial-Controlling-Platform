@@ -42,6 +42,8 @@ def test_prepare_controller_dashboard_data():
             "working_capital_ratio": 1.5,
             "cash_ratio": 0.8,
             "quick_ratio": 2.0,
+            "return_on_assets": 9.0,
+            "return_on_equity": 20.0,
         },
     )
 
