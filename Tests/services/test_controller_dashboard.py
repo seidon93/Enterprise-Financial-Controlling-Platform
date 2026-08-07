@@ -45,6 +45,9 @@ def test_controller_dashboard_creation():
         budget_net_profit=200000.0,
         net_profit_variance=0.0,
         net_profit_variance_pct=0.0,
+        revenue_variance_status="FAVORABLE",
+        expense_variance_status="UNFAVORABLE",
+        net_profit_variance_status="ON_TARGET",
     )
 
     dashboard = ControllerDashboard(

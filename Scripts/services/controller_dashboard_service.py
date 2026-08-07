@@ -5,7 +5,7 @@ Enterprise Financial Analytics Platform (EFAP)
 Object          : controller_dashboard_service.py
 Object Type     : Service
 Layer           : Service Layer
-Version         : 2.2.0
+Version         : 2.3.0
 Status          : Development
 ===============================================================================
 """
@@ -74,6 +74,30 @@ class ControllerDashboardService:
             else 0.0
         )
 
+        revenue_variance_status = (
+            "FAVORABLE"
+            if revenue_variance > 0
+            else "UNFAVORABLE"
+            if revenue_variance < 0
+            else "ON_TARGET"
+        )
+
+        expense_variance_status = (
+            "FAVORABLE"
+            if expense_variance < 0
+            else "UNFAVORABLE"
+            if expense_variance > 0
+            else "ON_TARGET"
+        )
+
+        net_profit_variance_status = (
+            "FAVORABLE"
+            if net_profit_variance > 0
+            else "UNFAVORABLE"
+            if net_profit_variance < 0
+            else "ON_TARGET"
+        )
+
         return ControllerDashboardData(
             revenue=revenue,
             expenses=expenses,
@@ -132,12 +156,15 @@ class ControllerDashboardService:
             revenue_budget=revenue_budget,
             revenue_variance=revenue_variance,
             revenue_variance_pct=revenue_variance_pct,
+            revenue_variance_status=revenue_variance_status,
 
             expense_budget=expense_budget,
             expense_variance=expense_variance,
             expense_variance_pct=expense_variance_pct,
+            expense_variance_status=expense_variance_status,
 
             budget_net_profit=budget_net_profit,
             net_profit_variance=net_profit_variance,
             net_profit_variance_pct=net_profit_variance_pct,
+            net_profit_variance_status=net_profit_variance_status,
         )

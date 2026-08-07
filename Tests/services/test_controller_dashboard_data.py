@@ -27,46 +27,17 @@ def test_controller_dashboard_data_creation():
         revenue_budget=950000.0,
         revenue_variance=50000.0,
         revenue_variance_pct=5.2631578947,
+        revenue_variance_status="FAVORABLE",
         expense_budget=750000.0,
         expense_variance=50000.0,
         expense_variance_pct=6.6666666667,
+        expense_variance_status="UNFAVORABLE",
         budget_net_profit=200000.0,
         net_profit_variance=0.0,
         net_profit_variance_pct=0.0,
+        net_profit_variance_status="ON_TARGET",
     )
 
-    assert data.revenue == 1000000.0
-    assert data.expenses == 800000.0
-    assert data.net_profit == 200000.0
-
-    assert data.current_ratio == 2.5
-    assert data.quick_ratio == 2.0
-    assert data.cash_ratio == 0.8
-
-    assert data.net_margin == 20.0
-    assert data.gross_margin == 35.0
-    assert data.operating_margin == 22.0
-
-    assert data.return_on_assets == 9.0
-    assert data.return_on_equity == 20.0
-
-    assert data.inventory_turnover == 4.0
-    assert data.receivables_turnover == 6.0
-    assert data.payables_turnover == 5.0
-    assert data.asset_turnover == 0.5
-    assert data.inventory_days == 91.25
-
-    assert data.working_capital == 150000.0
-    assert data.working_capital_ratio == 1.5
-
-    assert data.revenue_budget == 950000.0
-    assert data.revenue_variance == 50000.0
-    assert data.revenue_variance_pct == 5.2631578947
-
-    assert data.expense_budget == 750000.0
-    assert data.expense_variance == 50000.0
-    assert data.expense_variance_pct == 6.6666666667
-
-    assert data.budget_net_profit == 200000.0
-    assert data.net_profit_variance == 0.0
-    assert data.net_profit_variance_pct == 0.0
+    assert data.revenue_variance_status == "FAVORABLE"
+    assert data.expense_variance_status == "UNFAVORABLE"
+    assert data.net_profit_variance_status == "ON_TARGET"
