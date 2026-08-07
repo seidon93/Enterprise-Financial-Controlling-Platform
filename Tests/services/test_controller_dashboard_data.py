@@ -51,6 +51,11 @@ def test_controller_dashboard_data_creation():
         price_effect=0.0,
         volume_effect=0.0,
         total_revenue_change=0.0,
+        standard_cost=0.0,
+        actual_cost=0.0,
+        cost_variance=0.0,
+        cost_variance_pct=0.0,
+        cost_variance_status="ON_TARGET",
     )
 
     assert data.revenue_variance_status == "FAVORABLE"

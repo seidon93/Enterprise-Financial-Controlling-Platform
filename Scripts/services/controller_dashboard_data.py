@@ -76,3 +76,9 @@ class ControllerDashboardData:
     price_effect: float
     volume_effect: float
     total_revenue_change: float
+
+    standard_cost: float
+    actual_cost: float
+    cost_variance: float
+    cost_variance_pct: float
+    cost_variance_status: str

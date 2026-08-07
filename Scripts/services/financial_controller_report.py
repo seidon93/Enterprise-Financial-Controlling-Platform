@@ -39,3 +39,7 @@ class FinancialControllerReport:
     current_price: float = 0.0
     previous_volume: float = 0.0
     current_volume: float = 0.0
+
+    standard_cost: float = 0.0
+    actual_cost: float = 0.0
+  
