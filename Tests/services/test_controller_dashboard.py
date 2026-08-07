@@ -30,6 +30,8 @@ def test_controller_dashboard_creation():
         payables_turnover=5.0,
         asset_turnover=0.5,
         inventory_days=91.25,
+        working_capital=150000.0,
+        working_capital_ratio=1.5,
     )
 
     dashboard = ControllerDashboard(

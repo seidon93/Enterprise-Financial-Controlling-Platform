@@ -18,6 +18,8 @@ def test_controller_dashboard_data_creation():
         payables_turnover=5.0,
         asset_turnover=0.5,
         inventory_days=91.25,
+        working_capital=150000.0,
+        working_capital_ratio=1.5,
     )
 
     assert data.revenue == 1000000.0
@@ -32,3 +34,5 @@ def test_controller_dashboard_data_creation():
     assert data.payables_turnover == 5.0
     assert data.asset_turnover == 0.5
     assert data.inventory_days == 91.25
+    assert data.working_capital == 150000.0
+    assert data.working_capital_ratio == 1.5

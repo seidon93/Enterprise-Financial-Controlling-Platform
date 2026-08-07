@@ -60,4 +60,12 @@ class FinancialRatioService:
                 cost_of_goods_sold=income_statement.cost_of_goods_sold,
                 average_inventory=balance_sheet.average_inventory,
             )),
+            "working_capital": float(FinancialRatios.working_capital(
+                current_assets=balance_sheet.current_assets,
+                current_liabilities=balance_sheet.current_liabilities,
+            )),
+            "working_capital_ratio": float(FinancialRatios.working_capital_ratio(
+                current_assets=balance_sheet.current_assets,
+                current_liabilities=balance_sheet.current_liabilities,
+            )),
         }

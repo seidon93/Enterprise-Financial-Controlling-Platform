@@ -34,6 +34,8 @@ def test_create_controller_dashboard():
             "payables_turnover": 5.0,
             "asset_turnover": 0.5,
             "inventory_days": 91.25,
+            "working_capital": 150000.0,
+            "working_capital_ratio": 1.5,
         },
     )
 

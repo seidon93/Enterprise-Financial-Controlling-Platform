@@ -5,7 +5,7 @@ Enterprise Financial Analytics Platform (EFAP)
 Object          : controller_dashboard_data.py
 Object Type     : DTO
 Layer           : Service Layer
-Version         : 1.3.0
+Version         : 1.4.0
 Status          : Development
 ===============================================================================
 """
@@ -34,3 +34,6 @@ class ControllerDashboardData:
     payables_turnover: float
     asset_turnover: float
     inventory_days: float
+
+    working_capital: float
+    working_capital_ratio: float

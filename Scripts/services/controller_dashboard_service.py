@@ -51,4 +51,6 @@ class ControllerDashboardService:
             payables_turnover=ratios["payables_turnover"],
             asset_turnover=ratios["asset_turnover"],
             inventory_days=ratios["inventory_days"],
+            working_capital=ratios["working_capital"],
+            working_capital_ratio=ratios["working_capital_ratio"],
         )
