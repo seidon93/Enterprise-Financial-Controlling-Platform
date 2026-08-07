@@ -5,22 +5,14 @@ Enterprise Financial Analytics Platform (EFAP)
 Object          : controller_dashboard_service.py
 Object Type     : Service
 Layer           : Service Layer
-Version         : 1.0.0
+Version         : 1.2.0
 Status          : Development
 ===============================================================================
 """
 
-from services.controller_dashboard import (
-    ControllerDashboard,
-)
-
-from services.controller_dashboard_data import (
-    ControllerDashboardData,
-)
-
-from services.financial_controller_report import (
-    FinancialControllerReport,
-)
+from services.controller_dashboard import ControllerDashboard
+from services.controller_dashboard_data import ControllerDashboardData
+from services.financial_controller_report import FinancialControllerReport
 
 
 class ControllerDashboardService:
@@ -30,8 +22,13 @@ class ControllerDashboardService:
         report: FinancialControllerReport,
     ) -> ControllerDashboard:
 
+        data = ControllerDashboardService.prepare_data(
+            report
+        )
+
         return ControllerDashboard(
-            report=report
+            report=report,
+            data=data,
         )
 
     @staticmethod
@@ -43,6 +40,6 @@ class ControllerDashboardService:
             revenue=float(report.income_statement.revenues),
             expenses=float(report.income_statement.expenses),
             net_profit=float(report.income_statement.net_profit),
-            current_ratio=report.financial_ratios.get("current_ratio", 0.0),
-            net_margin=report.financial_ratios.get("net_margin", 0.0),
+            current_ratio=report.financial_ratios["current_ratio"],
+            net_margin=report.financial_ratios["net_margin"],
         )
