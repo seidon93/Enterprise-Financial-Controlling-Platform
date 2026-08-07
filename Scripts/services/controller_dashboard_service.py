@@ -5,7 +5,7 @@ Enterprise Financial Analytics Platform (EFAP)
 Object          : controller_dashboard_service.py
 Object Type     : Service
 Layer           : Service Layer
-Version         : 2.5.0
+Version         : 2.6.0
 Status          : Development
 ===============================================================================
 """
@@ -17,6 +17,9 @@ from services.controller_dashboard import ControllerDashboard
 from services.controller_dashboard_data import ControllerDashboardData
 from services.financial_controller_report import (
     FinancialControllerReport,
+)
+from services.price_volume_analysis_service import (
+    PriceVolumeAnalysisService,
 )
 from services.yoy_analysis_service import (
     YoYAnalysisService,
@@ -91,6 +94,13 @@ class ControllerDashboardService:
             previous_value=report.net_profit_previous_year,
         )
 
+        price_volume = PriceVolumeAnalysisService.calculate(
+            previous_price=report.previous_price,
+            current_price=report.current_price,
+            previous_volume=report.previous_volume,
+            current_volume=report.current_volume,
+        )
+
         return ControllerDashboardData(
             revenue=revenue,
             expenses=expenses,
@@ -140,4 +150,13 @@ class ControllerDashboardService:
             net_profit_yoy_change=net_profit_yoy.absolute_change,
             net_profit_yoy_change_pct=net_profit_yoy.change_pct,
             net_profit_yoy_status=net_profit_yoy.status,
+
+            previous_price=price_volume.previous_price,
+            current_price=price_volume.current_price,
+            previous_volume=price_volume.previous_volume,
+            current_volume=price_volume.current_volume,
+
+            price_effect=price_volume.price_effect,
+            volume_effect=price_volume.volume_effect,
+            total_revenue_change=price_volume.total_revenue_change,
         )

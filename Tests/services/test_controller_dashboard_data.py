@@ -44,6 +44,13 @@ def test_controller_dashboard_data_creation():
         net_profit_yoy_change=20000.0,
         net_profit_yoy_change_pct=11.11,
         net_profit_yoy_status="GROWTH",
+        previous_price=0.0,
+        current_price=0.0,
+        previous_volume=0.0,
+        current_volume=0.0,
+        price_effect=0.0,
+        volume_effect=0.0,
+        total_revenue_change=0.0,
     )
 
     assert data.revenue_variance_status == "FAVORABLE"

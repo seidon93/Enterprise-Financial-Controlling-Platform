@@ -34,3 +34,8 @@ class FinancialControllerReport:
     expense_budget: float = 0.0
     revenue_previous_year: float = 0.0
     net_profit_previous_year: float = 0.0
+
+    previous_price: float = 0.0
+    current_price: float = 0.0
+    previous_volume: float = 0.0
+    current_volume: float = 0.0
