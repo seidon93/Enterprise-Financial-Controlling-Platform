@@ -5,11 +5,14 @@ Enterprise Financial Analytics Platform (EFAP)
 Object          : controller_dashboard_service.py
 Object Type     : Service
 Layer           : Service Layer
-Version         : 2.3.0
+Version         : 2.4.0
 Status          : Development
 ===============================================================================
 """
 
+from services.budget_variance_service import (
+    BudgetVarianceService,
+)
 from services.controller_dashboard import ControllerDashboard
 from services.controller_dashboard_data import ControllerDashboardData
 from services.financial_controller_report import FinancialControllerReport
@@ -42,60 +45,27 @@ class ControllerDashboardService:
         expenses = float(report.income_statement.expenses)
         net_profit = float(report.income_statement.net_profit)
 
-        revenue_budget = float(report.revenue_budget)
-        expense_budget = float(report.expense_budget)
-
-        revenue_variance = revenue - revenue_budget
-        expense_variance = expenses - expense_budget
-
-        revenue_variance_pct = (
-            revenue_variance / revenue_budget * 100.0
-            if revenue_budget
-            else 0.0
+        revenue_variance = BudgetVarianceService.calculate(
+            budget=report.revenue_budget,
+            actual=revenue,
+            favorable_when="higher",
         )
 
-        expense_variance_pct = (
-            expense_variance / expense_budget * 100.0
-            if expense_budget
-            else 0.0
+        expense_variance = BudgetVarianceService.calculate(
+            budget=report.expense_budget,
+            actual=expenses,
+            favorable_when="lower",
         )
 
         budget_net_profit = (
-            revenue_budget - expense_budget
+            report.revenue_budget
+            - report.expense_budget
         )
 
-        net_profit_variance = (
-            net_profit - budget_net_profit
-        )
-
-        net_profit_variance_pct = (
-            net_profit_variance / budget_net_profit * 100.0
-            if budget_net_profit
-            else 0.0
-        )
-
-        revenue_variance_status = (
-            "FAVORABLE"
-            if revenue_variance > 0
-            else "UNFAVORABLE"
-            if revenue_variance < 0
-            else "ON_TARGET"
-        )
-
-        expense_variance_status = (
-            "FAVORABLE"
-            if expense_variance < 0
-            else "UNFAVORABLE"
-            if expense_variance > 0
-            else "ON_TARGET"
-        )
-
-        net_profit_variance_status = (
-            "FAVORABLE"
-            if net_profit_variance > 0
-            else "UNFAVORABLE"
-            if net_profit_variance < 0
-            else "ON_TARGET"
+        net_profit_variance = BudgetVarianceService.calculate(
+            budget=budget_net_profit,
+            actual=net_profit,
+            favorable_when="higher",
         )
 
         return ControllerDashboardData(
@@ -103,68 +73,38 @@ class ControllerDashboardService:
             expenses=expenses,
             net_profit=net_profit,
 
-            current_ratio=float(
-                ratios["current_ratio"]
-            ),
-            quick_ratio=float(
-                ratios["quick_ratio"]
-            ),
-            cash_ratio=float(
-                ratios["cash_ratio"]
-            ),
+            current_ratio=ratios["current_ratio"],
+            quick_ratio=ratios["quick_ratio"],
+            cash_ratio=ratios["cash_ratio"],
 
-            net_margin=float(
-                ratios["net_margin"]
-            ),
-            gross_margin=float(
-                ratios["gross_margin"]
-            ),
-            operating_margin=float(
-                ratios["operating_margin"]
-            ),
+            net_margin=ratios["net_margin"],
+            gross_margin=ratios["gross_margin"],
+            operating_margin=ratios["operating_margin"],
 
-            return_on_assets=float(
-                ratios["return_on_assets"]
-            ),
-            return_on_equity=float(
-                ratios["return_on_equity"]
-            ),
+            return_on_assets=ratios["return_on_assets"],
+            return_on_equity=ratios["return_on_equity"],
 
-            inventory_turnover=float(
-                ratios["inventory_turnover"]
-            ),
-            receivables_turnover=float(
-                ratios["receivables_turnover"]
-            ),
-            payables_turnover=float(
-                ratios["payables_turnover"]
-            ),
-            asset_turnover=float(
-                ratios["asset_turnover"]
-            ),
-            inventory_days=float(
-                ratios["inventory_days"]
-            ),
+            inventory_turnover=ratios["inventory_turnover"],
+            receivables_turnover=ratios["receivables_turnover"],
+            payables_turnover=ratios["payables_turnover"],
+            asset_turnover=ratios["asset_turnover"],
+            inventory_days=ratios["inventory_days"],
 
-            working_capital=float(
-                ratios["working_capital"]
-            ),
-            working_capital_ratio=float(
-                ratios["working_capital_ratio"]
-            ),
+            working_capital=ratios["working_capital"],
+            working_capital_ratio=ratios["working_capital_ratio"],
 
-            revenue_budget=revenue_budget,
-            revenue_variance=revenue_variance,
-            revenue_variance_pct=revenue_variance_pct,
-            revenue_variance_status=revenue_variance_status,
+            revenue_budget=revenue_variance.budget,
+            revenue_variance=revenue_variance.variance,
+            revenue_variance_pct=revenue_variance.variance_pct,
+            revenue_variance_status=revenue_variance.status,
 
-            expense_budget=expense_budget,
-            expense_variance=expense_variance,
-            expense_variance_pct=expense_variance_pct,
-            expense_variance_status=expense_variance_status,
+            expense_budget=expense_variance.budget,
+            expense_variance=expense_variance.variance,
+            expense_variance_pct=expense_variance.variance_pct,
+            expense_variance_status=expense_variance.status,
 
-            budget_net_profit=budget_net_profit,
-            net_profit_variance=net_profit_variance,
-            net_profit_variance_pct=net_profit_variance_pct,
-            net_profit_variance_status=net_profit_variance_status,
+            budget_net_profit=net_profit_variance.budget,
+            net_profit_variance=net_profit_variance.variance,
+            net_profit_variance_pct=net_profit_variance.variance_pct,
+            net_profit_variance_status=net_profit_variance.status,
         )
