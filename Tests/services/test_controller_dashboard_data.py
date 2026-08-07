@@ -20,6 +20,8 @@ def test_controller_dashboard_data_creation():
         inventory_days=91.25,
         working_capital=150000.0,
         working_capital_ratio=1.5,
+        cash_ratio=0.8,
+        quick_ratio=2.0,
     )
 
     assert data.revenue == 1000000.0
@@ -36,3 +38,5 @@ def test_controller_dashboard_data_creation():
     assert data.inventory_days == 91.25
     assert data.working_capital == 150000.0
     assert data.working_capital_ratio == 1.5
+    assert data.cash_ratio == 0.8
+    assert data.quick_ratio == 2.0

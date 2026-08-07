@@ -28,6 +28,15 @@ class FinancialRatioService:
                 current_assets=balance_sheet.current_assets,
                 current_liabilities=balance_sheet.current_liabilities,
             )),
+            "quick_ratio": float(FinancialRatios.quick_ratio(
+                current_assets=balance_sheet.current_assets,
+                inventory=balance_sheet.inventory,
+                current_liabilities=balance_sheet.current_liabilities,
+            )),
+            "cash_ratio": float(FinancialRatios.cash_ratio(
+                cash=balance_sheet.cash,
+                current_liabilities=balance_sheet.current_liabilities,
+            )),
             "net_margin": float(FinancialRatios.net_margin(
                 revenue=income_statement.revenue,
                 net_profit=income_statement.net_profit,

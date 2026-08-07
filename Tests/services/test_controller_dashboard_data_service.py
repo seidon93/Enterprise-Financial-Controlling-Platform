@@ -40,6 +40,8 @@ def test_prepare_controller_dashboard_data():
             "inventory_days": 91.25,
             "working_capital": 150000.0,
             "working_capital_ratio": 1.5,
+            "cash_ratio": 0.8,
+            "quick_ratio": 2.0,
         },
     )
 

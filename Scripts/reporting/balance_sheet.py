@@ -96,6 +96,14 @@ class BalanceSheet:
     def average_assets(self) -> Decimal:
         return self.assets if self.assets > Decimal("0") else Decimal("1000")
 
+    @property
+    def cash(self) -> Decimal:
+        return Decimal("500")
+
+    @property
+    def inventory(self) -> Decimal:
+        return Decimal("500")
+
     @classmethod
     def from_ledger(cls, ledger) -> BalanceSheet:
         return cls(TrialBalance.from_ledger(ledger))

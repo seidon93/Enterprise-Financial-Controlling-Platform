@@ -53,4 +53,6 @@ class ControllerDashboardService:
             inventory_days=ratios["inventory_days"],
             working_capital=ratios["working_capital"],
             working_capital_ratio=ratios["working_capital_ratio"],
+            cash_ratio=ratios["cash_ratio"],
+            quick_ratio=ratios["quick_ratio"],
         )

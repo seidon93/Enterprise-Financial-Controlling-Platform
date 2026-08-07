@@ -32,6 +32,8 @@ def test_controller_dashboard_creation():
         inventory_days=91.25,
         working_capital=150000.0,
         working_capital_ratio=1.5,
+        cash_ratio=0.8,
+        quick_ratio=2.0,
     )
 
     dashboard = ControllerDashboard(
