@@ -36,8 +36,19 @@ def test_controller_dashboard_data_creation():
         net_profit_variance=0.0,
         net_profit_variance_pct=0.0,
         net_profit_variance_status="ON_TARGET",
+        revenue_previous_year=900000.0,
+        revenue_yoy_change=100000.0,
+        revenue_yoy_change_pct=11.11,
+        revenue_yoy_status="GROWTH",
+        net_profit_previous_year=180000.0,
+        net_profit_yoy_change=20000.0,
+        net_profit_yoy_change_pct=11.11,
+        net_profit_yoy_status="GROWTH",
     )
 
     assert data.revenue_variance_status == "FAVORABLE"
     assert data.expense_variance_status == "UNFAVORABLE"
     assert data.net_profit_variance_status == "ON_TARGET"
+
+    assert data.revenue_yoy_status == "GROWTH"
+    assert data.net_profit_yoy_status == "GROWTH"

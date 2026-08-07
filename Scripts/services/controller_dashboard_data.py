@@ -57,3 +57,13 @@ class ControllerDashboardData:
     net_profit_variance: float
     net_profit_variance_pct: float
     net_profit_variance_status: str
+
+    revenue_previous_year: float
+    revenue_yoy_change: float
+    revenue_yoy_change_pct: float
+    revenue_yoy_status: str
+
+    net_profit_previous_year: float
+    net_profit_yoy_change: float
+    net_profit_yoy_change_pct: float
+    net_profit_yoy_status: str

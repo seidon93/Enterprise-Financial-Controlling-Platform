@@ -32,3 +32,5 @@ class FinancialControllerReport:
     financial_ratios: dict[str, float]
     revenue_budget: float = 0.0
     expense_budget: float = 0.0
+    revenue_previous_year: float = 0.0
+    net_profit_previous_year: float = 0.0

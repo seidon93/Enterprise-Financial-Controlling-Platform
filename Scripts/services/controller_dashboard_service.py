@@ -5,7 +5,7 @@ Enterprise Financial Analytics Platform (EFAP)
 Object          : controller_dashboard_service.py
 Object Type     : Service
 Layer           : Service Layer
-Version         : 2.4.0
+Version         : 2.5.0
 Status          : Development
 ===============================================================================
 """
@@ -15,7 +15,12 @@ from services.budget_variance_service import (
 )
 from services.controller_dashboard import ControllerDashboard
 from services.controller_dashboard_data import ControllerDashboardData
-from services.financial_controller_report import FinancialControllerReport
+from services.financial_controller_report import (
+    FinancialControllerReport,
+)
+from services.yoy_analysis_service import (
+    YoYAnalysisService,
+)
 
 
 class ControllerDashboardService:
@@ -41,9 +46,17 @@ class ControllerDashboardService:
 
         ratios = report.financial_ratios
 
-        revenue = float(report.income_statement.revenue)
-        expenses = float(report.income_statement.expenses)
-        net_profit = float(report.income_statement.net_profit)
+        revenue = float(
+            report.income_statement.revenue
+        )
+
+        expenses = float(
+            report.income_statement.expenses
+        )
+
+        net_profit = float(
+            report.income_statement.net_profit
+        )
 
         revenue_variance = BudgetVarianceService.calculate(
             budget=report.revenue_budget,
@@ -66,6 +79,16 @@ class ControllerDashboardService:
             budget=budget_net_profit,
             actual=net_profit,
             favorable_when="higher",
+        )
+
+        revenue_yoy = YoYAnalysisService.calculate(
+            current_value=revenue,
+            previous_value=report.revenue_previous_year,
+        )
+
+        net_profit_yoy = YoYAnalysisService.calculate(
+            current_value=net_profit,
+            previous_value=report.net_profit_previous_year,
         )
 
         return ControllerDashboardData(
@@ -107,4 +130,14 @@ class ControllerDashboardService:
             net_profit_variance=net_profit_variance.variance,
             net_profit_variance_pct=net_profit_variance.variance_pct,
             net_profit_variance_status=net_profit_variance.status,
+
+            revenue_previous_year=revenue_yoy.previous_value,
+            revenue_yoy_change=revenue_yoy.absolute_change,
+            revenue_yoy_change_pct=revenue_yoy.change_pct,
+            revenue_yoy_status=revenue_yoy.status,
+
+            net_profit_previous_year=net_profit_yoy.previous_value,
+            net_profit_yoy_change=net_profit_yoy.absolute_change,
+            net_profit_yoy_change_pct=net_profit_yoy.change_pct,
+            net_profit_yoy_status=net_profit_yoy.status,
         )
