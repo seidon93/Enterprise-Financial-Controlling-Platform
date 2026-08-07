@@ -1,15 +1,11 @@
-import sys, os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', 'Scripts')))
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+from reporting.balance_sheet import BalanceSheet
+from reporting.income_statement import IncomeStatement
+from reporting.trial_balance import TrialBalance
+from services.controller_dashboard import ControllerDashboard
+from services.controller_dashboard_data import ControllerDashboardData
+from services.financial_controller_report import FinancialControllerReport
 
-from Scripts.reporting.balance_sheet import BalanceSheet
-from Scripts.reporting.income_statement import IncomeStatement
-from Scripts.reporting.trial_balance import TrialBalance
 
-from Scripts.services.controller_dashboard import ControllerDashboard
-from Scripts.services.financial_controller_report import (
-    FinancialControllerReport,
-)
 def test_controller_dashboard_creation():
 
     tb = TrialBalance()
@@ -21,8 +17,20 @@ def test_controller_dashboard_creation():
         financial_ratios={},
     )
 
+    data = ControllerDashboardData(
+        revenue=100.0,
+        expenses=50.0,
+        net_profit=50.0,
+        current_ratio=1.0,
+        net_margin=0.5,
+        gross_margin=0.6,
+        operating_margin=0.4,
+    )
+
     dashboard = ControllerDashboard(
-        report=report
+        report=report,
+        data=data,
     )
 
     assert dashboard.report is report
+    assert dashboard.data is data

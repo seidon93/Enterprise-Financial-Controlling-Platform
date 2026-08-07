@@ -31,6 +31,8 @@ def test_prepare_controller_dashboard_data():
         financial_ratios={
             "current_ratio": 2.5,
             "net_margin": 20.0,
+            "gross_margin": 35.0,
+            "operating_margin": 22.0,
         },
     )
 

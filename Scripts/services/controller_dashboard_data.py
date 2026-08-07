@@ -5,7 +5,7 @@ Enterprise Financial Analytics Platform (EFAP)
 Object          : controller_dashboard_data.py
 Object Type     : DTO
 Layer           : Service Layer
-Version         : 1.0.0
+Version         : 1.1.0
 Status          : Development
 ===============================================================================
 """
@@ -24,3 +24,5 @@ class ControllerDashboardData:
     net_profit: float
     current_ratio: float
     net_margin: float
+    gross_margin: float
+    operating_margin: float

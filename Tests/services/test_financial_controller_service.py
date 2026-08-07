@@ -18,7 +18,12 @@ def test_create_controller_dashboard():
         trial_balance=tb,
         income_statement=IncomeStatement(tb),
         balance_sheet=BalanceSheet(tb),
-        financial_ratios={},
+        financial_ratios={
+            "current_ratio": 2.5,
+            "net_margin": 20.0,
+            "gross_margin": 35.0,
+            "operating_margin": 22.0,
+        },
     )
 
     dashboard = ControllerDashboardService.create(

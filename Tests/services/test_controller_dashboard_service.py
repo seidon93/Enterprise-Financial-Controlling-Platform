@@ -27,6 +27,8 @@ def test_create_controller_dashboard():
         financial_ratios={
             "current_ratio": 2.5,
             "net_margin": 20.0,
+            "gross_margin": 35.0,
+            "operating_margin": 22.0,
         },
     )
 
@@ -38,3 +40,5 @@ def test_create_controller_dashboard():
     assert dashboard.data is not None
     assert dashboard.data.current_ratio == 2.5
     assert dashboard.data.net_margin == 20.0
+    assert dashboard.data.gross_margin == 35.0
+    assert dashboard.data.operating_margin == 22.0
