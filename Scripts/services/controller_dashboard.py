@@ -10,12 +10,9 @@ Status          : Development
 ===============================================================================
 """
 
-import sys, os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 from dataclasses import dataclass
 
-from Scripts.services.financial_controller_report import (
+from services.financial_controller_report import (
     FinancialControllerReport,
 )
 

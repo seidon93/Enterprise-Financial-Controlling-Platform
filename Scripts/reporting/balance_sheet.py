@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from Scripts.reporting.trial_balance import TrialBalance
+from reporting.trial_balance import TrialBalance
 
 
 class BalanceSheet:
@@ -27,30 +27,39 @@ class BalanceSheet:
     def assets(self) -> Decimal:
 
         return sum(
-            amount
-            for account, amount in self.tb.balances.items()
-            if account.startswith(("1", "2"))
-            and amount > 0
+            (
+                amount
+                for account, amount in self.tb.balances.items()
+                if account.startswith(("1", "2"))
+                and amount > 0
+            ),
+            Decimal("0"),
         )
 
     @property
     def liabilities(self) -> Decimal:
 
         return sum(
-            -amount
-            for account, amount in self.tb.balances.items()
-            if account.startswith(("3", "4"))
-            and amount < 0
+            (
+                -amount
+                for account, amount in self.tb.balances.items()
+                if account.startswith(("3", "4"))
+                and amount < 0
+            ),
+            Decimal("0"),
         )
 
     @property
     def equity(self) -> Decimal:
 
         return sum(
-            -amount
-            for account, amount in self.tb.balances.items()
-            if account.startswith("9")
-            and amount < 0
+            (
+                -amount
+                for account, amount in self.tb.balances.items()
+                if account.startswith("9")
+                and amount < 0
+            ),
+            Decimal("0"),
         )
 
     @property

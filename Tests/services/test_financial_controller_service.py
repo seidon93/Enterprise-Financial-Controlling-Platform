@@ -1,33 +1,28 @@
-import sys, os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', 'Scripts')))
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+from reporting.balance_sheet import BalanceSheet
+from reporting.income_statement import IncomeStatement
+from reporting.trial_balance import TrialBalance
 
-from Scripts.repositories.journal_repository import JournalRepository
-
-from tests.helpers.factories import create_sales_invoice, create_purchase_invoice
-
-from Scripts.accounting.general_ledger_engine import GeneralLedgerEngine
-
-from Scripts.services.financial_controller_service import (
-    FinancialControllerService,
+from services.controller_dashboard_service import (
+    ControllerDashboardService,
 )
 
-def test_create_financial_controller_report():
+from services.financial_controller_report import (
+    FinancialControllerReport,
+)
 
-    repository = JournalRepository()
 
-    repository.save(create_sales_invoice())
-    repository.save(create_purchase_invoice())
+def test_create_controller_dashboard():
 
-    ledger = GeneralLedgerEngine()
-    for entry in repository.get_all():
-        ledger.post(entry)
-
-    report = FinancialControllerService.create_report(
-        ledger
+    tb = TrialBalance()
+    report = FinancialControllerReport(
+        trial_balance=tb,
+        income_statement=IncomeStatement(tb),
+        balance_sheet=BalanceSheet(tb),
+        financial_ratios={},
     )
 
-    assert report.trial_balance is not None
-    assert report.income_statement is not None
-    assert report.balance_sheet is not None
-    assert isinstance(report.financial_ratios, dict)
+    dashboard = ControllerDashboardService.create(
+        report
+    )
+
+    assert dashboard.report is report

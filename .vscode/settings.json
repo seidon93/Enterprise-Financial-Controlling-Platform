@@ -7,6 +7,9 @@
         "tests"
     ],
     "python.testing.unittestEnabled": false,
+    "terminal.integrated.env.windows": {
+        "PYTHONPATH": "${workspaceFolder};${workspaceFolder}\\Scripts"
+    },
     "sqltools.connections": [
         {
             "ssh": "Disabled",
