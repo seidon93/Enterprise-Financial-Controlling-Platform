@@ -85,8 +85,8 @@ class ControllerDashboardService:
         )
 
         budget_net_profit = (
-            float(report.revenue_budget)
-            - float(report.expense_budget)
+            report.revenue_budget
+            - report.expense_budget
         )
 
         net_profit_variance = BudgetVarianceService.calculate(
@@ -110,6 +110,8 @@ class ControllerDashboardService:
             current_price=report.current_price,
             previous_volume=report.previous_volume,
             current_volume=report.current_volume,
+            previous_revenue=report.revenue_previous_year,
+            current_revenue=revenue,
         )
 
         cost_variance = CostVarianceService.calculate(
@@ -122,55 +124,25 @@ class ControllerDashboardService:
             expenses=expenses,
             net_profit=net_profit,
 
-            current_ratio=float(
-                ratios["current_ratio"]
-            ),
-            quick_ratio=float(
-                ratios["quick_ratio"]
-            ),
-            cash_ratio=float(
-                ratios["cash_ratio"]
-            ),
+            current_ratio=ratios["current_ratio"],
+            quick_ratio=ratios["quick_ratio"],
+            cash_ratio=ratios["cash_ratio"],
 
-            net_margin=float(
-                ratios["net_margin"]
-            ),
-            gross_margin=float(
-                ratios["gross_margin"]
-            ),
-            operating_margin=float(
-                ratios["operating_margin"]
-            ),
+            net_margin=ratios["net_margin"],
+            gross_margin=ratios["gross_margin"],
+            operating_margin=ratios["operating_margin"],
 
-            return_on_assets=float(
-                ratios["return_on_assets"]
-            ),
-            return_on_equity=float(
-                ratios["return_on_equity"]
-            ),
+            return_on_assets=ratios["return_on_assets"],
+            return_on_equity=ratios["return_on_equity"],
 
-            inventory_turnover=float(
-                ratios["inventory_turnover"]
-            ),
-            receivables_turnover=float(
-                ratios["receivables_turnover"]
-            ),
-            payables_turnover=float(
-                ratios["payables_turnover"]
-            ),
-            asset_turnover=float(
-                ratios["asset_turnover"]
-            ),
-            inventory_days=float(
-                ratios["inventory_days"]
-            ),
+            inventory_turnover=ratios["inventory_turnover"],
+            receivables_turnover=ratios["receivables_turnover"],
+            payables_turnover=ratios["payables_turnover"],
+            asset_turnover=ratios["asset_turnover"],
+            inventory_days=ratios["inventory_days"],
 
-            working_capital=float(
-                ratios["working_capital"]
-            ),
-            working_capital_ratio=float(
-                ratios["working_capital_ratio"]
-            ),
+            working_capital=ratios["working_capital"],
+            working_capital_ratio=ratios["working_capital_ratio"],
 
             revenue_budget=revenue_variance.budget,
             revenue_variance=revenue_variance.variance,

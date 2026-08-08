@@ -5,8 +5,9 @@ Enterprise Financial Analytics Platform (EFAP)
 Object          : price_volume_analysis_service.py
 Object Type     : Service
 Layer           : Service Layer
-Version         : 1.0.0
+Version         : 2.0.0
 Status          : Development
+Description     : Decomposes revenue change into price and volume effects.
 ===============================================================================
 """
 
@@ -36,6 +37,15 @@ class PriceVolumeAnalysis:
 class PriceVolumeAnalysisService:
     """
     Decomposes revenue change into price and volume effects.
+
+    The revenue bridge is anchored to the actual previous and current
+    revenue values supplied by the controller layer.
+
+    This guarantees:
+
+        price_effect + volume_effect
+        =
+        current_revenue - previous_revenue
     """
 
     @staticmethod
@@ -44,35 +54,59 @@ class PriceVolumeAnalysisService:
         current_price: float,
         previous_volume: float,
         current_volume: float,
+        previous_revenue: float | None = None,
+        current_revenue: float | None = None,
     ) -> PriceVolumeAnalysis:
 
-        previous_price = previous_price
-        current_price = current_price
+        # ------------------------------------------------------------------
+        # Revenue baseline
+        #
+        # If explicit revenue values are supplied, they are treated as the
+        # authoritative controller values.
+        #
+        # Otherwise revenue is derived from price × volume for backward
+        # compatibility.
+        # ------------------------------------------------------------------
 
-        previous_volume = previous_volume
-        current_volume = current_volume
+        if previous_revenue is None:
+            previous_revenue = (
+                previous_price * previous_volume
+            )
 
-        previous_revenue = (
-            previous_price * previous_volume
+        if current_revenue is None:
+            current_revenue = (
+                current_price * current_volume
+            )
+
+        total_revenue_change = (
+            current_revenue
+            - previous_revenue
         )
 
-        current_revenue = (
-            current_price * current_volume
-        )
+        # ------------------------------------------------------------------
+        # Price effect
+        #
+        # Price change is measured against the previous-period volume.
+        # ------------------------------------------------------------------
 
         price_effect = (
             (current_price - previous_price)
             * previous_volume
         )
 
-        volume_effect = (
-            (current_volume - previous_volume)
-            * current_price
-        )
+        # ------------------------------------------------------------------
+        # Volume effect
+        #
+        # The remaining revenue movement is attributed to volume.
+        #
+        # This guarantees a mathematically complete bridge:
+        #
+        # Price Effect + Volume Effect = Total Revenue Change
+        # ------------------------------------------------------------------
 
-        total_revenue_change = (
-            current_revenue
-            - previous_revenue
+        volume_effect = (
+            total_revenue_change
+            - price_effect
         )
 
         return PriceVolumeAnalysis(
@@ -86,3 +120,4 @@ class PriceVolumeAnalysisService:
             volume_effect=volume_effect,
             total_revenue_change=total_revenue_change,
         )
+
