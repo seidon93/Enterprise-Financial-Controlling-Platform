@@ -5,53 +5,53 @@ Enterprise Financial Analytics Platform (EFAP)
 Object          : export_controller_dashboard.py
 Object Type     : Export Runner
 Layer           : Application Layer
-Version         : 1.0.0
+Version         : 2.0.0
 Status          : Development
 ===============================================================================
 """
 
 from pathlib import Path
 
-from reporting.balance_sheet import BalanceSheet
-from reporting.income_statement import IncomeStatement
-from reporting.trial_balance import TrialBalance
+from accounting.general_ledger_engine import GeneralLedgerEngine
+from repositories.journal_repository import JournalRepository
 
-from services.controller_dashboard_service import (
-    ControllerDashboardService,
-)
 from services.controller_dashboard_export_service import (
     ControllerDashboardExportService,
 )
-from services.financial_controller_report import (
-    FinancialControllerReport,
+from services.controller_dashboard_service import (
+    ControllerDashboardService,
+)
+from services.financial_controller_service import (
+    FinancialControllerService,
 )
 
 
-def build_report() -> FinancialControllerReport:
+def build_general_ledger(
+    journal_repository: JournalRepository,
+) -> GeneralLedgerEngine:
 
-    tb = TrialBalance()
+    ledger = GeneralLedgerEngine()
 
-    return FinancialControllerReport(
-        trial_balance=tb,
-        income_statement=IncomeStatement(tb),
-        balance_sheet=BalanceSheet(tb),
-        financial_ratios={
-            "current_ratio": 0.0,
-            "quick_ratio": 0.0,
-            "cash_ratio": 0.0,
-            "net_margin": 0.0,
-            "gross_margin": 0.0,
-            "operating_margin": 0.0,
-            "return_on_assets": 0.0,
-            "return_on_equity": 0.0,
-            "inventory_turnover": 0.0,
-            "receivables_turnover": 0.0,
-            "payables_turnover": 0.0,
-            "asset_turnover": 0.0,
-            "inventory_days": 0.0,
-            "working_capital": 0.0,
-            "working_capital_ratio": 0.0,
-        },
+    for entry in journal_repository.get_all():
+        ledger.post(entry)
+
+    return ledger
+
+
+def create_dashboard(
+    journal_repository: JournalRepository,
+):
+
+    general_ledger = build_general_ledger(
+        journal_repository
+    )
+
+    report = FinancialControllerService.create_report(
+        general_ledger
+    )
+
+    return ControllerDashboardService.create(
+        report
     )
 
 
@@ -66,10 +66,10 @@ def main() -> None:
         / "controller_dashboard.csv"
     )
 
-    report = build_report()
+    journal_repository = JournalRepository()
 
-    dashboard = ControllerDashboardService.create(
-        report
+    dashboard = create_dashboard(
+        journal_repository
     )
 
     ControllerDashboardExportService.export_csv(
