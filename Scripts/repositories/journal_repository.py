@@ -10,7 +10,7 @@ Status          : Development
 ===============================================================================
 """
 
-from Scripts.accounting.models import JournalEntry
+from accounting.models import JournalEntry
 
 
 class JournalRepository:

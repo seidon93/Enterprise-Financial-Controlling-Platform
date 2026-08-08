@@ -5,8 +5,8 @@ Enterprise Financial Analytics Platform (EFAP)
 Object          : financial_ratio_service.py
 Object Type     : Service
 Layer           : Service Layer
-Version         : 1.2.0
-Status          : Development
+Version         : 1.1.0
+Status          : Implemented
 ===============================================================================
 """
 
@@ -16,6 +16,18 @@ from reporting.financial_ratios import FinancialRatios
 
 
 class FinancialRatioService:
+    """
+    Service responsible for calculating the financial KPI set
+    consumed by the Financial Controller reporting layer.
+    """
+
+    @staticmethod
+    def _safe(func, **kwargs) -> float:
+        """Call a ratio function; return 0.0 when the denominator is zero."""
+        try:
+            return float(func(**kwargs))
+        except ZeroDivisionError:
+            return 0.0
 
     @staticmethod
     def calculate(
@@ -23,58 +35,99 @@ class FinancialRatioService:
         balance_sheet: BalanceSheet,
     ) -> dict[str, float]:
 
+        _safe = FinancialRatioService._safe
+
         return {
-            "current_ratio": float(FinancialRatios.current_ratio(
+            # -----------------------------------------------------------------
+            # Liquidity
+            # -----------------------------------------------------------------
+            "current_ratio": _safe(
+                FinancialRatios.current_ratio,
                 current_assets=balance_sheet.current_assets,
                 current_liabilities=balance_sheet.current_liabilities,
-            )),
-            "quick_ratio": float(FinancialRatios.quick_ratio(
+            ),
+            "quick_ratio": _safe(
+                FinancialRatios.quick_ratio,
                 current_assets=balance_sheet.current_assets,
                 inventory=balance_sheet.inventory,
                 current_liabilities=balance_sheet.current_liabilities,
-            )),
-            "cash_ratio": float(FinancialRatios.cash_ratio(
+            ),
+            "cash_ratio": _safe(
+                FinancialRatios.cash_ratio,
                 cash=balance_sheet.cash,
                 current_liabilities=balance_sheet.current_liabilities,
-            )),
-            "net_margin": float(FinancialRatios.net_margin(
+            ),
+
+            # -----------------------------------------------------------------
+            # Profitability
+            # -----------------------------------------------------------------
+            "net_margin": _safe(
+                FinancialRatios.net_margin,
                 revenue=income_statement.revenue,
                 net_profit=income_statement.net_profit,
-            )),
-            "gross_margin": float(FinancialRatios.gross_margin(
+            ),
+            "gross_margin": _safe(
+                FinancialRatios.gross_margin,
                 revenue=income_statement.revenue,
                 gross_profit=income_statement.gross_profit,
-            )),
-            "operating_margin": float(FinancialRatios.operating_margin(
+            ),
+            "operating_margin": _safe(
+                FinancialRatios.operating_margin,
                 revenue=income_statement.revenue,
                 operating_profit=income_statement.operating_profit,
-            )),
-            "inventory_turnover": float(FinancialRatios.inventory_turnover(
+            ),
+            "return_on_assets": _safe(
+                FinancialRatios.return_on_assets,
+                net_profit=income_statement.net_profit,
+                total_assets=balance_sheet.total_assets,
+            ),
+            "return_on_equity": _safe(
+                FinancialRatios.return_on_equity,
+                net_profit=income_statement.net_profit,
+                equity=balance_sheet.equity,
+            ),
+
+            # -----------------------------------------------------------------
+            # Efficiency
+            # -----------------------------------------------------------------
+            "inventory_turnover": _safe(
+                FinancialRatios.inventory_turnover,
                 cost_of_goods_sold=income_statement.cost_of_goods_sold,
                 average_inventory=balance_sheet.average_inventory,
-            )),
-            "receivables_turnover": float(FinancialRatios.receivables_turnover(
+            ),
+            "receivables_turnover": _safe(
+                FinancialRatios.receivables_turnover,
                 revenue=income_statement.revenue,
                 average_receivables=balance_sheet.average_receivables,
-            )),
-            "payables_turnover": float(FinancialRatios.payables_turnover(
+            ),
+            "payables_turnover": _safe(
+                FinancialRatios.payables_turnover,
                 purchases=income_statement.purchases,
                 average_payables=balance_sheet.average_payables,
-            )),
-            "asset_turnover": float(FinancialRatios.asset_turnover(
+            ),
+            "asset_turnover": _safe(
+                FinancialRatios.asset_turnover,
                 revenue=income_statement.revenue,
                 average_assets=balance_sheet.average_assets,
-            )),
-            "inventory_days": float(FinancialRatios.inventory_days(
+            ),
+            "inventory_days": _safe(
+                FinancialRatios.inventory_days,
                 cost_of_goods_sold=income_statement.cost_of_goods_sold,
                 average_inventory=balance_sheet.average_inventory,
-            )),
-            "working_capital": float(FinancialRatios.working_capital(
+            ),
+
+            # -----------------------------------------------------------------
+            # Working Capital
+            # -----------------------------------------------------------------
+            "working_capital": _safe(
+                FinancialRatios.working_capital,
                 current_assets=balance_sheet.current_assets,
                 current_liabilities=balance_sheet.current_liabilities,
-            )),
-            "working_capital_ratio": float(FinancialRatios.working_capital_ratio(
+            ),
+            "working_capital_ratio": _safe(
+                FinancialRatios.working_capital_ratio,
                 current_assets=balance_sheet.current_assets,
                 current_liabilities=balance_sheet.current_liabilities,
-            )),
+            ),
         }
+

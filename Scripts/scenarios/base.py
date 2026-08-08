@@ -13,6 +13,7 @@ Status          : Development
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Any
 import sys
 from pathlib import Path
 
@@ -36,7 +37,7 @@ class AccountingScenario(ABC):
         self.document_generator = document_generator
 
     @abstractmethod
-    def create(self) -> JournalEntry:
+    def create(self, request: Any) -> JournalEntry:
         """
         Create accounting journal entry.
         """

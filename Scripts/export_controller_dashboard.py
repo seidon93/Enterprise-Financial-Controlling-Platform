@@ -3,59 +3,33 @@
 Enterprise Financial Analytics Platform (EFAP)
 -------------------------------------------------------------------------------
 Object          : export_controller_dashboard.py
-Object Type     : Export Runner
-Layer           : Application Layer
-Version         : 2.0.0
+Object Type     : Controller Dashboard Export Runner
+Layer           : Application / Reporting
+Version         : 1.0.0
 Status          : Development
 ===============================================================================
 """
 
 from pathlib import Path
 
-from accounting.general_ledger_engine import GeneralLedgerEngine
-from repositories.journal_repository import JournalRepository
-
 from services.controller_dashboard_export_service import (
     ControllerDashboardExportService,
 )
+
 from services.controller_dashboard_service import (
     ControllerDashboardService,
 )
-from services.financial_controller_service import (
-    FinancialControllerService,
+
+from workflows.financial_controller_workflow import (
+    run_financial_controller_workflow,
 )
 
 
-def build_general_ledger(
-    journal_repository: JournalRepository,
-) -> GeneralLedgerEngine:
-
-    ledger = GeneralLedgerEngine()
-
-    for entry in journal_repository.get_all():
-        ledger.post(entry)
-
-    return ledger
-
-
-def create_dashboard(
-    journal_repository: JournalRepository,
-):
-
-    general_ledger = build_general_ledger(
-        journal_repository
-    )
-
-    report = FinancialControllerService.create_report(
-        general_ledger
-    )
-
-    return ControllerDashboardService.create(
-        report
-    )
-
-
 def main() -> None:
+    """
+    Execute the complete Financial Controller workflow
+    and export the resulting dashboard to CSV.
+    """
 
     project_root = Path(__file__).resolve().parents[1]
 
@@ -66,11 +40,31 @@ def main() -> None:
         / "controller_dashboard.csv"
     )
 
-    journal_repository = JournalRepository()
+    # -------------------------------------------------------------------------
+    # Execute production Financial Controller workflow
+    #
+    # Scenario
+    #     ↓
+    # JournalRepository
+    #     ↓
+    # GeneralLedgerEngine
+    #     ↓
+    # FinancialControllerService
+    # -------------------------------------------------------------------------
 
-    dashboard = create_dashboard(
-        journal_repository
+    report = run_financial_controller_workflow()
+
+    # -------------------------------------------------------------------------
+    # Build Controller Dashboard
+    # -------------------------------------------------------------------------
+
+    dashboard = ControllerDashboardService.create(
+        report
     )
+
+    # -------------------------------------------------------------------------
+    # Export dashboard
+    # -------------------------------------------------------------------------
 
     ControllerDashboardExportService.export_csv(
         dashboard=dashboard,
@@ -78,7 +72,7 @@ def main() -> None:
     )
 
     print(
-        f"Controller dashboard exported to: "
+        "Controller dashboard exported to: "
         f"{output_path}"
     )
 

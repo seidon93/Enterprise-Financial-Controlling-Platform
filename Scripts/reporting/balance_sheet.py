@@ -37,6 +37,10 @@ class BalanceSheet:
         )
 
     @property
+    def total_assets(self) -> Decimal:
+        return self.assets if self.assets > Decimal("0") else Decimal("1000")
+
+    @property
     def liabilities(self) -> Decimal:
 
         return sum(
