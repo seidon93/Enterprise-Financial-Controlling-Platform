@@ -48,6 +48,7 @@ class SalesInvoiceRequest:
     product_code: str | None = None
     quantity: Decimal | None = None
     unit_price: Decimal | None = None
+    material_code: str | None = None
 
 
 class SalesInvoiceScenario(AccountingScenario):

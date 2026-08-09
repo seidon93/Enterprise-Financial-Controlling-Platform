@@ -336,12 +336,20 @@ class ScenarioRouter:
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
                     currency_code=event.currency_code,
+
                     invoice_date=event.event_date,
                     due_date=event.due_date,
+
                     net_amount=event.amount,
                     vat_rate=event.vat_rate,
+
                     description=event.description,
+
                     customer_code=event.customer_code,
+
+                    product_code=event.material_code,
+                    quantity=event.quantity,
+                    unit_price=event.unit_price,
                 )
 
                 return self.sales_scenario.create(request)

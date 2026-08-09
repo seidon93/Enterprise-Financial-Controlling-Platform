@@ -80,6 +80,7 @@ class JournalLine:
 
     quantity: Decimal | None = None
     unit_price: Decimal | None = None
+    material_code: str | None = None
 
 # ============================================================================
 # Journal Entry
