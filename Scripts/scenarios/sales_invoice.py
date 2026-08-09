@@ -45,6 +45,10 @@ class SalesInvoiceRequest:
 
     customer_code: str | None = None
 
+    product_code: str | None = None
+    quantity: Decimal | None = None
+    unit_price: Decimal | None = None
+
 
 class SalesInvoiceScenario(AccountingScenario):
     """
@@ -85,6 +89,9 @@ class SalesInvoiceScenario(AccountingScenario):
                 amount_local=gross_amount,
                 description="Customer Receivable",
                 customer_code=request.customer_code,
+                product_code=request.product_code,
+                quantity=request.quantity,
+                unit_price=request.unit_price,
             )
         )
 
@@ -102,6 +109,9 @@ class SalesInvoiceScenario(AccountingScenario):
                 amount_local=request.net_amount,
                 description="Sales Revenue",
                 customer_code=request.customer_code,
+                product_code=request.product_code,
+                quantity=request.quantity,
+                unit_price=request.unit_price,
             )
         )
 

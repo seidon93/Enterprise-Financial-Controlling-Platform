@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import TypeVar
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -25,6 +26,8 @@ from domain.business_event import BusinessEvent
 from domain.business_event_type import BusinessEventType
 
 from decimal import Decimal
+
+_T = TypeVar('_T')
 
 from scenarios.sales_invoice import (
     SalesInvoiceRequest,
@@ -306,7 +309,19 @@ class ScenarioRouter:
         self.profit_transfer_scenario = profit_transfer_scenario
         self.opening_balance_scenario = opening_balance_scenario
 
-        
+
+    @staticmethod
+    def _req(value: _T | None) -> _T:
+        """
+        Narrows an optional field to its required type.
+        Raises ValueError if value is None.
+        """
+        if value is None:
+            raise ValueError(
+                "Required field is None."
+            )
+        return value
+
     def process(
         self,
         event: BusinessEvent,
@@ -342,7 +357,7 @@ class ScenarioRouter:
                     net_amount=event.amount,
                     vat_rate=event.vat_rate,
                     description=event.description,
-                    supplier_code=event.supplier_code,
+                    supplier_code=self._req(event.supplier_code),
                 )
                 return self.purchase_scenario.create(request)
 
@@ -367,7 +382,7 @@ class ScenarioRouter:
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
                     currency_code=event.currency_code,
-                    supplier_code=event.supplier_code,
+                    supplier_code=self._req(event.supplier_code),
                     payment_date=event.event_date,
                     payment_amount=event.amount,
                     description=event.description,
@@ -379,17 +394,17 @@ class ScenarioRouter:
 
                 request = AssetAcquisitionRequest(
                     company_code=event.company_code,
-                    asset_code=event.asset_code,
-                    asset_name=event.asset_name,
-                    asset_class=event.asset_class,
-                    asset_group=event.asset_group,
+                    asset_code=self._req(event.asset_code),
+                    asset_name=self._req(event.asset_name),
+                    asset_class=self._req(event.asset_class),
+                    asset_group=self._req(event.asset_group),
                     supplier_code=event.supplier_code,
                     acquisition_date=event.event_date,
-                    acquisition_cost=event.acquisition_cost,
+                    acquisition_cost=self._req(event.acquisition_cost),
                     vat_rate=event.vat_rate,
-                    useful_life_months=event.useful_life_months,
-                    depreciation_method=event.depreciation_method,
-                    residual_value=event.residual_value,
+                    useful_life_months=self._req(event.useful_life_months),
+                    depreciation_method=self._req(event.depreciation_method),
+                    residual_value=self._req(event.residual_value),
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
@@ -401,17 +416,17 @@ class ScenarioRouter:
 
                 request = AssetCapitalizationRequest(
                     company_code=event.company_code,
-                    asset_code=event.asset_code,
-                    asset_name=event.asset_name,
-                    asset_class=event.asset_class,
-                    asset_group=event.asset_group,
+                    asset_code=self._req(event.asset_code),
+                    asset_name=self._req(event.asset_name),
+                    asset_class=self._req(event.asset_class),
+                    asset_group=self._req(event.asset_group),
                     supplier_code=event.supplier_code,
                     acquisition_date=event.event_date,
-                    acquisition_cost=event.acquisition_cost,
+                    acquisition_cost=self._req(event.acquisition_cost),
                     vat_rate=event.vat_rate,
-                    useful_life_months=event.useful_life_months,
-                    depreciation_method=event.depreciation_method,
-                    residual_value=event.residual_value,
+                    useful_life_months=self._req(event.useful_life_months),
+                    depreciation_method=self._req(event.depreciation_method),
+                    residual_value=self._req(event.residual_value),
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
@@ -423,17 +438,17 @@ class ScenarioRouter:
 
                 request = AssetDepreciationRequest(
                     company_code=event.company_code,
-                    asset_code=event.asset_code,
-                    asset_name=event.asset_name,
-                    asset_class=event.asset_class,
-                    asset_group=event.asset_group,
+                    asset_code=self._req(event.asset_code),
+                    asset_name=self._req(event.asset_name),
+                    asset_class=self._req(event.asset_class),
+                    asset_group=self._req(event.asset_group),
                     supplier_code=event.supplier_code,
                     acquisition_date=event.event_date,
-                    acquisition_cost=event.acquisition_cost,
+                    acquisition_cost=self._req(event.acquisition_cost),
                     vat_rate=event.vat_rate,
-                    useful_life_months=event.useful_life_months,
-                    depreciation_method=event.depreciation_method,
-                    residual_value=event.residual_value,
+                    useful_life_months=self._req(event.useful_life_months),
+                    depreciation_method=self._req(event.depreciation_method),
+                    residual_value=self._req(event.residual_value),
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
@@ -447,17 +462,17 @@ class ScenarioRouter:
 
                 request = AssetImpairmentRequest(
                     company_code=event.company_code,
-                    asset_code=event.asset_code,
-                    asset_name=event.asset_name,
-                    asset_class=event.asset_class,
-                    asset_group=event.asset_group,
+                    asset_code=self._req(event.asset_code),
+                    asset_name=self._req(event.asset_name),
+                    asset_class=self._req(event.asset_class),
+                    asset_group=self._req(event.asset_group),
                     supplier_code=event.supplier_code,
                     acquisition_date=event.event_date,
-                    acquisition_cost=event.acquisition_cost,
+                    acquisition_cost=self._req(event.acquisition_cost),
                     vat_rate=event.vat_rate,
-                    useful_life_months=event.useful_life_months,
-                    depreciation_method=event.depreciation_method,
-                    residual_value=event.residual_value,
+                    useful_life_months=self._req(event.useful_life_months),
+                    depreciation_method=self._req(event.depreciation_method),
+                    residual_value=self._req(event.residual_value),
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
@@ -471,17 +486,17 @@ class ScenarioRouter:
 
                 request = AssetDisposalRequest(
                     company_code=event.company_code,
-                    asset_code=event.asset_code,
-                    asset_name=event.asset_name,
-                    asset_class=event.asset_class,
-                    asset_group=event.asset_group,
+                    asset_code=self._req(event.asset_code),
+                    asset_name=self._req(event.asset_name),
+                    asset_class=self._req(event.asset_class),
+                    asset_group=self._req(event.asset_group),
                     supplier_code=event.supplier_code,
                     acquisition_date=event.event_date,
-                    acquisition_cost=event.acquisition_cost,
+                    acquisition_cost=self._req(event.acquisition_cost),
                     vat_rate=event.vat_rate,
-                    useful_life_months=event.useful_life_months,
-                    depreciation_method=event.depreciation_method,
-                    residual_value=event.residual_value,
+                    useful_life_months=self._req(event.useful_life_months),
+                    depreciation_method=self._req(event.depreciation_method),
+                    residual_value=self._req(event.residual_value),
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
@@ -495,17 +510,17 @@ class ScenarioRouter:
 
                 request = AssetSaleRequest(
                     company_code=event.company_code,
-                    asset_code=event.asset_code,
-                    asset_name=event.asset_name,
-                    asset_class=event.asset_class,
-                    asset_group=event.asset_group,
+                    asset_code=self._req(event.asset_code),
+                    asset_name=self._req(event.asset_name),
+                    asset_class=self._req(event.asset_class),
+                    asset_group=self._req(event.asset_group),
                     supplier_code=event.supplier_code,
                     acquisition_date=event.event_date,
-                    acquisition_cost=event.acquisition_cost,
+                    acquisition_cost=self._req(event.acquisition_cost),
                     vat_rate=event.vat_rate,
-                    useful_life_months=event.useful_life_months,
-                    depreciation_method=event.depreciation_method,
-                    residual_value=event.residual_value,
+                    useful_life_months=self._req(event.useful_life_months),
+                    depreciation_method=self._req(event.depreciation_method),
+                    residual_value=self._req(event.residual_value),
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
@@ -520,17 +535,17 @@ class ScenarioRouter:
 
                 request = AssetTransferRequest(
                     company_code=event.company_code,
-                    asset_code=event.asset_code,
-                    asset_name=event.asset_name,
-                    asset_class=event.asset_class,
-                    asset_group=event.asset_group,
+                    asset_code=self._req(event.asset_code),
+                    asset_name=self._req(event.asset_name),
+                    asset_class=self._req(event.asset_class),
+                    asset_group=self._req(event.asset_group),
                     supplier_code=event.supplier_code,
                     acquisition_date=event.event_date,
-                    acquisition_cost=event.acquisition_cost,
+                    acquisition_cost=self._req(event.acquisition_cost),
                     vat_rate=event.vat_rate,
-                    useful_life_months=event.useful_life_months,
-                    depreciation_method=event.depreciation_method,
-                    residual_value=event.residual_value,
+                    useful_life_months=self._req(event.useful_life_months),
+                    depreciation_method=self._req(event.depreciation_method),
+                    residual_value=self._req(event.residual_value),
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
@@ -548,26 +563,26 @@ class ScenarioRouter:
             case BusinessEventType.INVENTORY_RECEIPT:
 
                 request = InventoryReceiptRequest(
-                company_code=event.company_code,
-                cost_center_code=event.cost_center_code,
-                department_code=event.department_code,
-                currency_code=event.currency_code,
+                    company_code=event.company_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                    currency_code=event.currency_code,
 
-                material_code=event.material_code,
-                material_name=event.material_name,
+                    material_code=self._req(event.material_code),
+                    material_name=self._req(event.material_name),
 
-                warehouse_code=event.warehouse_code,
-                storage_location=event.storage_location,
+                    warehouse_code=self._req(event.warehouse_code),
+                    storage_location=self._req(event.storage_location),
 
-                receipt_date=event.event_date,
+                    receipt_date=event.event_date,
 
-                quantity=event.quantity,
-                unit_price=event.unit_price,
-                total_amount=event.amount,
+                    quantity=self._req(event.quantity),
+                    unit_price=self._req(event.unit_price),
+                    total_amount=event.amount,
 
-                supplier_code=event.supplier_code,
-                description=event.description,
-            )
+                    supplier_code=event.supplier_code,
+                    description=event.description,
+                )
 
                 return self.inventory_receipt_scenario.create(request)
 
@@ -576,12 +591,12 @@ class ScenarioRouter:
 
                 request = InventoryIssueRequest(
                     company_code=event.company_code,
-                    inventory_code=event.inventory_code,
-                    material_code=event.material_code,
-                    material_name=event.material_name,
+                    inventory_code=self._req(event.inventory_code),
+                    material_code=self._req(event.material_code),
+                    material_name=self._req(event.material_name),
                     event_date=event.event_date,
-                    quantity=event.quantity,
-                    unit_cost=event.unit_cost,
+                    quantity=self._req(event.quantity),
+                    unit_cost=self._req(event.unit_cost),
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
@@ -594,19 +609,19 @@ class ScenarioRouter:
 
                 request = InventoryTransferRequest(
                     company_code=event.company_code,
-                    inventory_code=event.inventory_code,
-                    material_code=event.material_code,
-                    material_name=event.material_name,
+                    inventory_code=self._req(event.inventory_code),
+                    material_code=self._req(event.material_code),
+                    material_name=self._req(event.material_name),
                     event_date=event.event_date,
-                    quantity=event.quantity,
-                    unit_cost=event.unit_cost,
+                    quantity=self._req(event.quantity),
+                    unit_cost=self._req(event.unit_cost),
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
-                    from_cost_center_code=event.from_cost_center_code,
-                    from_department_code=event.from_department_code,
-                    to_cost_center_code=event.to_cost_center_code,
-                    to_department_code=event.to_department_code,
+                    from_cost_center_code=self._req(event.from_cost_center_code),
+                    from_department_code=self._req(event.from_department_code),
+                    to_cost_center_code=self._req(event.to_cost_center_code),
+                    to_department_code=self._req(event.to_department_code),
                     description=event.description,
                 )
 
@@ -616,12 +631,12 @@ class ScenarioRouter:
 
                 request = InventoryAdjustmentRequest(
                     company_code=event.company_code,
-                    inventory_code=event.inventory_code,
-                    material_code=event.material_code,
-                    material_name=event.material_name,
+                    inventory_code=self._req(event.inventory_code),
+                    material_code=self._req(event.material_code),
+                    material_name=self._req(event.material_name),
                     event_date=event.event_date,
-                    quantity=event.quantity,
-                    unit_cost=event.unit_cost,
+                    quantity=self._req(event.quantity),
+                    unit_cost=self._req(event.unit_cost),
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
@@ -636,9 +651,9 @@ class ScenarioRouter:
                 return self.payroll_expense_scenario.create(
                     PayrollExpenseRequest(
                         company_code=event.company_code,
-                        employee_code=event.employee_code,
+                        employee_code=self._req(event.employee_code),
                         payroll_date=event.payroll_date or event.event_date,
-                        gross_salary=event.gross_salary,
+                        gross_salary=self._req(event.gross_salary),
                         currency_code=event.currency_code,
                         cost_center_code=event.cost_center_code,
                         department_code=event.department_code,
@@ -651,9 +666,9 @@ class ScenarioRouter:
                 return self.employer_contribution_scenario.create(
                     EmployerContributionRequest(
                         company_code=event.company_code,
-                        employee_code=event.employee_code,
+                        employee_code=self._req(event.employee_code),
                         payroll_date=event.payroll_date or event.event_date,
-                        contribution_amount=event.employer_contribution,
+                        contribution_amount=self._req(event.employer_contribution),
                         currency_code=event.currency_code,
                         cost_center_code=event.cost_center_code,
                         department_code=event.department_code,
@@ -666,9 +681,9 @@ class ScenarioRouter:
                 return self.payroll_tax_scenario.create(
                     PayrollTaxRequest(
                         company_code=event.company_code,
-                        employee_code=event.employee_code,
+                        employee_code=self._req(event.employee_code),
                         payroll_date=event.payroll_date or event.event_date,
-                        tax_amount=event.employee_tax,
+                        tax_amount=self._req(event.employee_tax),
                         currency_code=event.currency_code,
                         cost_center_code=event.cost_center_code,
                         department_code=event.department_code,
@@ -678,30 +693,30 @@ class ScenarioRouter:
 
             case BusinessEventType.PAYROLL_PAYMENT:
 
-                    request = PayrollPaymentRequest(
-                        company_code=event.company_code,
-                        employee_code=event.employee_code,
-                        payment_date=event.event_date,
+                request = PayrollPaymentRequest(
+                    company_code=event.company_code,
+                    employee_code=self._req(event.employee_code),
+                    payment_date=event.event_date,
 
-                        payment_amount=(
-                            event.gross_salary
-                            - event.employee_tax
-                            + event.bonus_amount
-                            + event.overtime_amount
-                        ),
+                    payment_amount=(
+                        self._req(event.gross_salary)
+                        - self._req(event.employee_tax)
+                        + self._req(event.bonus_amount)
+                        + self._req(event.overtime_amount)
+                    ),
 
-                        currency_code=event.currency_code,
-                        cost_center_code=event.cost_center_code,
-                        department_code=event.department_code,
-                    )
+                    currency_code=event.currency_code,
+                    cost_center_code=event.cost_center_code,
+                    department_code=event.department_code,
+                )
 
-                    return self.payroll_payment_scenario.create(request)
+                return self.payroll_payment_scenario.create(request)
 
             case BusinessEventType.BANK_FEE:
 
                 request = BankFeeRequest(
                     company_code=event.company_code,
-                    bank_account=event.bank_account,
+                    bank_account=self._req(event.bank_account),
                     transaction_date=event.event_date,
                     amount=event.amount,
                     currency_code=event.currency_code,
@@ -716,7 +731,7 @@ class ScenarioRouter:
 
                 request = InterestIncomeRequest(
                     company_code=event.company_code,
-                    bank_account=event.bank_account,
+                    bank_account=self._req(event.bank_account),
                     transaction_date=event.event_date,
                     amount=event.amount,
                     currency_code=event.currency_code,
@@ -731,7 +746,7 @@ class ScenarioRouter:
 
                 request = InterestExpenseRequest(
                     company_code=event.company_code,
-                    bank_account=event.bank_account,
+                    bank_account=self._req(event.bank_account),
                     transaction_date=event.event_date,
                     amount=event.amount,
                     currency_code=event.currency_code,
@@ -746,7 +761,7 @@ class ScenarioRouter:
 
                 request = FXGainRequest(
                     company_code=event.company_code,
-                    bank_account=event.bank_account,
+                    bank_account=self._req(event.bank_account),
                     transaction_date=event.event_date,
                     amount=event.amount,
                     currency_code=event.currency_code,
@@ -761,7 +776,7 @@ class ScenarioRouter:
 
                 request = FXLossRequest(
                     company_code=event.company_code,
-                    bank_account=event.bank_account,
+                    bank_account=self._req(event.bank_account),
                     transaction_date=event.event_date,
                     amount=event.amount,
                     currency_code=event.currency_code,
@@ -775,10 +790,10 @@ class ScenarioRouter:
 
                 request = LoanDrawdownRequest(
                     company_code=event.company_code,
-                    bank_account=event.bank_account,
+                    bank_account=self._req(event.bank_account),
                     transaction_date=event.event_date,
                     amount=event.amount,
-                    loan_term=event.loan_term,
+                    loan_term=self._req(event.loan_term),
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
@@ -791,10 +806,10 @@ class ScenarioRouter:
 
                 request = LoanRepaymentRequest(
                     company_code=event.company_code,
-                    bank_account=event.bank_account,
+                    bank_account=self._req(event.bank_account),
                     transaction_date=event.event_date,
                     amount=event.amount,
-                    loan_term=event.loan_term,
+                    loan_term=self._req(event.loan_term),
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
@@ -807,7 +822,7 @@ class ScenarioRouter:
 
                 request = CashDepositRequest(
                     company_code=event.company_code,
-                    bank_account=event.bank_account,
+                    bank_account=self._req(event.bank_account),
                     transaction_date=event.event_date,
                     amount=event.amount,
                     currency_code=event.currency_code,
@@ -822,7 +837,7 @@ class ScenarioRouter:
 
                 request = CashWithdrawalRequest(
                     company_code=event.company_code,
-                    bank_account=event.bank_account,
+                    bank_account=self._req(event.bank_account),
                     transaction_date=event.event_date,
                     amount=event.amount,
                     currency_code=event.currency_code,
@@ -837,8 +852,8 @@ class ScenarioRouter:
 
                 request = InternalTransferRequest(
                     company_code=event.company_code,
-                    source_bank_account=event.source_bank_account,
-                    target_bank_account=event.target_bank_account,
+                    source_bank_account=self._req(event.source_bank_account),
+                    target_bank_account=self._req(event.target_bank_account),
                     transaction_date=event.event_date,
                     amount=event.amount,
                     currency_code=event.currency_code,
@@ -857,7 +872,7 @@ class ScenarioRouter:
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
-                    expense_account=event.expense_account,
+                    expense_account=self._req(event.expense_account),
                 )
 
                 return self.accrued_expense_scenario.create(
@@ -872,7 +887,7 @@ class ScenarioRouter:
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
-                    revenue_account=event.revenue_account,
+                    revenue_account=self._req(event.revenue_account),
                 )
 
                 return self.accrued_revenue_scenario.create(request)
@@ -886,7 +901,7 @@ class ScenarioRouter:
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
-                    expense_account=event.expense_account,
+                    expense_account=self._req(event.expense_account),
                 )
 
                 return self.prepaid_expense_scenario.create(
@@ -902,7 +917,7 @@ class ScenarioRouter:
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
-                    revenue_account=event.revenue_account,
+                    revenue_account=self._req(event.revenue_account),
                 )
 
                 return self.deferred_revenue_scenario.create(
@@ -918,8 +933,8 @@ class ScenarioRouter:
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
-                    expense_account=event.expense_account,
-                    provision_account=event.provision_account,
+                    expense_account=self._req(event.expense_account),
+                    provision_account=self._req(event.provision_account),
                 )
 
                 return self.provision_scenario.create(
@@ -942,9 +957,9 @@ class ScenarioRouter:
 
                     department_code=event.department_code,
 
-                    expense_account=event.expense_account,
+                    expense_account=self._req(event.expense_account),
 
-                    inventory_account=event.inventory_account,
+                    inventory_account=self._req(event.inventory_account),
                 )
 
                 return self.inventory_writeoff_scenario.create(
@@ -967,9 +982,9 @@ class ScenarioRouter:
 
                     department_code=event.department_code,
 
-                    expense_account=event.expense_account,
+                    expense_account=self._req(event.expense_account),
 
-                    inventory_account=event.balance_account,
+                    inventory_account=self._req(event.balance_account),
                 )
 
                 return self.inventory_revaluation_scenario.create(
@@ -992,9 +1007,9 @@ class ScenarioRouter:
 
                     department_code=event.department_code,
 
-                    expense_account=event.expense_account,
+                    expense_account=self._req(event.expense_account),
 
-                    allowance_account=event.allowance_account,
+                    allowance_account=self._req(event.allowance_account),
                 )
 
                 return self.bad_debt_allowance_scenario.create(
@@ -1017,9 +1032,9 @@ class ScenarioRouter:
 
                     department_code=event.department_code,
 
-                    debit_account=event.debit_account,
+                    debit_account=self._req(event.debit_account),
 
-                    credit_account=event.credit_account,
+                    credit_account=self._req(event.credit_account),
                 )
 
                 return self.foreign_currency_revaluation_scenario.create(
@@ -1042,9 +1057,9 @@ class ScenarioRouter:
 
                     department_code=event.department_code,
 
-                    tax_expense_account=event.tax_expense_account,
+                    tax_expense_account=self._req(event.tax_expense_account),
 
-                    tax_liability_account=event.tax_liability_account,
+                    tax_liability_account=self._req(event.tax_liability_account),
                 )
 
                 return self.income_tax_accrual_scenario.create(
@@ -1067,9 +1082,9 @@ class ScenarioRouter:
 
                     department_code=event.department_code,
 
-                    deferred_tax_expense_account=event.deferred_tax_expense_account,
+                    deferred_tax_expense_account=self._req(event.deferred_tax_expense_account),
 
-                    deferred_tax_balance_account=event.deferred_tax_balance_account,
+                    deferred_tax_balance_account=self._req(event.deferred_tax_balance_account),
                 )
 
                 return self.deferred_tax_scenario.create(
@@ -1092,9 +1107,9 @@ class ScenarioRouter:
 
                     department_code=event.department_code,
 
-                    profit_account=event.profit_account,
+                    profit_account=self._req(event.profit_account),
 
-                    retained_earnings_account=event.retained_earnings_account,
+                    retained_earnings_account=self._req(event.retained_earnings_account),
                 )
 
                 return self.profit_transfer_scenario.create(
@@ -1117,9 +1132,9 @@ class ScenarioRouter:
 
                     department_code=event.department_code,
 
-                    opening_account=event.opening_account,
+                    opening_account=self._req(event.opening_account),
 
-                    balance_account=event.balance_account,
+                    balance_account=self._req(event.balance_account),
                 )
 
                 return self.opening_balance_scenario.create(

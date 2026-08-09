@@ -155,10 +155,6 @@ class BusinessEvent:
 
     tax_liability_account: str | None = None
 
-    tax_expense_account: str | None = None
-
-    tax_liability_account: str | None = None
-
     deferred_tax_expense_account: str | None = None
 
     deferred_tax_balance_account: str | None = None
@@ -168,5 +164,3 @@ class BusinessEvent:
     retained_earnings_account: str | None = None
 
     opening_account: str | None = None
-
-    balance_account: str | None = None

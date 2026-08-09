@@ -78,6 +78,9 @@ class JournalLine:
     inventory_item_code: str | None = None
     bank_account: str | None = None
 
+    quantity: Decimal | None = None
+    unit_price: Decimal | None = None
+
 # ============================================================================
 # Journal Entry
 # ============================================================================
