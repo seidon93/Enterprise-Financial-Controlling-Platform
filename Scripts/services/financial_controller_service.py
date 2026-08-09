@@ -11,6 +11,7 @@ Description     : Creates the aggregated Financial Controller Report.
 ===============================================================================
 """
 
+from services import sales_analysis_service
 from accounting.general_ledger_engine import GeneralLedgerEngine
 
 from reporting.trial_balance import TrialBalance
@@ -22,6 +23,9 @@ from services.financial_controller_report import (
 )
 from services.financial_ratio_service import (
     FinancialRatioService,
+)
+from services.sales_analysis_service import (
+    SalesAnalysisService,
 )
 
 
@@ -49,6 +53,10 @@ class FinancialControllerService:
             balance_sheet=balance_sheet,
         )
 
+        sales_analysis = SalesAnalysisService.calculate(
+            general_ledger=general_ledger,
+        )
+
         # ------------------------------------------------------------------
         # Controller planning / comparison inputs
         #
@@ -64,10 +72,10 @@ class FinancialControllerService:
         net_profit_previous_year = 25_000.0
 
         previous_price = 95.0
-        current_price = 100.0
+        current_price = sales_analysis["average_price"]
 
         previous_volume = 485.0
-        current_volume = 500.0
+        current_volume = sales_analysis["volume"]
 
         standard_cost = 18_500.0
         actual_cost = 20_000.0
