@@ -162,6 +162,10 @@ class BusinessDataProvider:
     def create_sales_transaction(self) -> BusinessTransaction:
         """
         Create business transaction for Sales Invoice.
+
+        Sales transactions contain product-level commercial drivers so that
+        downstream controller analytics can calculate Price / Volume / Mix
+        effects from transactional data.
         """
 
         company = self.random_company()
@@ -169,16 +173,56 @@ class BusinessDataProvider:
         invoice_date = self.random_invoice_date()
         customer = self.customer_provider.random_customer()
 
+        product_code = self.random.choice(
+            self.material_codes
+        )
+
+        quantity = Decimal(
+            str(self.random.randint(1, 100))
+        )
+
+        unit_price = Decimal(
+            str(
+                round(
+                    self.random.uniform(10, 500),
+                    2,
+                )
+            )
+        )
+
+        amount = (
+            quantity * unit_price
+        ).quantize(
+            Decimal("0.01")
+        )
+
         return BusinessTransaction(
             company_code=company.company_code,
+
             cost_center_code=self.random_cost_center(),
+
             department_code=self.random_department(),
+
             currency_code=company.currency_code,
+
             invoice_date=invoice_date,
-            due_date=self.random_due_date(invoice_date),
-            amount=self.random_invoice_amount(company),
+
+            due_date=self.random_due_date(
+                invoice_date
+            ),
+
+            amount=amount,
+
             vat_rate=self.random_vat_rate(),
+
             description="Sales Invoice",
+
+            product_code=product_code,
+
+            quantity=quantity,
+
+            unit_price=unit_price,
+
             customer_code=customer.customer_code,
         )
 
@@ -812,44 +856,44 @@ class BusinessDataProvider:
             ),
         )
 
-        def create_deferred_revenue_transaction(
-            self,
-        ) -> ClosingTransaction:
-            """
-            Creates deferred revenue transaction.
-            """
+    def create_deferred_revenue_transaction(
+        self,
+    ) -> ClosingTransaction:
+        """
+        Creates deferred revenue transaction.
+        """
 
-            company = self.random_company()
+        company = self.random_company()
 
-            return ClosingTransaction(
+        return ClosingTransaction(
 
-                company_code=company.company_code,
+            company_code=company.company_code,
 
-                closing_date=self.random_date(),
+            closing_date=self.random_date(),
 
-                amount=self.random_decimal(
-                    Decimal("5000"),
-                    Decimal("250000"),
-                ),
+            amount=self.random_decimal(
+                Decimal("5000"),
+                Decimal("250000"),
+            ),
 
-                currency_code=company.currency_code,
+            currency_code=company.currency_code,
 
-                cost_center_code=self.random_cost_center(),
+            cost_center_code=self.random_cost_center(),
 
-                department_code=self.random_department(),
+            department_code=self.random_department(),
 
-                closing_type="DEFERRED_REVENUE",
+            closing_type="DEFERRED_REVENUE",
 
-                description="Deferred Revenue",
+            description="Deferred Revenue",
 
-                revenue_account=self.random.choice(
-                    [
-                        "602",
-                        "604",
-                        "648",
-                    ]
-                ),
-            )   
+            revenue_account=self.random.choice(
+                [
+                    "602",
+                    "604",
+                    "648",
+                ]
+            ),
+        )
 
 
     def create_provision_transaction(

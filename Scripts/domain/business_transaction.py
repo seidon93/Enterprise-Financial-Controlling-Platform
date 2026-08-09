@@ -3,13 +3,11 @@
 Enterprise Financial Analytics Platform (EFAP)
 -------------------------------------------------------------------------------
 Object          : business_transaction.py
-Object Type     : Business Transaction Model
-Layer           : Domain
-Version         : 1.0.0
+Object Type     : Domain Model
+Layer           : Domain Layer
+Version         : 2.0.0
 Status          : Development
--------------------------------------------------------------------------------
-Description:
-Represents business data before it is transformed into accounting entries.
+Description     : Business transaction model used by business generators.
 ===============================================================================
 """
 
@@ -22,7 +20,17 @@ from decimal import Decimal
 
 @dataclass(slots=True, frozen=True)
 class BusinessTransaction:
-    """Business transaction used by generators."""
+    """
+    Business transaction used by business data generators.
+
+    The transaction keeps both the aggregated monetary amount and the
+    underlying commercial drivers required for controller analytics:
+
+        amount = quantity * unit_price
+
+    Product, quantity and unit price enable downstream Price / Volume /
+    Mix analysis without changing the accounting journal model.
+    """
 
     company_code: str
     cost_center_code: str
@@ -36,6 +44,10 @@ class BusinessTransaction:
     vat_rate: Decimal
 
     description: str
+
+    product_code: str | None = None
+    quantity: Decimal | None = None
+    unit_price: Decimal | None = None
 
     customer_code: str | None = None
     supplier_code: str | None = None
