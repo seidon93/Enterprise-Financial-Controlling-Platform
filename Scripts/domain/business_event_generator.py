@@ -21,6 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from domain.business_event import BusinessEvent
 from domain.business_event_type import BusinessEventType
 from domain.business_data_provider import BusinessDataProvider
+from scenarios.inventory.inventory import Inventory
 
 
 class BusinessEventGenerator:
@@ -38,22 +39,42 @@ class BusinessEventGenerator:
     def sales_event(self) -> BusinessEvent:
         """
         Generate one sales business event.
+
+        Product-level commercial drivers are propagated from the
+        business transaction so downstream controller analytics
+        can calculate Price / Volume / Mix effects.
         """
 
         transaction = self.provider.create_sales_transaction()
 
         return BusinessEvent(
             event_type=BusinessEventType.SALES_INVOICE,
+
             company_code=transaction.company_code,
+
             event_date=transaction.invoice_date,
+
             amount=transaction.amount,
+
             currency_code=transaction.currency_code,
+
             description=transaction.description,
+
             cost_center_code=transaction.cost_center_code,
+
             department_code=transaction.department_code,
+
             vat_rate=transaction.vat_rate,
+
             due_date=transaction.due_date,
+
             customer_code=transaction.customer_code,
+
+            material_code=transaction.material_code,
+
+            quantity=transaction.quantity,
+
+            unit_price=transaction.unit_price,
         )
 
     def purchase_event(self) -> BusinessEvent:
@@ -284,7 +305,7 @@ class BusinessEventGenerator:
     def _inventory_event(
         self,
         event_type: BusinessEventType,
-        inventory,
+        inventory: Inventory,
         description: str,
     ) -> BusinessEvent:
         """
@@ -294,13 +315,9 @@ class BusinessEventGenerator:
         unit_cost = getattr(inventory, "unit_cost", None)
 
         if unit_cost is None:
-            unit_cost = getattr(inventory, "unit_price", Decimal("0"))
+            unit_cost = inventory.unit_price
 
-        total_amount = getattr(
-            inventory,
-            "total_amount",
-            inventory.quantity * unit_cost,
-        )
+        total_amount = inventory.total_amount
 
         return BusinessEvent(
             event_type=event_type,
@@ -683,108 +700,6 @@ class BusinessEventGenerator:
             "Internal Transfer",
         )
 
-# -------------------------------------------------------------------------
-# Closing Events
-# -------------------------------------------------------------------------
-
-    def _build_closing_event(
-        self,
-        event_type: BusinessEventType,
-        closing,
-        description: str,
-    ) -> BusinessEvent:
-        """
-        Helper: build BusinessEvent from ClosingTransaction.
-        """
-
-        return BusinessEvent(
-            event_type=event_type,
-
-            company_code=closing.company_code,
-
-            event_date=closing.closing_date,
-
-            amount=closing.amount,
-
-            currency_code=closing.currency_code,
-
-            description=description,
-
-            cost_center_code=closing.cost_center_code,
-
-            department_code=closing.department_code,
-
-            vat_rate=Decimal("0"),
-
-            due_date=closing.closing_date,
-
-            closing_type=closing.closing_type,
-        )
-
-    def accrual_event(self) -> BusinessEvent:
-
-        closing = self.provider.create_closing_transaction()
-
-        return self._build_closing_event(
-            BusinessEventType.ACCRUAL,
-            closing,
-            "Accrual",
-        )
-
-
-    def deferral_event(self) -> BusinessEvent:
-
-        closing = self.provider.create_closing_transaction()
-
-        return self._build_closing_event(
-            BusinessEventType.DEFERRAL,
-            closing,
-            "Deferral",
-        )
-
-
-    def provision_event(self) -> BusinessEvent:
-
-        closing = self.provider.create_closing_transaction()
-
-        return self._build_closing_event(
-            BusinessEventType.PROVISION,
-            closing,
-            "Provision",
-        )
-
-
-    def fx_revaluation_event(self) -> BusinessEvent:
-
-        closing = self.provider.create_closing_transaction()
-
-        return self._build_closing_event(
-            BusinessEventType.FX_REVALUATION,
-            closing,
-            "FX Revaluation",
-        )
-
-
-    def year_end_event(self) -> BusinessEvent:
-
-        closing = self.provider.create_closing_transaction()
-
-        return self._build_closing_event(
-            BusinessEventType.YEAR_END,
-            closing,
-            "Year End Closing",
-        )
-
-
-    def period_close_event(self) -> BusinessEvent:
-
-        closing = self.provider.create_closing_transaction()
-
-        return self._build_closing_event(
-            BusinessEventType.PERIOD_CLOSE,
-            closing,
-            "Period Close",
-        )
 
 # -------------------------------------------------------------------------
 # Closing Events

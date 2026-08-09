@@ -51,3 +51,4 @@ class BusinessTransaction:
 
     customer_code: str | None = None
     supplier_code: str | None = None
+    material_code: str | None = None
