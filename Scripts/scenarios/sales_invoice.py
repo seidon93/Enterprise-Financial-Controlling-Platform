@@ -93,6 +93,8 @@ class SalesInvoiceScenario(AccountingScenario):
                 product_code=request.product_code,
                 quantity=request.quantity,
                 unit_price=request.unit_price,
+                material_code=request.material_code,
+                
             )
         )
 
@@ -113,6 +115,7 @@ class SalesInvoiceScenario(AccountingScenario):
                 product_code=request.product_code,
                 quantity=request.quantity,
                 unit_price=request.unit_price,
+                material_code=request.material_code,
             )
         )
 

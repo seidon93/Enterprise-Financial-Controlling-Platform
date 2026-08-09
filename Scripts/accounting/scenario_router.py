@@ -347,9 +347,10 @@ class ScenarioRouter:
 
                     customer_code=event.customer_code,
 
-                    product_code=event.material_code,
                     quantity=event.quantity,
                     unit_price=event.unit_price,
+                    material_code=event.material_code,
+                  
                 )
 
                 return self.sales_scenario.create(request)
