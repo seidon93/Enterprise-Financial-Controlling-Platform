@@ -50,6 +50,8 @@ CREATE TABLE IF NOT EXISTS warehouse.fact_gl (
     credit_amount NUMERIC(18, 2) NOT NULL DEFAULT 0,
     amount_local NUMERIC(18, 2) NOT NULL,
     quantity NUMERIC(18, 3) DEFAULT 1,
+    unit_price NUMERIC(18, 2),
+    material_code VARCHAR(50),
     -- =====================================================================
     -- Business Attributes
     -- =====================================================================
