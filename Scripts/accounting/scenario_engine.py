@@ -667,7 +667,6 @@ class ScenarioEngine:
             + inventory_rows
             + payroll_rows
             + bank_rows
-            + payroll_rows
         )
 
 

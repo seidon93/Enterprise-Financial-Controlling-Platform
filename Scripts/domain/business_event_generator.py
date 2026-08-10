@@ -39,41 +39,24 @@ class BusinessEventGenerator:
     def sales_event(self) -> BusinessEvent:
         """
         Generate one sales business event.
-
-        Product-level commercial drivers are propagated from the
-        business transaction so downstream controller analytics
-        can calculate Price / Volume / Mix effects.
         """
 
         transaction = self.provider.create_sales_transaction()
 
         return BusinessEvent(
             event_type=BusinessEventType.SALES_INVOICE,
-
             company_code=transaction.company_code,
-
             event_date=transaction.invoice_date,
-
             amount=transaction.amount,
-
             currency_code=transaction.currency_code,
-
             description=transaction.description,
-
             cost_center_code=transaction.cost_center_code,
-
             department_code=transaction.department_code,
-
             vat_rate=transaction.vat_rate,
-
             due_date=transaction.due_date,
-
             customer_code=transaction.customer_code,
-
             material_code=transaction.material_code,
-
             quantity=transaction.quantity,
-
             unit_price=transaction.unit_price,
         )
 

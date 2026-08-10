@@ -10,7 +10,9 @@ Status          : Development
 ===============================================================================
 """
 
+
 from __future__ import annotations
+from domain import customer_provider
 
 import sys
 from pathlib import Path
@@ -50,9 +52,8 @@ class BusinessDataProvider:
         )
         self.supplier_provider = SupplierProvider(seed)
         self.customer_provider = CustomerProvider(seed)
-        self.supplier_provider = SupplierProvider(seed)
-        self.customer_provider = CustomerProvider(seed)
         self.asset_provider = AssetProvider(seed)
+
 
         self.company_profiles = [
 
@@ -173,7 +174,7 @@ class BusinessDataProvider:
         invoice_date = self.random_invoice_date()
         customer = self.customer_provider.random_customer()
 
-        product_code = self.random.choice(
+        material_code = self.random.choice(
             self.material_codes
         )
 
@@ -198,33 +199,20 @@ class BusinessDataProvider:
 
         return BusinessTransaction(
             company_code=company.company_code,
-
             cost_center_code=self.random_cost_center(),
-
             department_code=self.random_department(),
-
             currency_code=company.currency_code,
-
             invoice_date=invoice_date,
-
-            due_date=self.random_due_date(
-                invoice_date
-            ),
-
+            due_date=self.random_due_date(invoice_date),
             amount=amount,
-
             vat_rate=self.random_vat_rate(),
-
             description="Sales Invoice",
-
-            product_code=product_code,
-
+            material_code=material_code,
             quantity=quantity,
-
             unit_price=unit_price,
-
             customer_code=customer.customer_code,
         )
+
 
     def create_purchase_transaction(self) -> BusinessTransaction:
         """
