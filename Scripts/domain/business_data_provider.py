@@ -47,7 +47,7 @@ class BusinessDataProvider:
         self.random = random.Random(seed)
         self.calendar = BusinessCalendar(
             start_date=date(2021, 1, 1),
-            end_date=date(2025, 12, 31),
+            end_date=date(2026, 8, 10),
             seed=seed,
         )
         self.supplier_provider = SupplierProvider(seed)
