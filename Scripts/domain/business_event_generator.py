@@ -314,7 +314,7 @@ class BusinessEventGenerator:
             vat_rate=Decimal("0"),
             due_date=inventory.movement_date,
 
-            inventory_code=getattr(inventory, "inventory_code", None),
+            inventory_code=inventory.inventory_code,
 
             material_code=inventory.material_code,
             material_name=inventory.material_name,

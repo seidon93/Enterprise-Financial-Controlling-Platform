@@ -49,6 +49,8 @@ class Inventory:
 
     department_code: str
 
+    inventory_code: str | None = None
+
     supplier_code: str | None = None
 
     customer_code: str | None = None

@@ -461,6 +461,8 @@ class BusinessDataProvider:
         supplier = self.supplier_provider.random_supplier()
         customer = self.customer_provider.random_customer()
 
+        inventory_code = f"INV-{self.random.randint(10000, 99999)}"
+
         return Inventory(
 
             company_code=company.company_code,
@@ -490,6 +492,8 @@ class BusinessDataProvider:
             cost_center_code=self.random_cost_center(),
 
             department_code=self.random_department(),
+
+            inventory_code=inventory_code,
 
             supplier_code=supplier.supplier_code,
 
