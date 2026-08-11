@@ -130,14 +130,14 @@ class DimCurrencyGenerator:
 
             connection.execute(
                 text(
-                    f"TRUNCATE TABLE {settings.DB_SCHEMA}.dim_currency;"
+                    f"TRUNCATE TABLE {settings.DB_SCHEMA}.dim_currency CASCADE;"
                 )
             )
 
         self.df.to_sql(
             name="dim_currency",
             schema=settings.DB_SCHEMA,
-            con=engine,
+            con=engine,  # type: ignore
             if_exists="append",
             index=False,
             method="multi",

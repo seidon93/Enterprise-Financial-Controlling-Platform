@@ -31,7 +31,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from common.config import settings
-from common.constants import (
+from common.constants import (  # type: ignore
     BUSINESS_UNITS,
     LEGAL_FORMS,
     VALID_FROM,
@@ -242,14 +242,14 @@ class DimCompanyGenerator:
 
             connection.execute(
                 text(
-                    f"TRUNCATE TABLE {settings.DB_SCHEMA}.dim_company;"
+                    f"TRUNCATE TABLE {settings.DB_SCHEMA}.dim_company CASCADE;"
                 )
             )
 
         self.df.to_sql(
             name="dim_company",
             schema=settings.DB_SCHEMA,
-            con=engine,
+            con=engine,  # type: ignore
             if_exists="append",
             index=False,
         )

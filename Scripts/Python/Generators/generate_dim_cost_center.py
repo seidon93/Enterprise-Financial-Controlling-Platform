@@ -154,14 +154,14 @@ class DimCostCenterGenerator:
 
             connection.execute(
                 text(
-                f"TRUNCATE TABLE {settings.DB_SCHEMA}.dim_cost_center;"
+                f"TRUNCATE TABLE {settings.DB_SCHEMA}.dim_cost_center CASCADE;"
             )
         )
 
         self.df.to_sql(
             name="dim_cost_center",
             schema=settings.DB_SCHEMA,
-            con=engine,
+            con=engine,  # type: ignore
             if_exists="append",
             index=False,
             method="multi",

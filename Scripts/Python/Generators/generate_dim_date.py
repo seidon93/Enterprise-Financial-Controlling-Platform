@@ -1,3 +1,4 @@
+# pyright: reportAttributeAccessIssue=false
 """
 ===============================================================================
 Enterprise Financial Analytics Platform (EFAP)
@@ -30,7 +31,7 @@ from datetime import date
 import pandas as pd
 from sqlalchemy import text
 
-from common.calendar import (
+from common.calendar import (  # type: ignore
     CZECH_DAY_NAMES,
     CZECH_DAY_SHORT_NAMES,
     CZECH_MONTH_NAMES,
@@ -53,27 +54,6 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-
-
-# =============================================================================
-# Configuration
-# =============================================================================
-
-@dataclass(slots=True)
-class DimDateConfig:
-    start_year: int = 2020
-    end_year: int = 2035
-    fiscal_year_start_month: int = 1
-    culture: str = "en-US"
-
-    @property
-    def start_date(self) -> date:
-        return date(self.start_year, 1, 1)
-
-    @property
-    def end_date(self) -> date:
-        return date(self.end_year, 12, 31)
-
 
 
 # =============================================================================
@@ -125,26 +105,6 @@ class DimDateGenerator:
 
         return self.df
 
-# =============================================================================
-# Calendar Creation
-# =============================================================================
-
-    def _create_calendar(self) -> None:
-
-        self.df = pd.DataFrame(
-            {
-                "full_date": pd.date_range(
-                    self.config.start_date,
-                    self.config.end_date,
-                    freq="D",
-                )
-            }
-        )
-
-        self.df["date_key"] = (
-            self.df["full_date"].dt.strftime("%Y%m%d").astype(int)
-        )
-
     # =========================================================================
     # Day Attributes
     # =========================================================================
@@ -156,37 +116,14 @@ class DimDateGenerator:
 
         logger.info("Adding day attributes...")
 
-        iso = self.df["full_date"].dt.isocalendar()
+        iso = self.df["full_date"].dt.isocalendar()  # type: ignore
 
-        self.df["date_key"] = (
-            self.df["full_date"]
-            .dt.strftime("%Y%m%d")
-            .astype(int)
-        )
-
-        self.df["day"] = (
-            self.df["full_date"]
-            .dt.day
-            .astype(int)
-        )
-
-        self.df["day_of_week"] = (
-            iso.day.astype(int)
-        )
-
-        self.df["week_of_year"] = (
-            iso.week.astype(int)
-        )
-
-        self.df["day_name"] = (
-            self.df["day_of_week"]
-            .map(CZECH_DAY_NAMES)
-        )
-
-        self.df["day_short_name"] = (
-            self.df["day_of_week"]
-            .map(CZECH_DAY_SHORT_NAMES)
-        )
+        self.df["date_key"] = self.df["full_date"].dt.strftime("%Y%m%d").astype(int)  # type: ignore
+        self.df["day"] = self.df["full_date"].dt.day.astype(int)  # type: ignore
+        self.df["day_of_week"] = iso.day.astype(int)  # type: ignore
+        self.df["week_of_year"] = iso.week.astype(int)  # type: ignore
+        self.df["day_name"] = self.df["day_of_week"].map(CZECH_DAY_NAMES)
+        self.df["day_short_name"] = self.df["day_of_week"].map(CZECH_DAY_SHORT_NAMES)
 
         logger.info("Day attributes created.")
 
@@ -201,38 +138,12 @@ class DimDateGenerator:
 
         logger.info("Adding calendar attributes...")
 
-        self.df["calendar_month"] = (
-            self.df["full_date"]
-            .dt.month
-            .astype(int)
-        )
-
-        self.df["month_name"] = (
-            self.df["calendar_month"]
-            .map(CZECH_MONTH_NAMES)
-        )
-
-        self.df["month_short_name"] = (
-            self.df["calendar_month"]
-            .map(CZECH_MONTH_SHORT_NAMES)
-        )
-
-        self.df["calendar_quarter"] = (
-            self.df["full_date"]
-            .dt.quarter
-            .astype(int)
-        )
-
-        self.df["quarter_name"] = (
-            self.df["calendar_quarter"]
-            .map(QUARTER_NAMES)
-        )
-
-        self.df["calendar_year"] = (
-            self.df["full_date"]
-            .dt.year
-            .astype(int)
-        )
+        self.df["calendar_month"] = self.df["full_date"].dt.month.astype(int)  # type: ignore
+        self.df["month_name"] = self.df["calendar_month"].map(CZECH_MONTH_NAMES)
+        self.df["month_short_name"] = self.df["calendar_month"].map(CZECH_MONTH_SHORT_NAMES)
+        self.df["calendar_quarter"] = self.df["full_date"].dt.quarter.astype(int)  # type: ignore
+        self.df["quarter_name"] = self.df["calendar_quarter"].map(QUARTER_NAMES)
+        self.df["calendar_year"] = self.df["full_date"].dt.year.astype(int)  # type: ignore
 
         logger.info("Calendar attributes created.")
 
@@ -290,31 +201,10 @@ class DimDateGenerator:
             + self.df["calendar_month"]
         )
 
-        self.df["month_start_date"] = (
-            self.df["full_date"]
-            .dt.to_period("M")
-            .dt.start_time
-        )
-
-        self.df["month_end_date"] = (
-            self.df["full_date"]
-            .dt.to_period("M")
-            .dt.end_time
-            .dt.normalize()
-        )
-
-        self.df["quarter_start_date"] = (
-            self.df["full_date"]
-            .dt.to_period("Q")
-            .dt.start_time
-        )
-
-        self.df["quarter_end_date"] = (
-            self.df["full_date"]
-            .dt.to_period("Q")
-            .dt.end_time
-            .dt.normalize()
-        )
+        self.df["month_start_date"] = self.df["full_date"].dt.to_period("M").dt.start_time  # type: ignore
+        self.df["month_end_date"] = self.df["full_date"].dt.to_period("M").dt.end_time.dt.normalize()  # type: ignore
+        self.df["quarter_start_date"] = self.df["full_date"].dt.to_period("Q").dt.start_time  # type: ignore
+        self.df["quarter_end_date"] = self.df["full_date"].dt.to_period("Q").dt.end_time.dt.normalize()  # type: ignore
 
         self.df["year_start_date"] = (
             pd.to_datetime(
@@ -498,14 +388,14 @@ class DimDateGenerator:
 
             connection.execute(
                 text(
-                    f"TRUNCATE TABLE {settings.DB_SCHEMA}.dim_date;"
+                    f"TRUNCATE TABLE {settings.DB_SCHEMA}.dim_date CASCADE;"
                 )
             )
 
         self.df.to_sql(
             name="dim_date",
             schema=settings.DB_SCHEMA,
-            con=engine,
+            con=engine,  # type: ignore
             if_exists="append",
             index=False,
         )

@@ -28,7 +28,7 @@ def truncate_table(table_name: str) -> None:
 
         connection.execute(
             text(
-                f"TRUNCATE TABLE {settings.DB_SCHEMA}.{table_name};"
+                f"TRUNCATE TABLE {settings.DB_SCHEMA}.{table_name} CASCADE;"
             )
         )
 
@@ -41,14 +41,15 @@ def load_dataframe(
     Load a DataFrame into PostgreSQL.
     """
 
-    df.to_sql(
-        name=table_name,
-        schema=settings.DB_SCHEMA,
-        con=engine,
-        if_exists="append",
-        index=False,
-        method="multi",
-    )
+    with engine.begin() as connection:
+        df.to_sql(
+            name=table_name,
+            schema=settings.DB_SCHEMA,
+            con=connection,  # type: ignore
+            if_exists="append",
+            index=False,
+            method="multi",
+        )
 
 
 def replace_table(

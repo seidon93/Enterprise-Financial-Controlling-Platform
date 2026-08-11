@@ -118,14 +118,14 @@ class DimDepartmentGenerator:
 
             connection.execute(
                 text(
-                    f"TRUNCATE TABLE {settings.DB_SCHEMA}.dim_department;"
+                    f"TRUNCATE TABLE {settings.DB_SCHEMA}.dim_department CASCADE;"
                 )
             )
 
         self.df.to_sql(
             name="dim_department",
             schema=settings.DB_SCHEMA,
-            con=engine,
+            con=engine,  # type: ignore
             if_exists="append",
             index=False,
             method="multi",

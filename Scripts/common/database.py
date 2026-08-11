@@ -110,3 +110,16 @@ db = DatabaseManager(
     user=settings.db_user,
     password=settings.db_password,
 )
+
+from sqlalchemy import create_engine
+
+connection_string = (
+    f"postgresql+psycopg2://"
+    f"{settings.db_user}:"
+    f"{settings.db_password}@"
+    f"{settings.db_host}:"
+    f"{settings.db_port}/"
+    f"{settings.db_name}"
+)
+
+engine = create_engine(connection_string)
