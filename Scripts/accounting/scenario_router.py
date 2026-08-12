@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import TypeVar
+from typing import TypeVar, Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -310,17 +310,12 @@ class ScenarioRouter:
         self.opening_balance_scenario = opening_balance_scenario
 
 
-    @staticmethod
-    def _req(value: _T | None) -> _T:
-        """
-        Narrows an optional field to its required type.
-        Raises ValueError if value is None.
-        """
-        if value is None:
+    def _req(self, field: Any, field_name: str = "Unknown") -> Any:
+        if field is None:
             raise ValueError(
-                "Required field is None."
+                f"Required field '{field_name}' is None."
             )
-        return value
+        return field
 
     def process(
         self,
@@ -627,10 +622,10 @@ class ScenarioRouter:
                     currency_code=event.currency_code,
                     cost_center_code=event.cost_center_code,
                     department_code=event.department_code,
-                    from_cost_center_code=self._req(event.from_cost_center_code),
-                    from_department_code=self._req(event.from_department_code),
-                    to_cost_center_code=self._req(event.to_cost_center_code),
-                    to_department_code=self._req(event.to_department_code),
+                    from_cost_center_code=self._req(event.from_cost_center_code, "from_cost_center_code"),
+                    from_department_code=self._req(event.from_department_code, "from_department_code"),
+                    to_cost_center_code=self._req(event.to_cost_center_code, "to_cost_center_code"),
+                    to_department_code=self._req(event.to_department_code, "to_department_code"),
                     description=event.description,
                 )
 

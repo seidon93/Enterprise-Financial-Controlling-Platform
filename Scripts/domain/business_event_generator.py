@@ -311,6 +311,10 @@ class BusinessEventGenerator:
             description=description,
             cost_center_code=inventory.cost_center_code,
             department_code=inventory.department_code,
+            from_cost_center_code=inventory.cost_center_code,
+            from_department_code=inventory.department_code,
+            to_cost_center_code=inventory.cost_center_code,
+            to_department_code=inventory.department_code,
             vat_rate=Decimal("0"),
             due_date=inventory.movement_date,
 
@@ -324,6 +328,7 @@ class BusinessEventGenerator:
 
             quantity=inventory.quantity,
             unit_cost=unit_cost,
+            unit_price=getattr(inventory, "unit_price", unit_cost),
 
             supplier_code=inventory.supplier_code,
             customer_code=inventory.customer_code,
@@ -565,6 +570,10 @@ class BusinessEventGenerator:
             supplier_code=transaction.supplier_code,
 
             bank_account=transaction.bank_account,
+
+            source_bank_account=transaction.bank_account,
+            
+            target_bank_account=transaction.bank_account,
 
             transaction_type=transaction.transaction_type,
 
