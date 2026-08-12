@@ -144,6 +144,12 @@ class FactGLLoader:
 
         with self.database.cursor() as cursor:
 
+            # Remove any existing lines for this document to prevent orphaned lines on re-runs
+            cursor.execute(
+                "DELETE FROM warehouse.fact_gl WHERE document_number = %(document_number)s",
+                {"document_number": entry.document.document_number}
+            )
+
             for line in entry.lines:
 
                 cursor.execute(
