@@ -107,9 +107,9 @@ class AssetTransferScenario(AccountingScenario):
 
                 company_code=request.company_code,
 
-                cost_center_code=request.from_cost_center_code,
+                cost_center_code=request.from_cost_center_code or request.cost_center_code,
 
-                department_code=request.from_department_code,
+                department_code=request.from_department_code or request.department_code,
 
                 currency_code=request.currency_code,
 
@@ -135,9 +135,9 @@ class AssetTransferScenario(AccountingScenario):
 
                 company_code=request.company_code,
 
-                cost_center_code=request.to_cost_center_code,
+                cost_center_code=request.to_cost_center_code or request.cost_center_code,
 
-                department_code=request.to_department_code,
+                department_code=request.to_department_code or request.department_code,
 
                 currency_code=request.currency_code,
 
