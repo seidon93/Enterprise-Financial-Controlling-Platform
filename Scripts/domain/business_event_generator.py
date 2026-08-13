@@ -275,12 +275,65 @@ class BusinessEventGenerator:
 
         asset = self.provider.create_asset_transfer_transaction()
 
-        return self._asset_event(
-            event_type=BusinessEventType.ASSET_TRANSFER,
-            asset=asset,
-            description="Asset Transfer",
-        )
+        from_cost_center_code = asset.cost_center_code
+        from_department_code = asset.department_code
 
+        to_cost_center_code = self.provider.random_cost_center()
+
+        while to_cost_center_code == from_cost_center_code:
+            to_cost_center_code = self.provider.random_cost_center()
+
+        to_department_code = self.provider.random_department()
+
+        while to_department_code == from_department_code:
+            to_department_code = self.provider.random_department()
+
+        return BusinessEvent(
+            event_type=BusinessEventType.ASSET_TRANSFER,
+
+            company_code=asset.company_code,
+
+            event_date=asset.acquisition_date,
+
+            amount=asset.acquisition_cost,
+
+            currency_code=asset.currency_code,
+
+            description="Asset Transfer",
+
+            cost_center_code=from_cost_center_code,
+            department_code=from_department_code,
+
+            vat_rate=asset.vat_rate,
+            due_date=asset.acquisition_date,
+
+            asset_code=asset.asset_code,
+            asset_name=asset.asset_name,
+            asset_class=asset.asset_class,
+            asset_group=asset.asset_group,
+
+            acquisition_cost=asset.acquisition_cost,
+            capitalization_date=asset.capitalization_date,
+            depreciation_start_date=asset.depreciation_start_date,
+
+            useful_life_months=asset.useful_life_months,
+            depreciation_method=asset.depreciation_method,
+
+            residual_value=asset.residual_value,
+
+            country_code=asset.country_code,
+            city=asset.city,
+            location=asset.location,
+
+            supplier_code=asset.supplier_code,
+
+            from_cost_center_code=from_cost_center_code,
+            from_department_code=from_department_code,
+
+            to_cost_center_code=to_cost_center_code,
+            to_department_code=to_department_code,
+        )
+    
     # -------------------------------------------------------------------------
     # Inventory Events
     # -------------------------------------------------------------------------

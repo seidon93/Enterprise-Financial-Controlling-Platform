@@ -555,10 +555,10 @@ class ScenarioRouter:
                     department_code=event.department_code,
                     transfer_date=event.event_date,
                     asset_value=event.amount,
-                    from_cost_center_code=event.cost_center_code,
-                    from_department_code=event.department_code,
-                    to_cost_center_code=event.cost_center_code,
-                    to_department_code=event.department_code,
+                    from_cost_center_code=self._req(event.from_cost_center_code),
+                    from_department_code=self._req(event.from_department_code),
+                    to_cost_center_code=self._req(event.to_cost_center_code),
+                    to_department_code=self._req(event.to_department_code),
                 )
 
                 return self.asset_transfer_scenario.create(request)
