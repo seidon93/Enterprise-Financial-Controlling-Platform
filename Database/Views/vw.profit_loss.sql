@@ -1,6 +1,6 @@
-DROP VIEW IF EXISTS warehouse.vw_profit_loss;
+DROP VIEW IF EXISTS mart.vw_profit_loss;
 
-CREATE VIEW warehouse.vw_profit_loss AS
+CREATE VIEW mart.vw_profit_loss AS
 SELECT
     gl.gl_entry_key,
     gl.document_number,
