@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS warehouse.fact_budget (
+    budget_entry_key BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    budget_date_key INTEGER NOT NULL,
+    company_key INTEGER NOT NULL,
+    account_key INTEGER NOT NULL,
+    cost_center_key INTEGER,
+    department_key INTEGER,
+    currency_key INTEGER,
+    budget_version VARCHAR(50) NOT NULL DEFAULT 'BASE',
+    scenario VARCHAR(50) NOT NULL DEFAULT 'Budget',
+    budget_amount NUMERIC(18, 2) NOT NULL,
+    budget_amount_local NUMERIC(18, 2) NOT NULL,
+    source_system VARCHAR(100) NOT NULL DEFAULT 'EFAP_BUDGET',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    batch_id VARCHAR(100),
+    CONSTRAINT fk_budget_date FOREIGN KEY (budget_date_key) REFERENCES warehouse.dim_date (date_key),
+    CONSTRAINT fk_budget_company FOREIGN KEY (company_key) REFERENCES warehouse.dim_company (company_key),
+    CONSTRAINT fk_budget_account FOREIGN KEY (account_key) REFERENCES warehouse.dim_account (account_key),
+    CONSTRAINT fk_budget_cost_center FOREIGN KEY (cost_center_key) REFERENCES warehouse.dim_cost_center (cost_center_key),
+    CONSTRAINT fk_budget_department FOREIGN KEY (department_key) REFERENCES warehouse.dim_department (department_key),
+    CONSTRAINT fk_budget_currency FOREIGN KEY (currency_key) REFERENCES warehouse.dim_currency (currency_key)
+);
