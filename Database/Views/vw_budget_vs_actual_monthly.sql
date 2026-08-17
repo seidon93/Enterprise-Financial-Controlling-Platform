@@ -51,6 +51,14 @@ WITH
             account_name,
             budget_version,
             scenario
+    ),
+    cutoff AS (
+        SELECT
+            MAX(full_date) AS actual_through_date
+        FROM
+            mart.vw_pnl_detail
+        WHERE
+            calendar_year = 2026
     )
 SELECT
     COALESCE(a.calendar_year, b.calendar_year) AS calendar_year,
@@ -63,14 +71,74 @@ SELECT
     COALESCE(a.account_name, b.account_name) AS account_name,
     b.budget_version,
     b.scenario,
-    COALESCE(a.actual_amount, 0) AS actual_amount,
-    COALESCE(b.budget_amount, 0) AS budget_amount,
-    COALESCE(a.actual_amount, 0) - COALESCE(b.budget_amount, 0) AS variance_amount,
+    c.actual_through_date,
     CASE
-        WHEN COALESCE(b.budget_amount, 0) = 0 THEN NULL
-        ELSE (
-            COALESCE(a.actual_amount, 0) - COALESCE(b.budget_amount, 0)
-        ) / ABS(b.budget_amount) * 100
+        WHEN a.actual_amount IS NOT NULL THEN 'ACTUAL_AVAILABLE'
+        ELSE 'NO_ACTUAL'
+    END AS actual_status,
+    CASE
+        WHEN COALESCE(a.calendar_year, b.calendar_year) = EXTRACT(
+            YEAR
+            FROM
+                c.actual_through_date
+        )
+        AND COALESCE(a.calendar_month, b.calendar_month) < EXTRACT(
+            MONTH
+            FROM
+                c.actual_through_date
+        ) THEN 'CLOSED'
+        WHEN COALESCE(a.calendar_year, b.calendar_year) = EXTRACT(
+            YEAR
+            FROM
+                c.actual_through_date
+        )
+        AND COALESCE(a.calendar_month, b.calendar_month) = EXTRACT(
+            MONTH
+            FROM
+                c.actual_through_date
+        ) THEN 'PARTIAL'
+        ELSE 'NO_ACTUAL'
+    END AS period_status,
+    CASE
+        WHEN COALESCE(a.calendar_year, b.calendar_year) = EXTRACT(
+            YEAR
+            FROM
+                c.actual_through_date
+        )
+        AND COALESCE(a.calendar_month, b.calendar_month) < EXTRACT(
+            MONTH
+            FROM
+                c.actual_through_date
+        ) THEN a.actual_amount
+        ELSE NULL
+    END AS actual_amount,
+    b.budget_amount,
+    CASE
+        WHEN COALESCE(a.calendar_year, b.calendar_year) = EXTRACT(
+            YEAR
+            FROM
+                c.actual_through_date
+        )
+        AND COALESCE(a.calendar_month, b.calendar_month) < EXTRACT(
+            MONTH
+            FROM
+                c.actual_through_date
+        ) THEN a.actual_amount - b.budget_amount
+        ELSE NULL
+    END AS variance_amount,
+    CASE
+        WHEN COALESCE(a.calendar_year, b.calendar_year) = EXTRACT(
+            YEAR
+            FROM
+                c.actual_through_date
+        )
+        AND COALESCE(a.calendar_month, b.calendar_month) < EXTRACT(
+            MONTH
+            FROM
+                c.actual_through_date
+        )
+        AND b.budget_amount <> 0 THEN (a.actual_amount - b.budget_amount) / ABS(b.budget_amount) * 100
+        ELSE NULL
     END AS variance_pct
 FROM
     actual a
@@ -78,4 +146,5 @@ FROM
     AND a.calendar_month = b.calendar_month
     AND a.reporting_group = b.reporting_group
     AND a.reporting_category = b.reporting_category
-    AND a.account_number = b.account_number;
+    AND a.account_number = b.account_number
+    CROSS JOIN cutoff c;
