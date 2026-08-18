@@ -1,48 +1,60 @@
 -- ============================================================
--- EFAP
--- View: mart.vw_management_pnl
+-- EFAP - Management P&L
+-- Object: mart.vw_management_pnl
 -- Layer: Mart / Management Reporting
 -- Grain: One row per calendar month
 --
 -- Purpose:
---   Management P&L based on the P&L management mapping.
---
--- Source:
---   mart.vw_pnl_management_detail
+--   Management-oriented monthly P&L with:
+--     Revenue
+--     Operating Costs
+--     EBITDA
+--     EBITDA Adjustments
+--     EBIT
+--     Financial Result
+--     EBT
+--     Income Tax
+--     Net Profit
+--     Margins
 --
 -- Important:
---   signed_amount is CALCULATED in the upstream P&L view.
+--   signed_amount is a CALCULATED field from mart.vw_pnl_monthly.
 --   It does NOT exist in warehouse.fact_gl.
 --
--- Management sign convention:
---   Revenue / income       -> positive
---   Operating costs       -> negative
---   Financial expenses    -> negative
---   Taxes                 -> negative
---
--- P&L structure:
---   Revenue
---   + Other Operating Income
---   + Operating Costs
---   + Non-Core Operating Items
---   = EBITDA
---
---   EBITDA
---   + EBITDA Adjustments
---   = EBIT
---
---   EBIT
---   + Financial Result
---   = EBT
---
---   EBT
---   + Tax
---   = Net Profit
+-- Source:
+--   mart.vw_pnl_monthly
+--   mart.dim_pnl_management_mapping
 -- ============================================================
 DROP VIEW IF EXISTS mart.vw_management_pnl;
 
-CREATE OR REPLACE VIEW mart.vw_management_pnl AS
+CREATE
+OR REPLACE VIEW mart.vw_management_pnl AS
 WITH
+    management_detail AS (
+        SELECT
+            d.calendar_year,
+            d.calendar_month,
+            d.month_name,
+            d.year_month,
+            d.account_number,
+            d.account_name,
+            m.management_group,
+            m.management_line,
+            m.management_sign,
+            m.ebitda_included,
+            m.sort_order,
+            d.row_count,
+            d.debit_amount,
+            d.credit_amount,
+            d.signed_amount,
+            -- Management-adjusted amount.
+            d.signed_amount * m.management_sign AS management_amount
+        FROM
+            mart.vw_pnl_monthly d
+            INNER JOIN mart.dim_pnl_management_mapping m ON d.account_number::text = m.account_number::text
+        WHERE
+            m.is_active = TRUE
+    ),
     monthly_pnl AS (
         SELECT
             calendar_year,
@@ -52,89 +64,70 @@ WITH
             -- ====================================================
             -- REVENUE
             -- ====================================================
-            COALESCE(
-                SUM(
-                    CASE
-                        WHEN management_group = 'Revenue' THEN management_amount
-                        ELSE 0
-                    END
-                ),
-                0
+            SUM(
+                CASE
+                    WHEN management_group = 'Revenue' THEN management_amount
+                    ELSE 0
+                END
             ) AS revenue,
             -- ====================================================
             -- OTHER OPERATING INCOME
             -- ====================================================
-            COALESCE(
-                SUM(
-                    CASE
-                        WHEN management_group = 'Other Operating Income' THEN management_amount
-                        ELSE 0
-                    END
-                ),
-                0
+            SUM(
+                CASE
+                    WHEN management_group = 'Other Operating Income' THEN management_amount
+                    ELSE 0
+                END
             ) AS other_operating_income,
             -- ====================================================
             -- OPERATING COSTS
             -- ====================================================
-            COALESCE(
-                SUM(
-                    CASE
-                        WHEN management_group = 'Operating Costs' THEN management_amount
-                        ELSE 0
-                    END
-                ),
-                0
+            SUM(
+                CASE
+                    WHEN management_group = 'Operating Costs' THEN management_amount
+                    ELSE 0
+                END
             ) AS operating_costs,
             -- ====================================================
             -- NON-CORE OPERATING ITEMS
             -- ====================================================
-            COALESCE(
-                SUM(
-                    CASE
-                        WHEN management_group = 'Non-Core Operating Items' THEN management_amount
-                        ELSE 0
-                    END
-                ),
-                0
+            SUM(
+                CASE
+                    WHEN management_group = 'Non-Core Operating Items' THEN management_amount
+                    ELSE 0
+                END
             ) AS non_core_operating_items,
             -- ====================================================
             -- EBITDA ADJUSTMENTS
+            -- Depreciation + Provisions
             -- ====================================================
-            COALESCE(
-                SUM(
-                    CASE
-                        WHEN management_group = 'EBITDA Adjustments' THEN management_amount
-                        ELSE 0
-                    END
-                ),
-                0
+            SUM(
+                CASE
+                    WHEN management_group = 'EBITDA Adjustments' THEN management_amount
+                    ELSE 0
+                END
             ) AS ebitda_adjustments,
             -- ====================================================
             -- FINANCIAL RESULT
+            -- Interest + FX + Other financial result
             -- ====================================================
-            COALESCE(
-                SUM(
-                    CASE
-                        WHEN management_group = 'Financial Result' THEN management_amount
-                        ELSE 0
-                    END
-                ),
-                0
+            SUM(
+                CASE
+                    WHEN management_group = 'Financial Result' THEN management_amount
+                    ELSE 0
+                END
             ) AS financial_result,
             -- ====================================================
             -- TAX
             -- ====================================================
-            COALESCE(
-                SUM(
-                    CASE
-                        WHEN management_group = 'Tax' THEN management_amount
-                        ELSE 0
-                    END
-                ),
-                0
+            SUM(
+                CASE
+                    WHEN management_group = 'Tax' THEN management_amount
+                    ELSE 0
+                END
             ) AS income_tax
         FROM
-            mart.vw_pnl_management_detail
+            management_detail
         GROUP BY
             calendar_year,
             calendar_month,
@@ -147,7 +140,7 @@ SELECT
     month_name,
     year_month,
     -- ========================================================
-    -- P&L COMPONENTS
+    -- BASE P&L COMPONENTS
     -- ========================================================
     revenue,
     other_operating_income,
@@ -159,10 +152,14 @@ SELECT
     -- ========================================================
     -- EBITDA
     --
-    -- Revenue
-    -- + Other Operating Income
-    -- + Operating Costs
-    -- + Non-Core Operating Items
+    -- EBITDA includes:
+    --   Revenue
+    --   Other Operating Income
+    --   Operating Costs
+    --   Non-Core Operating Items
+    --
+    -- Depreciation and provisions are excluded because
+    -- ebitda_included = FALSE.
     -- ========================================================
     (
         revenue + other_operating_income + operating_costs + non_core_operating_items
@@ -170,8 +167,10 @@ SELECT
     -- ========================================================
     -- EBIT
     --
-    -- EBITDA
-    -- + EBITDA Adjustments
+    -- EBITDA + EBITDA adjustments.
+    --
+    -- EBITDA adjustments are already signed negatively
+    -- through management_sign.
     -- ========================================================
     (
         revenue + other_operating_income + operating_costs + non_core_operating_items + ebitda_adjustments
@@ -179,8 +178,7 @@ SELECT
     -- ========================================================
     -- EBT
     --
-    -- EBIT
-    -- + Financial Result
+    -- EBIT + Financial Result.
     -- ========================================================
     (
         revenue + other_operating_income + operating_costs + non_core_operating_items + ebitda_adjustments + financial_result
@@ -188,11 +186,10 @@ SELECT
     -- ========================================================
     -- NET PROFIT
     --
-    -- EBT
-    -- + Income Tax
+    -- EBT + Income Tax.
     --
-    -- Tax is already signed through management_sign,
-    -- therefore it is ADDED rather than subtracted.
+    -- Income tax is already negative because the mapping
+    -- contains management_sign = -1.
     -- ========================================================
     (
         revenue + other_operating_income + operating_costs + non_core_operating_items + ebitda_adjustments + financial_result + income_tax
@@ -215,6 +212,15 @@ SELECT
         ) / revenue
         ELSE NULL
     END AS ebit_margin,
+    -- ========================================================
+    -- EBT MARGIN
+    -- ========================================================
+    CASE
+        WHEN revenue <> 0 THEN (
+            revenue + other_operating_income + operating_costs + non_core_operating_items + ebitda_adjustments + financial_result
+        ) / revenue
+        ELSE NULL
+    END AS ebt_margin,
     -- ========================================================
     -- NET PROFIT MARGIN
     -- ========================================================

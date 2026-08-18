@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS mart.dim_pnl_management_mapping (
-    account_number integer PRIMARY KEY,
+    account_number VARCHAR(20) PRIMARY KEY,
     management_line varchar(100) NOT NULL,
     management_group varchar(100) NOT NULL,
     management_sign integer NOT NULL DEFAULT 1,
@@ -22,14 +22,14 @@ VALUES
     -- =========================================================
     -- REVENUE
     -- =========================================================
-    (601, 'Sales Revenue', 'Revenue', 1, true, 10),
-    (602, 'Sales Revenue', 'Revenue', 1, true, 10),
-    (604, 'Sales Revenue', 'Revenue', 1, true, 10),
+    ('601', 'Sales Revenue', 'Revenue', 1, true, 10),
+    ('602', 'Sales Revenue', 'Revenue', 1, true, 10),
+    ('604', 'Sales Revenue', 'Revenue', 1, true, 10),
     -- =========================================================
     -- OTHER OPERATING INCOME
     -- =========================================================
     (
-        641,
+        '641',
         'Other Operating Income',
         'Other Operating Income',
         1,
@@ -40,7 +40,7 @@ VALUES
     -- OPERATING COSTS
     -- =========================================================
     (
-        501,
+        '501',
         'Material Consumption',
         'Operating Costs',
         -1,
@@ -48,7 +48,7 @@ VALUES
         30
     ),
     (
-        502,
+        '502',
         'Energy Consumption',
         'Operating Costs',
         -1,
@@ -56,7 +56,7 @@ VALUES
         31
     ),
     (
-        504,
+        '504',
         'Cost of Goods Sold',
         'Operating Costs',
         -1,
@@ -64,7 +64,7 @@ VALUES
         32
     ),
     (
-        511,
+        '511',
         'Repairs & Maintenance',
         'Operating Costs',
         -1,
@@ -72,7 +72,7 @@ VALUES
         33
     ),
     (
-        518,
+        '518',
         'Other Services',
         'Operating Costs',
         -1,
@@ -80,7 +80,7 @@ VALUES
         34
     ),
     (
-        521,
+        '521',
         'Payroll Costs',
         'Operating Costs',
         -1,
@@ -88,7 +88,7 @@ VALUES
         35
     ),
     (
-        524,
+        '524',
         'Social & Health Insurance',
         'Operating Costs',
         -1,
@@ -96,7 +96,7 @@ VALUES
         35
     ),
     (
-        548,
+        '548',
         'Other Operating Costs',
         'Operating Costs',
         -1,
@@ -104,7 +104,7 @@ VALUES
         36
     ),
     (
-        549,
+        '549',
         'Shortages & Damages',
         'Operating Costs',
         -1,
@@ -112,7 +112,7 @@ VALUES
         36
     ),
     (
-        582,
+        '582',
         'Inventory Change',
         'Operating Costs',
         -1,
@@ -123,7 +123,7 @@ VALUES
     -- NON-CORE OPERATING ITEMS
     -- =========================================================
     (
-        541,
+        '541',
         'Fixed Asset Disposal Costs',
         'Non-Core Operating Items',
         -1,
@@ -134,7 +134,7 @@ VALUES
     -- EBITDA ADJUSTMENTS
     -- =========================================================
     (
-        551,
+        '551',
         'Depreciation',
         'EBITDA Adjustments',
         -1,
@@ -142,7 +142,7 @@ VALUES
         50
     ),
     (
-        554,
+        '554',
         'Provisions',
         'EBITDA Adjustments',
         -1,
@@ -150,7 +150,7 @@ VALUES
         51
     ),
     (
-        558,
+        '558',
         'Provisions',
         'EBITDA Adjustments',
         -1,
@@ -161,7 +161,7 @@ VALUES
     -- FINANCIAL RESULT
     -- =========================================================
     (
-        562,
+        '562',
         'Interest Expense',
         'Financial Result',
         -1,
@@ -169,7 +169,7 @@ VALUES
         61
     ),
     (
-        563,
+        '563',
         'FX Losses',
         'Financial Result',
         -1,
@@ -177,7 +177,7 @@ VALUES
         61
     ),
     (
-        568,
+        '568',
         'Other Financial Expenses',
         'Financial Result',
         -1,
@@ -185,24 +185,24 @@ VALUES
         61
     ),
     (
-        662,
+        '662',
         'Interest Income',
         'Financial Result',
         1,
         false,
         60
     ),
-    (663, 'FX Gains', 'Financial Result', 1, false, 60),
+    ('663', 'FX Gains', 'Financial Result', 1, false, 60),
     -- =========================================================
     -- TAX
     -- =========================================================
-    (591, 'Income Tax', 'Tax', -1, false, 70),
-    (592, 'Income Tax', 'Tax', -1, false, 70),
+    ('591', 'Income Tax', 'Tax', -1, false, 70),
+    ('592', 'Income Tax', 'Tax', -1, false, 70),
     -- =========================================================
     -- CLOSING / TECHNICAL ACCOUNTS
     -- =========================================================
     (
-        701,
+        '701',
         'Opening Balance Sheet Account',
         'Closing Accounts',
         1,
@@ -210,7 +210,7 @@ VALUES
         90
     ),
     (
-        702,
+        '702',
         'Closing Balance Sheet Account',
         'Closing Accounts',
         1,
@@ -218,7 +218,7 @@ VALUES
         90
     ),
     (
-        710,
+        '710',
         'Profit and Loss Account',
         'Closing Accounts',
         1,
