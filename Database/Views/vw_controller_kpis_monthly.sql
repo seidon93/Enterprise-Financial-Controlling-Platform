@@ -1,126 +1,93 @@
 -- ============================================================
--- EFAP - Working Capital KPIs Monthly
+-- EFAP - Controller KPIs Monthly
 --
--- Object: mart.vw_working_capital_kpis_monthly
+-- Object: mart.vw_controller_kpis_monthly
 -- Layer: Mart / Financial Controlling
 -- Grain: One row per calendar month
---
--- KPIs:
---   DSO
---   DIO
---   DPO
---   Cash Conversion Cycle
 -- ============================================================
-CREATE OR REPLACE VIEW mart.vw_working_capital_kpis_monthly AS
-WITH
-    base AS (
-        SELECT
-            w.calendar_year,
-            w.calendar_month,
-            w.year_month,
-            w.receivables_balance,
-            w.inventory_balance,
-            w.current_liabilities_balance,
-            p.revenue,
-            p.operating_costs,
-            (
-                EXTRACT(
-                    DAY
-                    FROM
-                        d.month_end_date
-                )
-            )::numeric AS days_in_period
-        FROM
-            mart.vw_working_capital_monthly w
-            LEFT JOIN mart.vw_management_pnl p ON p.calendar_year = w.calendar_year
-            AND p.calendar_month = w.calendar_month
-            INNER JOIN warehouse.dim_date d ON d.calendar_year = w.calendar_year
-            AND d.calendar_month = w.calendar_month
-            AND d.day = 1
-    ),
-    with_lags AS (
-        SELECT
-            *,
-            LAG(receivables_balance) OVER (
-                ORDER BY
-                    calendar_year,
-                    calendar_month
-            ) AS previous_receivables_balance,
-            LAG(inventory_balance) OVER (
-                ORDER BY
-                    calendar_year,
-                    calendar_month
-            ) AS previous_inventory_balance,
-            LAG(current_liabilities_balance) OVER (
-                ORDER BY
-                    calendar_year,
-                    calendar_month
-            ) AS previous_current_liabilities_balance
-        FROM
-            base
-    ),
-    averages AS (
-        SELECT
-            *,
-            CASE
-                WHEN previous_receivables_balance IS NULL THEN receivables_balance
-                ELSE (
-                    previous_receivables_balance + receivables_balance
-                ) / 2
-            END AS average_receivables,
-            CASE
-                WHEN previous_inventory_balance IS NULL THEN inventory_balance
-                ELSE (previous_inventory_balance + inventory_balance) / 2
-            END AS average_inventory,
-            CASE
-                WHEN previous_current_liabilities_balance IS NULL THEN current_liabilities_balance
-                ELSE (
-                    previous_current_liabilities_balance + current_liabilities_balance
-                ) / 2
-            END AS average_current_liabilities
-        FROM
-            with_lags
-    )
+CREATE
+OR REPLACE VIEW mart.vw_controller_kpis_monthly AS
 SELECT
-    calendar_year,
-    calendar_month,
-    year_month,
-    revenue,
-    operating_costs,
-    receivables_balance,
-    inventory_balance,
-    current_liabilities_balance,
-    average_receivables,
-    average_inventory,
-    average_current_liabilities,
-    days_in_period,
+    p.calendar_year,
+    p.calendar_month,
+    p.year_month,
+    -- ========================================================
+    -- P&L
+    -- ========================================================
+    p.revenue,
+    p.other_operating_income,
+    p.operating_costs,
+    p.non_core_operating_items,
+    p.ebitda_adjustments,
+    p.ebitda,
+    p.ebit,
+    p.financial_result,
+    p.ebt,
+    p.income_tax,
+    p.net_profit,
+    p.ebitda_margin,
+    p.ebit_margin,
+    p.ebt_margin,
+    p.net_profit_margin,
+    -- ========================================================
+    -- WORKING CAPITAL
+    -- ========================================================
+    w.cash_balance,
+    w.inventory_balance,
+    w.receivables_balance,
+    w.other_current_assets_balance,
+    w.current_assets,
+    w.current_liabilities_balance,
+    w.net_working_capital,
+    w.operating_working_capital,
+    w.nwc_change,
+    w.current_ratio,
+    w.quick_ratio,
+    w.cash_ratio,
+    -- ========================================================
+    -- DSO / DIO / DPO / CCC
+    -- ========================================================
+    k.dso_days,
+    k.dio_days,
+    k.dpo_days,
+    k.cash_conversion_cycle_days,
+    -- ========================================================
+    -- CASH FLOW
+    -- ========================================================
+    cf.operating_cash_flow,
+    cf.investing_cash_flow,
+    cf.financing_cash_flow,
+    cf.net_cash_change,
+    cf.opening_cash,
+    cf.closing_cash,
+    cf.cash_reconciliation_difference,
+    liq.free_cash_flow,
+    -- ========================================================
+    -- STATUS
+    -- ========================================================
     CASE
-        WHEN revenue > 0 THEN average_receivables / revenue * days_in_period
-        ELSE NULL
-    END AS dso_days,
+        WHEN p.ebitda < 0 THEN 'NEGATIVE_EBITDA'
+        WHEN p.ebitda = 0 THEN 'ZERO_EBITDA'
+        ELSE 'POSITIVE_EBITDA'
+    END AS ebitda_status,
     CASE
-        WHEN ABS(operating_costs) > 0 THEN average_inventory / ABS(operating_costs) * days_in_period
-        ELSE NULL
-    END AS dio_days,
+        WHEN w.net_working_capital < 0 THEN 'NEGATIVE_NWC'
+        WHEN w.net_working_capital = 0 THEN 'ZERO_NWC'
+        ELSE 'POSITIVE_NWC'
+    END AS working_capital_status,
     CASE
-        WHEN ABS(operating_costs) > 0 THEN average_current_liabilities / ABS(operating_costs) * days_in_period
-        ELSE NULL
-    END AS dpo_days,
-    (
-        CASE
-            WHEN revenue > 0 THEN average_receivables / revenue * days_in_period
-            ELSE 0
-        END
-    ) + (
-        CASE
-            WHEN ABS(operating_costs) > 0 THEN average_inventory / ABS(operating_costs) * days_in_period
-            ELSE 0
-        END
-    ) - (
-        CASE
-            WHEN ABS(operating_costs) > 0 THEN average_current_liabilities / ABS(operating_costs) * days_in_period
-            ELSE 0
-        END
-    ) AS cash_conversion_cycle_days
+        WHEN w.current_ratio < 1 THEN 'LIQUIDITY_RISK'
+        WHEN w.current_ratio < 1.5 THEN 'WATCH'
+        ELSE 'HEALTHY'
+    END AS liquidity_status,
+    liq.cash_flow_status
 FROM
-    averages;
+    mart.vw_management_pnl p
+    LEFT JOIN mart.vw_working_capital_monthly w ON w.calendar_year = p.calendar_year
+    AND w.calendar_month = p.calendar_month
+    LEFT JOIN mart.vw_working_capital_kpis_monthly k ON k.calendar_year = p.calendar_year
+    AND k.calendar_month = p.calendar_month
+    LEFT JOIN mart.vw_cash_flow_monthly cf ON cf.calendar_year = p.calendar_year
+    AND cf.calendar_month = p.calendar_month
+    LEFT JOIN mart.vw_liquidity_monthly liq ON liq.calendar_year = p.calendar_year
+    AND liq.calendar_month = p.calendar_month;
