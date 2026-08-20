@@ -13,7 +13,7 @@
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS warehouse.dim_account (
     account_key INTEGER PRIMARY KEY,
-    account_number VARCHAR(20) NOT NULL,
+    account_number INTEGER NOT NULL,
     account_name VARCHAR(255) NOT NULL,
     account_type CHAR(1) NOT NULL,
     account_class SMALLINT NOT NULL,
