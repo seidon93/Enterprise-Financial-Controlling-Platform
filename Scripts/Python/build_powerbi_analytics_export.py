@@ -436,35 +436,86 @@ def prepare_variance(
     if df.empty:
         return pd.DataFrame()
 
-    return df.rename(
-        columns={
-            "metric":
-                "variance_metric",
-            "total_variance":
-                "root_cause_total_variance",
-            "primary_driver_account":
-                "root_cause_primary_account",
-            "primary_driver_name":
-                "root_cause_primary_driver",
-            "primary_driver_variance":
-                "root_cause_primary_variance",
-            "primary_driver_contribution_pct":
-                "root_cause_primary_contribution_pct",
-            "controller_interpretation":
-                "root_cause_controller_interpretation",
-        }
-    )[
-        [
-            "period",
-            "variance_metric",
-            "root_cause_total_variance",
-            "root_cause_primary_account",
-            "root_cause_primary_driver",
-            "root_cause_primary_variance",
+    df = df.copy()
+
+    rename_map = {
+        "total_variance": "root_cause_total_variance",
+        "primary_driver_account": "root_cause_primary_account",
+        "primary_driver_name": "root_cause_primary_driver",
+        "primary_driver_variance": "root_cause_primary_variance",
+        "primary_driver_contribution_pct":
             "root_cause_primary_contribution_pct",
+        "controller_interpretation":
             "root_cause_controller_interpretation",
-        ]
-    ]
+    }
+
+    df = df.rename(
+        columns=rename_map
+    )
+
+    # --------------------------------------------------------
+    # One row per period
+    # --------------------------------------------------------
+
+    rows = []
+
+    for period, group in df.groupby("period"):
+
+        row = {
+            "period": period
+        }
+
+        for _, item in group.iterrows():
+
+            metric = str(
+                item["metric"]
+            ).lower()
+
+            metric = (
+                metric
+                .replace(" ", "_")
+                .replace("-", "_")
+            )
+
+            row[
+                f"{metric}_root_cause_variance"
+            ] = item[
+                "root_cause_total_variance"
+            ]
+
+            row[
+                f"{metric}_root_cause_primary_account"
+            ] = item[
+                "root_cause_primary_account"
+            ]
+
+            row[
+                f"{metric}_root_cause_primary_driver"
+            ] = item[
+                "root_cause_primary_driver"
+            ]
+
+            row[
+                f"{metric}_root_cause_primary_variance"
+            ] = item[
+                "root_cause_primary_variance"
+            ]
+
+            row[
+                f"{metric}_root_cause_primary_contribution_pct"
+            ] = item[
+                "root_cause_primary_contribution_pct"
+            ]
+
+            row[
+                f"{metric}_root_cause_interpretation"
+            ] = item[
+                "root_cause_controller_interpretation"
+            ]
+
+        rows.append(row)
+
+    return pd.DataFrame(rows)
 
 
 def prepare_pvm(
@@ -474,24 +525,97 @@ def prepare_pvm(
     if df.empty:
         return pd.DataFrame()
 
-    return df.rename(
-        columns={
-            "total_variance":
-                "pvm_total_variance",
-            "price_effect":
-                "pvm_price_effect",
-            "volume_effect":
-                "pvm_volume_effect",
-            "mix_effect":
-                "pvm_mix_effect",
-            "top_driver_account":
-                "pvm_top_driver_account",
-            "top_driver_name":
-                "pvm_top_driver_name",
-            "top_driver_variance":
-                "pvm_top_driver_variance",
+    df = df.copy()
+
+    rows = []
+
+    for period, group in df.groupby("period"):
+
+        row = {
+            "period": period
         }
-    )
+
+        for _, item in group.iterrows():
+
+            analysis_type = str(
+                item["analysis_type"]
+            ).lower()
+
+            prefix = (
+                "revenue_pvm"
+                if analysis_type == "revenue"
+                else "operating_cost_pvm"
+            )
+
+            row[
+                f"{prefix}_total_variance"
+            ] = item[
+                "total_variance"
+            ]
+
+            row[
+                f"{prefix}_price_effect"
+            ] = item[
+                "price_effect"
+            ]
+
+            row[
+                f"{prefix}_volume_effect"
+            ] = item[
+                "volume_effect"
+            ]
+
+            row[
+                f"{prefix}_mix_effect"
+            ] = item[
+                "mix_effect"
+            ]
+
+            row[
+                f"{prefix}_reconciliation_check"
+            ] = item[
+                "reconciliation_check"
+            ]
+
+            row[
+                f"{prefix}_top_driver_account"
+            ] = item[
+                "top_driver_account"
+            ]
+
+            row[
+                f"{prefix}_top_driver_name"
+            ] = item[
+                "top_driver_name"
+            ]
+
+            row[
+                f"{prefix}_top_driver_variance"
+            ] = item[
+                "top_driver_variance"
+            ]
+
+            row[
+                f"{prefix}_price_status"
+            ] = item[
+                "price_status"
+            ]
+
+            row[
+                f"{prefix}_volume_status"
+            ] = item[
+                "volume_status"
+            ]
+
+            row[
+                f"{prefix}_mix_status"
+            ] = item[
+                "mix_status"
+            ]
+
+        rows.append(row)
+
+    return pd.DataFrame(rows)
 
 
 def prepare_classification(
