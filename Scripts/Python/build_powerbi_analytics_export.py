@@ -3,31 +3,34 @@ EFAP - Power BI Analytics Reporting Export
 
 Purpose:
     Consolidate Python analytical outputs into one Power BI-ready
-    reporting dataset.
+    monthly reporting dataset.
 
-Sources:
-    rolling_forecast.csv
-    financial_anomaly_monthly_summary.csv
-    variance_root_cause_controller_summary.csv
-    price_volume_summary.csv
-    revenue_prediction.csv
-    expense_prediction.csv
-    cash_flow_prediction.csv
-    financial_classification_predictions.csv
+Grain:
+    Exactly one row per calendar month.
+
+Important semantic rules:
+
+    ACTUAL periods:
+        - anomalies
+        - variance root cause
+        - PVM
+        - historical analytics
+        - ML outputs only where they exist
+
+    FORECAST periods:
+        - rolling forecast
+        - ML predictions
+        - no actual anomaly/root-cause/PVM interpretation
 
 Output:
     data/powerbi/efap_analytics_reporting.csv
-
-Principle:
-    This script does not recalculate financial logic.
-    It only consolidates analytical outputs for Power BI.
 """
 
 from __future__ import annotations
 
 import logging
-import sys
 from pathlib import Path
+import sys
 
 import pandas as pd
 
@@ -36,7 +39,9 @@ import pandas as pd
 # PATHS
 # ============================================================
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = (
+    Path(__file__).resolve().parents[2]
+)
 
 ANALYTICS_DIR = (
     PROJECT_ROOT
@@ -69,6 +74,13 @@ OUTPUT_FILE = (
 
 
 # ============================================================
+# CONFIGURATION
+# ============================================================
+
+EXPECTED_FORECAST_HORIZON = 6
+
+
+# ============================================================
 # LOGGING
 # ============================================================
 
@@ -81,20 +93,20 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================
-# HELPERS
+# LOAD HELPERS
 # ============================================================
 
 def load_optional_csv(
     path: Path,
 ) -> pd.DataFrame:
     """
-    Load CSV if available.
+    Load optional analytical CSV.
 
-    Missing analytical outputs do not stop the whole reporting
-    export.
+    Missing datasets do not stop the export pipeline.
     """
 
     if not path.exists():
+
         logger.warning(
             "Optional analytical file not found: %s",
             path,
@@ -110,18 +122,20 @@ def load_optional_csv(
     return pd.read_csv(path)
 
 
-def add_period(
+def normalize_period(
     df: pd.DataFrame,
-    column: str = "period",
 ) -> pd.DataFrame:
-    """Normalize period column."""
+    """Normalize period to pandas datetime."""
 
     if df.empty:
         return df
 
-    if column in df.columns:
-        df[column] = pd.to_datetime(
-            df[column],
+    df = df.copy()
+
+    if "period" in df.columns:
+
+        df["period"] = pd.to_datetime(
+            df["period"],
             errors="coerce",
         )
 
@@ -129,7 +143,7 @@ def add_period(
 
 
 # ============================================================
-# LOAD
+# LOAD ALL SOURCES
 # ============================================================
 
 def load_all_sources() -> dict[str, pd.DataFrame]:
@@ -137,7 +151,7 @@ def load_all_sources() -> dict[str, pd.DataFrame]:
     return {
 
         "rolling_forecast":
-            add_period(
+            normalize_period(
                 load_optional_csv(
                     FORECAST_DIR
                     / "rolling_forecast.csv"
@@ -145,7 +159,7 @@ def load_all_sources() -> dict[str, pd.DataFrame]:
             ),
 
         "anomaly":
-            add_period(
+            normalize_period(
                 load_optional_csv(
                     ANALYTICS_DIR
                     / "financial_anomaly_monthly_summary.csv"
@@ -153,7 +167,7 @@ def load_all_sources() -> dict[str, pd.DataFrame]:
             ),
 
         "variance":
-            add_period(
+            normalize_period(
                 load_optional_csv(
                     ANALYTICS_DIR
                     / "variance_root_cause_controller_summary.csv"
@@ -161,7 +175,7 @@ def load_all_sources() -> dict[str, pd.DataFrame]:
             ),
 
         "pvm":
-            add_period(
+            normalize_period(
                 load_optional_csv(
                     ANALYTICS_DIR
                     / "price_volume_summary.csv"
@@ -169,7 +183,7 @@ def load_all_sources() -> dict[str, pd.DataFrame]:
             ),
 
         "revenue_prediction":
-            add_period(
+            normalize_period(
                 load_optional_csv(
                     PREDICTION_DIR
                     / "revenue_prediction.csv"
@@ -177,7 +191,7 @@ def load_all_sources() -> dict[str, pd.DataFrame]:
             ),
 
         "expense_prediction":
-            add_period(
+            normalize_period(
                 load_optional_csv(
                     PREDICTION_DIR
                     / "expense_prediction.csv"
@@ -185,7 +199,7 @@ def load_all_sources() -> dict[str, pd.DataFrame]:
             ),
 
         "cash_prediction":
-            add_period(
+            normalize_period(
                 load_optional_csv(
                     PREDICTION_DIR
                     / "cash_flow_prediction.csv"
@@ -193,7 +207,7 @@ def load_all_sources() -> dict[str, pd.DataFrame]:
             ),
 
         "classification":
-            add_period(
+            normalize_period(
                 load_optional_csv(
                     PREDICTION_DIR
                     / "financial_classification_predictions.csv"
@@ -203,13 +217,80 @@ def load_all_sources() -> dict[str, pd.DataFrame]:
 
 
 # ============================================================
-# MONTHLY FRAME
+# ACTUAL / FORECAST BOUNDARY
+# ============================================================
+
+def determine_actual_cutoff(
+    rolling_forecast: pd.DataFrame,
+) -> pd.Timestamp:
+    """
+    Determine the last actual month from rolling forecast data.
+
+    The rolling forecast dataset explicitly contains:
+        ACTUAL
+        FORECAST
+
+    Therefore it is the authoritative boundary for the
+    Power BI reporting dataset.
+    """
+
+    if rolling_forecast.empty:
+        raise RuntimeError(
+            "Rolling forecast dataset is required to determine "
+            "ACTUAL / FORECAST boundary."
+        )
+
+    required = {
+        "period",
+        "data_type",
+    }
+
+    missing = (
+        required
+        - set(rolling_forecast.columns)
+    )
+
+    if missing:
+        raise ValueError(
+            "Rolling forecast is missing columns: "
+            + ", ".join(sorted(missing))
+        )
+
+    actual = rolling_forecast[
+        rolling_forecast["data_type"]
+        .astype(str)
+        .str.upper()
+        .eq("ACTUAL")
+    ]
+
+    if actual.empty:
+        raise RuntimeError(
+            "No ACTUAL periods found in rolling forecast."
+        )
+
+    cutoff = actual[
+        "period"
+    ].max()
+
+    logger.info(
+        "Last ACTUAL period: %s",
+        cutoff.strftime("%Y-%m"),
+    )
+
+    return cutoff
+
+
+# ============================================================
+# MONTHLY CALENDAR
 # ============================================================
 
 def build_monthly_calendar(
     sources: dict[str, pd.DataFrame],
+    actual_cutoff: pd.Timestamp,
 ) -> pd.DataFrame:
-    """Create common monthly reporting calendar."""
+    """
+    Create one unique row per reporting month.
+    """
 
     periods = []
 
@@ -218,21 +299,21 @@ def build_monthly_calendar(
         if df.empty:
             continue
 
-        if "period" in df.columns:
+        if "period" not in df.columns:
+            continue
 
-            values = (
-                df["period"]
-                .dropna()
-                .unique()
-            )
+        values = (
+            df["period"]
+            .dropna()
+            .unique()
+            .tolist()
+        )
 
-            periods.extend(
-                values.tolist()
-            )
+        periods.extend(values)
 
     if not periods:
         raise RuntimeError(
-            "No analytical periods available."
+            "No reporting periods available."
         )
 
     calendar = pd.DataFrame(
@@ -249,21 +330,118 @@ def build_monthly_calendar(
     )
 
     calendar["calendar_year"] = (
-        calendar["period"].dt.year
+        calendar["period"]
+        .dt.year
     )
 
     calendar["calendar_month"] = (
-        calendar["period"].dt.month
+        calendar["period"]
+        .dt.month
+    )
+
+    # --------------------------------------------------------
+    # Explicit reporting type
+    # --------------------------------------------------------
+
+    calendar["reporting_data_type"] = (
+        calendar["period"]
+        .apply(
+            lambda value:
+            "ACTUAL"
+            if value <= actual_cutoff
+            else "FORECAST"
+        )
     )
 
     return calendar
 
 
 # ============================================================
-# AGGREGATIONS
+# ROLLING FORECAST
 # ============================================================
 
-def prepare_revenue_prediction(
+def prepare_rolling_forecast(
+    df: pd.DataFrame,
+) -> pd.DataFrame:
+
+    if df.empty:
+        return pd.DataFrame()
+
+    required = {
+        "period",
+        "data_type",
+        "forecast_horizon_month",
+        "revenue",
+        "operating_costs",
+        "ebitda",
+        "ebitda_margin",
+    }
+
+    missing = required - set(df.columns)
+
+    if missing:
+        logger.warning(
+            "Rolling forecast missing columns: %s",
+            ", ".join(sorted(missing)),
+        )
+
+        return pd.DataFrame()
+
+    result = (
+        df[
+            [
+                "period",
+                "data_type",
+                "forecast_horizon_month",
+                "revenue",
+                "operating_costs",
+                "ebitda",
+                "ebitda_margin",
+            ]
+        ]
+        .rename(
+            columns={
+                "data_type":
+                    "rolling_data_type",
+
+                "revenue":
+                    "rolling_revenue",
+
+                "operating_costs":
+                    "rolling_operating_costs",
+
+                "ebitda":
+                    "rolling_ebitda",
+
+                "ebitda_margin":
+                    "rolling_ebitda_margin",
+            }
+        )
+    )
+
+    # Guarantee one row per period.
+    result = (
+        result
+        .sort_values(
+            [
+                "period",
+                "rolling_data_type",
+            ]
+        )
+        .drop_duplicates(
+            "period",
+            keep="last",
+        )
+    )
+
+    return result
+
+
+# ============================================================
+# ANOMALY
+# ============================================================
+
+def prepare_anomaly(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
 
@@ -273,161 +451,33 @@ def prepare_revenue_prediction(
     return (
         df[
             [
-                "period",
-                "predicted_revenue",
-                "lower_bound",
-                "upper_bound",
-                "validation_rmse",
-                "validation_mape_pct",
+                column
+                for column in [
+                    "period",
+                    "anomaly_count",
+                    "high_critical_anomaly_count",
+                    "max_robust_score",
+                    "max_severity",
+                    "controller_status",
+                ]
+                if column in df.columns
             ]
         ]
         .rename(
             columns={
-                "predicted_revenue":
-                    "ml_predicted_revenue",
-                "lower_bound":
-                    "ml_revenue_lower_bound",
-                "upper_bound":
-                    "ml_revenue_upper_bound",
-                "validation_rmse":
-                    "revenue_prediction_rmse",
-                "validation_mape_pct":
-                    "revenue_prediction_mape_pct",
+                "max_severity":
+                    "anomaly_max_severity",
+
+                "controller_status":
+                    "anomaly_controller_status",
             }
         )
     )
 
 
-def prepare_expense_prediction(
-    df: pd.DataFrame,
-) -> pd.DataFrame:
-
-    if df.empty:
-        return pd.DataFrame()
-
-    result = (
-        df
-        .groupby(
-            "period",
-            as_index=False,
-        )
-        .agg(
-            ml_predicted_expenses=(
-                "predicted_expense",
-                "sum",
-            ),
-            ml_expense_lower_bound=(
-                "lower_bound",
-                "sum",
-            ),
-            ml_expense_upper_bound=(
-                "upper_bound",
-                "sum",
-            ),
-            expense_prediction_rmse=(
-                "validation_rmse",
-                "mean",
-            ),
-        )
-    )
-
-    return result
-
-
-def prepare_cash_prediction(
-    df: pd.DataFrame,
-) -> pd.DataFrame:
-
-    if df.empty:
-        return pd.DataFrame()
-
-    return df[
-        [
-            "period",
-            "predicted_operating_cash_flow",
-            "predicted_closing_cash",
-            "ocf_lower_bound",
-            "ocf_upper_bound",
-            "cash_lower_bound",
-            "cash_upper_bound",
-            "validation_rmse",
-            "validation_mape_pct",
-        ]
-    ].rename(
-        columns={
-            "predicted_operating_cash_flow":
-                "ml_predicted_operating_cf",
-            "predicted_closing_cash":
-                "ml_predicted_closing_cash",
-            "ocf_lower_bound":
-                "ml_ocf_lower_bound",
-            "ocf_upper_bound":
-                "ml_ocf_upper_bound",
-            "cash_lower_bound":
-                "ml_cash_lower_bound",
-            "cash_upper_bound":
-                "ml_cash_upper_bound",
-            "validation_rmse":
-                "cash_prediction_rmse",
-            "validation_mape_pct":
-                "cash_prediction_mape_pct",
-        }
-    )
-
-
-def prepare_rolling_forecast(
-    df: pd.DataFrame,
-) -> pd.DataFrame:
-
-    if df.empty:
-        return pd.DataFrame()
-
-    return df[
-        [
-            "period",
-            "data_type",
-            "forecast_horizon_month",
-            "revenue",
-            "operating_costs",
-            "ebitda",
-            "ebitda_margin",
-        ]
-    ].rename(
-        columns={
-            "data_type":
-                "rolling_data_type",
-            "revenue":
-                "rolling_revenue",
-            "operating_costs":
-                "rolling_operating_costs",
-            "ebitda":
-                "rolling_ebitda",
-            "ebitda_margin":
-                "rolling_ebitda_margin",
-        }
-    )
-
-
-def prepare_anomaly(
-    df: pd.DataFrame,
-) -> pd.DataFrame:
-
-    if df.empty:
-        return pd.DataFrame()
-
-    return df.rename(
-        columns={
-            "anomaly_count":
-                "anomaly_count",
-            "high_or_critical_count":
-                "high_critical_anomaly_count",
-            "max_severity":
-                "anomaly_max_severity",
-            "controller_status":
-                "anomaly_controller_status",
-        }
-    )
-
+# ============================================================
+# VARIANCE ROOT CAUSE
+# ============================================================
 
 def prepare_variance(
     df: pd.DataFrame,
@@ -436,30 +486,33 @@ def prepare_variance(
     if df.empty:
         return pd.DataFrame()
 
-    df = df.copy()
-
-    rename_map = {
-        "total_variance": "root_cause_total_variance",
-        "primary_driver_account": "root_cause_primary_account",
-        "primary_driver_name": "root_cause_primary_driver",
-        "primary_driver_variance": "root_cause_primary_variance",
-        "primary_driver_contribution_pct":
-            "root_cause_primary_contribution_pct",
-        "controller_interpretation":
-            "root_cause_controller_interpretation",
+    required = {
+        "period",
+        "metric",
+        "total_variance",
+        "primary_driver_account",
+        "primary_driver_name",
+        "primary_driver_variance",
+        "primary_driver_contribution_pct",
+        "controller_interpretation",
     }
 
-    df = df.rename(
-        columns=rename_map
-    )
+    missing = required - set(df.columns)
 
-    # --------------------------------------------------------
-    # One row per period
-    # --------------------------------------------------------
+    if missing:
+        logger.warning(
+            "Variance dataset missing columns: %s",
+            ", ".join(sorted(missing)),
+        )
+
+        return pd.DataFrame()
 
     rows = []
 
-    for period, group in df.groupby("period"):
+    for period, group in df.groupby(
+        "period",
+        sort=True,
+    ):
 
         row = {
             "period": period
@@ -477,46 +530,54 @@ def prepare_variance(
                 .replace("-", "_")
             )
 
+            prefix = (
+                f"{metric}_root_cause"
+            )
+
             row[
-                f"{metric}_root_cause_variance"
+                f"{prefix}_variance"
             ] = item[
-                "root_cause_total_variance"
+                "total_variance"
             ]
 
             row[
-                f"{metric}_root_cause_primary_account"
+                f"{prefix}_primary_account"
             ] = item[
-                "root_cause_primary_account"
+                "primary_driver_account"
             ]
 
             row[
-                f"{metric}_root_cause_primary_driver"
+                f"{prefix}_primary_driver"
             ] = item[
-                "root_cause_primary_driver"
+                "primary_driver_name"
             ]
 
             row[
-                f"{metric}_root_cause_primary_variance"
+                f"{prefix}_primary_variance"
             ] = item[
-                "root_cause_primary_variance"
+                "primary_driver_variance"
             ]
 
             row[
-                f"{metric}_root_cause_primary_contribution_pct"
+                f"{prefix}_primary_contribution_pct"
             ] = item[
-                "root_cause_primary_contribution_pct"
+                "primary_driver_contribution_pct"
             ]
 
             row[
-                f"{metric}_root_cause_interpretation"
+                f"{prefix}_interpretation"
             ] = item[
-                "root_cause_controller_interpretation"
+                "controller_interpretation"
             ]
 
         rows.append(row)
 
     return pd.DataFrame(rows)
 
+
+# ============================================================
+# PRICE / VOLUME / MIX
+# ============================================================
 
 def prepare_pvm(
     df: pd.DataFrame,
@@ -525,11 +586,38 @@ def prepare_pvm(
     if df.empty:
         return pd.DataFrame()
 
-    df = df.copy()
+    required = {
+        "period",
+        "analysis_type",
+        "total_variance",
+        "price_effect",
+        "volume_effect",
+        "mix_effect",
+        "reconciliation_check",
+        "top_driver_account",
+        "top_driver_name",
+        "top_driver_variance",
+        "price_status",
+        "volume_status",
+        "mix_status",
+    }
+
+    missing = required - set(df.columns)
+
+    if missing:
+        logger.warning(
+            "PVM dataset missing columns: %s",
+            ", ".join(sorted(missing)),
+        )
+
+        return pd.DataFrame()
 
     rows = []
 
-    for period, group in df.groupby("period"):
+    for period, group in df.groupby(
+        "period",
+        sort=True,
+    ):
 
         row = {
             "period": period
@@ -539,13 +627,22 @@ def prepare_pvm(
 
             analysis_type = str(
                 item["analysis_type"]
-            ).lower()
+            ).upper()
 
-            prefix = (
-                "revenue_pvm"
-                if analysis_type == "revenue"
-                else "operating_cost_pvm"
-            )
+            if analysis_type == "REVENUE":
+
+                prefix = "revenue_pvm"
+
+            elif analysis_type in {
+                "OPERATING_COST",
+                "OPERATING_COSTS",
+            }:
+
+                prefix = "operating_cost_pvm"
+
+            else:
+
+                continue
 
             row[
                 f"{prefix}_total_variance"
@@ -618,12 +715,401 @@ def prepare_pvm(
     return pd.DataFrame(rows)
 
 
+# ============================================================
+# REVENUE PREDICTION
+# ============================================================
+
+def prepare_revenue_prediction(
+    df: pd.DataFrame,
+) -> pd.DataFrame:
+
+    if df.empty:
+        return pd.DataFrame()
+
+    required = {
+        "period",
+        "predicted_revenue",
+        "lower_bound",
+        "upper_bound",
+        "validation_rmse",
+        "validation_mape_pct",
+    }
+
+    missing = required - set(df.columns)
+
+    if missing:
+        logger.warning(
+            "Revenue prediction missing columns: %s",
+            ", ".join(sorted(missing)),
+        )
+
+        return pd.DataFrame()
+
+    return (
+        df[
+            [
+                "period",
+                "predicted_revenue",
+                "lower_bound",
+                "upper_bound",
+                "validation_rmse",
+                "validation_mape_pct",
+            ]
+        ]
+        .rename(
+            columns={
+                "predicted_revenue":
+                    "ml_predicted_revenue",
+
+                "lower_bound":
+                    "ml_revenue_lower_bound",
+
+                "upper_bound":
+                    "ml_revenue_upper_bound",
+
+                "validation_rmse":
+                    "revenue_prediction_rmse",
+
+                "validation_mape_pct":
+                    "revenue_prediction_mape_pct",
+            }
+        )
+        .drop_duplicates("period")
+    )
+
+
+# ============================================================
+# EXPENSE PREDICTION
+# ============================================================
+
+def prepare_expense_prediction(
+    df: pd.DataFrame,
+) -> pd.DataFrame:
+
+    if df.empty:
+        return pd.DataFrame()
+
+    required = {
+        "period",
+        "predicted_expense",
+        "lower_bound",
+        "upper_bound",
+        "validation_rmse",
+    }
+
+    missing = required - set(df.columns)
+
+    if missing:
+        logger.warning(
+            "Expense prediction missing columns: %s",
+            ", ".join(sorted(missing)),
+        )
+
+        return pd.DataFrame()
+
+    return (
+        df
+        .groupby(
+            "period",
+            as_index=False,
+        )
+        .agg(
+            ml_predicted_expenses=(
+                "predicted_expense",
+                "sum",
+            ),
+
+            ml_expense_lower_bound=(
+                "lower_bound",
+                "sum",
+            ),
+
+            ml_expense_upper_bound=(
+                "upper_bound",
+                "sum",
+            ),
+
+            expense_prediction_rmse=(
+                "validation_rmse",
+                "mean",
+            ),
+        )
+    )
+
+
+# ============================================================
+# CASH FLOW PREDICTION
+# ============================================================
+
+def prepare_cash_prediction(
+    df: pd.DataFrame,
+) -> pd.DataFrame:
+
+    if df.empty:
+        return pd.DataFrame()
+
+    required = {
+        "period",
+        "predicted_operating_cash_flow",
+        "predicted_closing_cash",
+        "ocf_lower_bound",
+        "ocf_upper_bound",
+        "cash_lower_bound",
+        "cash_upper_bound",
+        "validation_rmse",
+        "validation_mape_pct",
+    }
+
+    missing = required - set(df.columns)
+
+    if missing:
+        logger.warning(
+            "Cash prediction missing columns: %s",
+            ", ".join(sorted(missing)),
+        )
+
+        return pd.DataFrame()
+
+    return (
+        df[
+            [
+                "period",
+                "predicted_operating_cash_flow",
+                "predicted_closing_cash",
+                "ocf_lower_bound",
+                "ocf_upper_bound",
+                "cash_lower_bound",
+                "cash_upper_bound",
+                "validation_rmse",
+                "validation_mape_pct",
+            ]
+        ]
+        .rename(
+            columns={
+                "predicted_operating_cash_flow":
+                    "ml_predicted_operating_cf",
+
+                "predicted_closing_cash":
+                    "ml_predicted_closing_cash",
+
+                "ocf_lower_bound":
+                    "ml_ocf_lower_bound",
+
+                "ocf_upper_bound":
+                    "ml_ocf_upper_bound",
+
+                "cash_lower_bound":
+                    "ml_cash_lower_bound",
+
+                "cash_upper_bound":
+                    "ml_cash_upper_bound",
+
+                "validation_rmse":
+                    "cash_prediction_rmse",
+
+                "validation_mape_pct":
+                    "cash_prediction_mape_pct",
+            }
+        )
+        .drop_duplicates("period")
+    )
+
+
+# ============================================================
+# CLASSIFICATION
+# ============================================================
+
 def prepare_classification(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
 
     if df.empty:
         return pd.DataFrame()
+
+    if "period" not in df.columns:
+        return pd.DataFrame()
+
+    return (
+        df
+        .sort_values("period")
+        .drop_duplicates("period")
+    )
+
+
+# ============================================================
+# MERGE ONE-ROW-PER-MONTH DATASETS
+# ============================================================
+
+def safe_merge(
+    base: pd.DataFrame,
+    dataset: pd.DataFrame,
+    name: str,
+) -> pd.DataFrame:
+    """
+    Merge only datasets that are guaranteed to have one row
+    per period.
+    """
+
+    if dataset.empty:
+        return base
+
+    duplicated = (
+        dataset["period"]
+        .duplicated()
+        .any()
+    )
+
+    if duplicated:
+
+        raise RuntimeError(
+            f"Dataset '{name}' still contains duplicate periods."
+        )
+
+    return base.merge(
+        dataset,
+        on="period",
+        how="left",
+        validate="one_to_one",
+    )
+
+
+# ============================================================
+# FORECAST HORIZON VALIDATION
+# ============================================================
+
+def validate_forecast_horizon(
+    df: pd.DataFrame,
+    actual_cutoff: pd.Timestamp,
+) -> None:
+    """Validate number of future rolling forecast months."""
+
+    future = df[
+        (
+            df["period"]
+            > actual_cutoff
+        )
+        &
+        (
+            df["reporting_data_type"]
+            == "FORECAST"
+        )
+    ].copy()
+
+    if future.empty:
+
+        logger.warning(
+            "No future FORECAST months found."
+        )
+
+        return
+
+    future_months = (
+        future["period"]
+        .sort_values()
+        .drop_duplicates()
+    )
+
+    horizon = len(
+        future_months
+    )
+
+    logger.info(
+        "Detected forecast horizon: %s months.",
+        horizon,
+    )
+
+    if horizon != EXPECTED_FORECAST_HORIZON:
+
+        logger.warning(
+            "Expected %s forecast months, "
+            "found %s.",
+            EXPECTED_FORECAST_HORIZON,
+            horizon,
+        )
+
+
+# ============================================================
+# FORECAST-ONLY SANITIZATION
+# ============================================================
+
+def clear_actual_only_metrics_for_forecast(
+    df: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Remove actual-only interpretations from future months.
+
+    These metrics must NOT be interpreted as known Actual vs
+    Budget or Actual vs Prior Year values in forecast periods.
+    """
+
+    df = df.copy()
+
+    forecast_mask = (
+        df["reporting_data_type"]
+        == "FORECAST"
+    )
+
+    # --------------------------------------------------------
+    # Root Cause
+    # --------------------------------------------------------
+
+    root_cause_columns = [
+        column
+        for column in df.columns
+        if (
+            "_root_cause_"
+            in column
+        )
+        or column.endswith(
+            "_root_cause_variance"
+        )
+        or column.endswith(
+            "_root_cause_interpretation"
+        )
+    ]
+
+    # --------------------------------------------------------
+    # PVM
+    # --------------------------------------------------------
+
+    pvm_columns = [
+        column
+        for column in df.columns
+        if "_pvm_" in column
+    ]
+
+    columns_to_clear = sorted(
+        set(
+            root_cause_columns
+            + pvm_columns
+        )
+    )
+
+    if columns_to_clear:
+
+        df.loc[
+            forecast_mask,
+            columns_to_clear,
+        ] = pd.NA
+
+    # --------------------------------------------------------
+    # Anomaly historical classification
+    # --------------------------------------------------------
+
+    anomaly_columns = [
+        column
+        for column in df.columns
+        if column.startswith(
+            "anomaly_"
+        )
+    ]
+
+    if anomaly_columns:
+
+        df.loc[
+            forecast_mask,
+            anomaly_columns,
+        ] = pd.NA
 
     return df
 
@@ -636,60 +1122,186 @@ def build_reporting_dataset(
     sources: dict[str, pd.DataFrame],
 ) -> pd.DataFrame:
 
-    result = build_monthly_calendar(
-        sources
+    actual_cutoff = (
+        determine_actual_cutoff(
+            sources[
+                "rolling_forecast"
+            ]
+        )
     )
 
-    prepared = [
-        prepare_rolling_forecast(
-            sources["rolling_forecast"]
-        ),
+    result = build_monthly_calendar(
+        sources,
+        actual_cutoff,
+    )
 
+    # --------------------------------------------------------
+    # Prepare datasets
+    # --------------------------------------------------------
+
+    rolling = (
+        prepare_rolling_forecast(
+            sources[
+                "rolling_forecast"
+            ]
+        )
+    )
+
+    anomaly = (
         prepare_anomaly(
             sources["anomaly"]
-        ),
+        )
+    )
 
+    variance = (
         prepare_variance(
             sources["variance"]
-        ),
+        )
+    )
 
+    pvm = (
         prepare_pvm(
             sources["pvm"]
-        ),
-
-        prepare_revenue_prediction(
-            sources["revenue_prediction"]
-        ),
-
-        prepare_expense_prediction(
-            sources["expense_prediction"]
-        ),
-
-        prepare_cash_prediction(
-            sources["cash_prediction"]
-        ),
-
-        prepare_classification(
-            sources["classification"]
-        ),
-    ]
-
-    for dataset in prepared:
-
-        if dataset.empty:
-            continue
-
-        result = result.merge(
-            dataset,
-            on="period",
-            how="left",
         )
+    )
 
-    return (
+    revenue_prediction = (
+        prepare_revenue_prediction(
+            sources[
+                "revenue_prediction"
+            ]
+        )
+    )
+
+    expense_prediction = (
+        prepare_expense_prediction(
+            sources[
+                "expense_prediction"
+            ]
+        )
+    )
+
+    cash_prediction = (
+        prepare_cash_prediction(
+            sources[
+                "cash_prediction"
+            ]
+        )
+    )
+
+    classification = (
+        prepare_classification(
+            sources[
+                "classification"
+            ]
+        )
+    )
+
+    # --------------------------------------------------------
+    # Safe one-to-one merges
+    # --------------------------------------------------------
+
+    result = safe_merge(
+        result,
+        rolling,
+        "rolling_forecast",
+    )
+
+    result = safe_merge(
+        result,
+        anomaly,
+        "anomaly",
+    )
+
+    result = safe_merge(
+        result,
+        variance,
+        "variance",
+    )
+
+    result = safe_merge(
+        result,
+        pvm,
+        "pvm",
+    )
+
+    result = safe_merge(
+        result,
+        revenue_prediction,
+        "revenue_prediction",
+    )
+
+    result = safe_merge(
+        result,
+        expense_prediction,
+        "expense_prediction",
+    )
+
+    result = safe_merge(
+        result,
+        cash_prediction,
+        "cash_prediction",
+    )
+
+    result = safe_merge(
+        result,
+        classification,
+        "classification",
+    )
+
+    # --------------------------------------------------------
+    # Validate forecast horizon
+    # --------------------------------------------------------
+
+    validate_forecast_horizon(
+        result,
+        actual_cutoff,
+    )
+
+    # --------------------------------------------------------
+    # Clear future actual-only metrics
+    # --------------------------------------------------------
+
+    result = (
+        clear_actual_only_metrics_for_forecast(
+            result
+        )
+    )
+
+    # --------------------------------------------------------
+    # Final ordering
+    # --------------------------------------------------------
+
+    result = (
         result
         .sort_values("period")
         .reset_index(drop=True)
     )
+
+    # --------------------------------------------------------
+    # Final grain validation
+    # --------------------------------------------------------
+
+    if result["period"].duplicated().any():
+
+        duplicates = (
+            result.loc[
+                result["period"].duplicated(
+                    keep=False
+                ),
+                "period",
+            ]
+            .dt.strftime("%Y-%m")
+            .unique()
+            .tolist()
+        )
+
+        raise RuntimeError(
+            "Power BI reporting dataset contains duplicate "
+            f"periods: {duplicates}"
+        )
+
+    return result
 
 
 # ============================================================
@@ -711,7 +1323,7 @@ def save_output(
     )
 
     logger.info(
-        "Power BI analytics export saved to %s",
+        "Power BI reporting export saved to %s",
         OUTPUT_FILE,
     )
 
@@ -735,6 +1347,7 @@ def main() -> int:
         )
 
         if reporting.empty:
+
             raise RuntimeError(
                 "Reporting dataset is empty."
             )
@@ -744,14 +1357,14 @@ def main() -> int:
         )
 
         logger.info(
-            "Generated %s reporting rows "
-            "and %s columns.",
+            "Generated %s rows and %s columns.",
             len(reporting),
             len(reporting.columns),
         )
 
         logger.info(
-            "Power BI Analytics Export completed successfully."
+            "Power BI Analytics Export "
+            "completed successfully."
         )
 
         return 0
