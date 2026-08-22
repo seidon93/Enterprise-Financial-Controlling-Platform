@@ -2,42 +2,37 @@
 EFAP - Cash Flow Prediction
 
 Object:
-    Python/forecasting/cash_flow_prediction.py
+    Scripts/Python/forecasting/cash_flow_prediction.py
 
 Purpose:
-    Predict future Operating Cash Flow and Closing Cash.
+    Predict future Operating Cash Flow (OCF) and Closing Cash.
+
+Design:
+    - Direct driver-based forecasting.
+    - No recursive OCF self-feeding.
+    - Revenue and Operating Cost forecasts are explicit future drivers.
+    - Robust baseline is evaluated against ML.
+    - Better model is selected using time-ordered validation.
+    - Closing Cash is calculated transparently from OCF.
 
 Sources:
     data/processed/controller_kpi_timeseries.csv
     data/predictions/revenue_prediction.csv
     data/forecasts/expense_forecast.csv
 
-Model:
-    HistGradientBoostingRegressor
-
-Targets:
-    Operating Cash Flow
-    Closing Cash
-
-Forecast horizon:
-    6 months
+Output:
+    data/predictions/cash_flow_prediction.csv
 
 Management sign convention:
-    Revenue              positive
-    Operating Costs      negative
-    Operating Cash Flow  signed
-    Closing Cash         signed
+    Revenue         >= 0
+    Operating Costs <= 0
+    Operating CF    signed
+    Closing Cash    signed
 
 Important:
     - PostgreSQL remains the financial source of truth.
     - This module performs predictive analytics only.
     - No database credentials are stored in source code.
-    - Future Revenue and Operating Costs come from dedicated
-      forecast layers.
-    - Future Net Profit and Working Capital are NOT artificially
-      held constant.
-    - Closing Cash is derived from previous Closing Cash + predicted OCF.
-    - Cash uncertainty accumulates through the forecast horizon.
 """
 
 from __future__ import annotations
@@ -50,7 +45,10 @@ from typing import Final
 import numpy as np
 import pandas as pd
 
-from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.ensemble import (
+    HistGradientBoostingRegressor,
+    RandomForestRegressor,
+)
 from sklearn.metrics import (
     mean_absolute_error,
     mean_squared_error,
@@ -108,19 +106,22 @@ MIN_HISTORY: Final[int] = 24
 
 RANDOM_STATE: Final[int] = 42
 
-# Forecast blend:
-# ML model provides the main prediction.
-# A cash-conversion baseline stabilizes the model
-# when the historical sample is small/noisy.
-ML_WEIGHT: Final[float] = 0.75
-BASELINE_WEIGHT: Final[float] = 0.25
+# Blend threshold:
+# ML must beat baseline sufficiently to become preferred.
+ML_IMPROVEMENT_THRESHOLD: Final[float] = 0.05
 
-# Confidence interval:
-# Approximate 95% interval using residual standard deviation.
-CONFIDENCE_Z: Final[float] = 1.96
+# Robust rolling windows.
+SHORT_WINDOW: Final[int] = 3
+MEDIUM_WINDOW: Final[int] = 6
+LONG_WINDOW: Final[int] = 12
 
-# Lower limit for denominator in stabilized MAPE.
-MAPE_EPSILON: Final[float] = 1_000_000.0
+# Validation scoring weights.
+MAE_WEIGHT: Final[float] = 0.50
+RMSE_WEIGHT: Final[float] = 0.30
+SMAPE_WEIGHT: Final[float] = 0.20
+
+# Prediction interval.
+INTERVAL_QUANTILE: Final[float] = 0.90
 
 
 # ============================================================
@@ -143,14 +144,9 @@ def validate_files() -> None:
     """Validate required source files."""
 
     required_files = {
-        "controller KPI time series":
-            TIME_SERIES_FILE,
-
-        "revenue prediction":
-            REVENUE_PREDICTION_FILE,
-
-        "expense forecast":
-            EXPENSE_FORECAST_FILE,
+        "time series": TIME_SERIES_FILE,
+        "revenue prediction": REVENUE_PREDICTION_FILE,
+        "expense forecast": EXPENSE_FORECAST_FILE,
     }
 
     missing = [
@@ -167,13 +163,13 @@ def validate_files() -> None:
 
 
 # ============================================================
-# GENERIC PERIOD NORMALIZATION
+# GENERIC HELPERS
 # ============================================================
 
-def normalize_month(
+def normalize_monthly_period(
     series: pd.Series,
 ) -> pd.Series:
-    """Normalize dates to monthly-start timestamps."""
+    """Convert dates to monthly start timestamps."""
 
     return (
         pd.to_datetime(
@@ -185,12 +181,126 @@ def normalize_month(
     )
 
 
+def safe_divide(
+    numerator: pd.Series,
+    denominator: pd.Series,
+) -> pd.Series:
+    """Safe element-wise division."""
+
+    denominator = denominator.replace(
+        0,
+        np.nan,
+    )
+
+    return numerator.div(
+        denominator
+    )
+
+
+def smape(
+    actual: np.ndarray,
+    predicted: np.ndarray,
+) -> float:
+    """
+    Symmetric Mean Absolute Percentage Error.
+
+    Stable around zero compared with ordinary MAPE.
+    """
+
+    actual = np.asarray(
+        actual,
+        dtype=float,
+    )
+
+    predicted = np.asarray(
+        predicted,
+        dtype=float,
+    )
+
+    denominator = (
+        np.abs(actual)
+        + np.abs(predicted)
+    )
+
+    valid = denominator > 0
+
+    if not np.any(valid):
+        return 0.0
+
+    value = (
+        2.0
+        * np.abs(
+            actual[valid]
+            - predicted[valid]
+        )
+        / denominator[valid]
+    )
+
+    return float(
+        np.mean(value)
+        * 100.0
+    )
+
+
+def stabilized_mape(
+    actual: np.ndarray,
+    predicted: np.ndarray,
+) -> float:
+    """
+    Stabilized MAPE.
+
+    Uses a scale floor based on the median absolute
+    actual value, preventing tiny denominators from
+    exploding the metric.
+    """
+
+    actual = np.asarray(
+        actual,
+        dtype=float,
+    )
+
+    predicted = np.asarray(
+        predicted,
+        dtype=float,
+    )
+
+    scale = np.median(
+        np.abs(actual)
+    )
+
+    floor = max(
+        scale * 0.10,
+        1.0,
+    )
+
+    denominator = np.maximum(
+        np.abs(actual),
+        floor,
+    )
+
+    return float(
+        np.mean(
+            np.abs(
+                actual
+                - predicted
+            )
+            / denominator
+        )
+        * 100.0
+    )
+
+
 # ============================================================
-# LOAD HISTORICAL DATA
+# HISTORICAL DATA
 # ============================================================
 
 def load_historical_data() -> pd.DataFrame:
-    """Load and normalize historical controller KPI data."""
+    """
+    Load historical controller KPI time series.
+
+    The OCF model uses historical financial drivers
+    and historical Operating Cash Flow.
+    """
 
     logger.info(
         "Loading Cash Flow Prediction input: %s",
@@ -224,7 +334,7 @@ def load_historical_data() -> pd.DataFrame:
             )
         )
 
-    df["period"] = normalize_month(
+    df["period"] = normalize_monthly_period(
         df["period"]
     )
 
@@ -256,22 +366,24 @@ def load_historical_data() -> pd.DataFrame:
             ]
         ]
         .dropna(
-            subset=[
-                "period",
-                "operating_cash_flow",
-                "closing_cash",
-            ]
+            subset=["period"]
         )
         .sort_values("period")
         .drop_duplicates(
-            "period",
-            keep="last",
+            "period"
         )
-        .reset_index(drop=True)
+        .reset_index(
+            drop=True
+        )
     )
 
+    if df.empty:
+        raise ValueError(
+            "Historical Cash Flow dataset is empty."
+        )
+
     # --------------------------------------------------------
-    # MANAGEMENT SIGN CONVENTION
+    # MANAGEMENT SIGN NORMALIZATION
     # --------------------------------------------------------
 
     df["revenue"] = (
@@ -280,8 +392,18 @@ def load_historical_data() -> pd.DataFrame:
     )
 
     df["operating_costs"] = (
-        -df["operating_costs"]
-        .abs()
+        -df["operating_costs"].abs()
+    )
+
+    # --------------------------------------------------------
+    # MONTHLY CONTINUITY
+    # --------------------------------------------------------
+
+    df = (
+        df
+        .set_index("period")
+        .asfreq("MS")
+        .reset_index()
     )
 
     if len(df) < MIN_HISTORY:
@@ -290,31 +412,28 @@ def load_historical_data() -> pd.DataFrame:
             f"are required. Found {len(df)}."
         )
 
-    # --------------------------------------------------------
-    # MONTHLY CONTINUITY
-    # --------------------------------------------------------
-
-    expected_periods = pd.date_range(
-        start=df["period"].min(),
-        end=df["period"].max(),
-        freq="MS",
+    missing_target_rows = df[
+        [
+            "operating_cash_flow",
+            "closing_cash",
+        ]
+    ].isna().any(
+        axis=1
     )
 
-    actual_periods = (
-        df["period"]
-        .drop_duplicates()
-        .sort_values()
-    )
-
-    if not actual_periods.equals(
-        pd.Series(
-            expected_periods,
-            name="period",
+    if missing_target_rows.any():
+        periods = (
+            df.loc[
+                missing_target_rows,
+                "period",
+            ]
+            .dt.strftime("%Y-%m")
+            .tolist()
         )
-    ):
-        raise RuntimeError(
-            "Historical financial time series is not continuous "
-            "at monthly grain."
+
+        raise ValueError(
+            "Historical OCF / Closing Cash contains "
+            f"missing monthly observations: {periods}"
         )
 
     logger.info(
@@ -332,11 +451,11 @@ def load_historical_data() -> pd.DataFrame:
 
 
 # ============================================================
-# LOAD REVENUE PREDICTION
+# REVENUE PREDICTION
 # ============================================================
 
 def load_revenue_prediction() -> pd.DataFrame:
-    """Load Revenue ML forecast."""
+    """Load future Revenue prediction."""
 
     logger.info(
         "Loading Revenue prediction: %s",
@@ -365,13 +484,18 @@ def load_revenue_prediction() -> pd.DataFrame:
             )
         )
 
-    df["period"] = normalize_month(
+    df["period"] = normalize_monthly_period(
         df["period"]
     )
 
     df["predicted_revenue"] = pd.to_numeric(
         df["predicted_revenue"],
         errors="coerce",
+    )
+
+    df["predicted_revenue"] = (
+        df["predicted_revenue"]
+        .abs()
     )
 
     df = (
@@ -389,17 +513,17 @@ def load_revenue_prediction() -> pd.DataFrame:
         )
         .sort_values("period")
         .drop_duplicates(
-            "period",
-            keep="last",
+            "period"
         )
-        .reset_index(drop=True)
+        .reset_index(
+            drop=True
+        )
     )
 
-    # Revenue must follow positive management convention.
-    df["predicted_revenue"] = (
-        df["predicted_revenue"]
-        .abs()
-    )
+    if df.empty:
+        raise ValueError(
+            "Revenue prediction contains no valid rows."
+        )
 
     logger.info(
         "Revenue prediction periods: %s",
@@ -410,25 +534,18 @@ def load_revenue_prediction() -> pd.DataFrame:
 
 
 # ============================================================
-# LOAD EXPENSE FORECAST
+# EXPENSE FORECAST
 # ============================================================
 
 def load_expense_forecast() -> pd.DataFrame:
     """
-    Load account-level expense forecast.
+    Load account-level expense forecast and aggregate
+    it to monthly operating cost magnitude.
 
-    Current EFAP source contract:
-
-        forecast_period
-        account_number
-        account_name
-        forecast_expense
-        lower_bound
-        upper_bound
-        selected_model
-        validation_rmse
-
-    The data is aggregated to monthly expense magnitude.
+    Source convention:
+        forecast_expense >= 0
+    Management convention:
+        operating_costs <= 0
     """
 
     logger.info(
@@ -440,57 +557,44 @@ def load_expense_forecast() -> pd.DataFrame:
         EXPENSE_FORECAST_FILE
     )
 
-    # --------------------------------------------------------
-    # SOURCE PERIOD
-    # --------------------------------------------------------
+    required = {
+        "forecast_period",
+        "forecast_expense",
+    }
 
-    if "forecast_period" in df.columns:
-        period_column = "forecast_period"
-
-    elif "period" in df.columns:
-        period_column = "period"
-
-    else:
-        raise ValueError(
-            "Expense forecast must contain either "
-            "'forecast_period' or 'period'."
-        )
-
-    # --------------------------------------------------------
-    # SOURCE EXPENSE
-    # --------------------------------------------------------
-
-    if "forecast_expense" in df.columns:
-        expense_column = "forecast_expense"
-
-    elif "predicted_expense" in df.columns:
-        expense_column = "predicted_expense"
-
-    else:
-        raise ValueError(
-            "Expense forecast must contain either "
-            "'forecast_expense' or 'predicted_expense'."
-        )
-
-    df["period"] = normalize_month(
-        df[period_column]
+    missing = (
+        required
+        - set(df.columns)
     )
 
-    df["expense_magnitude"] = pd.to_numeric(
-        df[expense_column],
+    if missing:
+        raise ValueError(
+            "Expense forecast is missing columns: "
+            + ", ".join(
+                sorted(missing)
+            )
+        )
+
+    df["period"] = normalize_monthly_period(
+        df["forecast_period"]
+    )
+
+    df["forecast_expense"] = pd.to_numeric(
+        df["forecast_expense"],
         errors="coerce",
-    ).abs()
+    )
+
+    df["forecast_expense"] = (
+        df["forecast_expense"]
+        .abs()
+    )
 
     df = df.dropna(
         subset=[
             "period",
-            "expense_magnitude",
+            "forecast_expense",
         ]
     )
-
-    # --------------------------------------------------------
-    # FUTURE MONTHLY AGGREGATION
-    # --------------------------------------------------------
 
     monthly = (
         df
@@ -500,13 +604,18 @@ def load_expense_forecast() -> pd.DataFrame:
         )
         .agg(
             predicted_expense=(
-                "expense_magnitude",
+                "forecast_expense",
                 "sum",
             )
         )
         .sort_values("period")
         .reset_index(drop=True)
     )
+
+    if monthly.empty:
+        raise ValueError(
+            "Expense forecast contains no valid rows."
+        )
 
     logger.info(
         "Expense forecast periods: %s",
@@ -517,20 +626,18 @@ def load_expense_forecast() -> pd.DataFrame:
 
 
 # ============================================================
-# HISTORICAL FEATURE ENGINEERING
+# HISTORICAL DRIVER FEATURES
 # ============================================================
 
 def create_features(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
     """
-    Create OCF forecasting features.
+    Create direct-driver OCF prediction features.
 
-    Important design decision:
-        Only variables that are realistically available
-        for future forecasting are used as direct predictors.
-
-    This avoids artificially fixing future Net Profit and NWC.
+    Important:
+        Features intentionally avoid future OCF values.
+        This prevents recursive error propagation.
     """
 
     result = df.copy()
@@ -540,27 +647,25 @@ def create_features(
     # --------------------------------------------------------
 
     result["month"] = (
-        result["period"]
-        .dt.month
+        result["period"].dt.month
     )
 
     result["quarter"] = (
-        result["period"]
-        .dt.quarter
+        result["period"].dt.quarter
     )
 
     result["month_sin"] = np.sin(
         2
         * np.pi
         * result["month"]
-        / 12
+        / 12.0
     )
 
     result["month_cos"] = np.cos(
         2
         * np.pi
         * result["month"]
-        / 12
+        / 12.0
     )
 
     result["time_index"] = np.arange(
@@ -568,22 +673,30 @@ def create_features(
     )
 
     # --------------------------------------------------------
-    # Current financial drivers
+    # Core financial drivers
     # --------------------------------------------------------
 
-    result["revenue_current"] = (
-        result["revenue"]
+    result["revenue_abs"] = (
+        result["revenue"].abs()
     )
 
-    result["operating_costs_current"] = (
-        result["operating_costs"]
+    result["operating_costs_abs"] = (
+        result["operating_costs"].abs()
     )
 
-    result["operating_cost_ratio"] = np.where(
-        result["revenue"] != 0,
-        result["operating_costs"]
-        / result["revenue"].abs(),
-        0.0,
+    result["ebitda_proxy"] = (
+        result["revenue_abs"]
+        - result["operating_costs_abs"]
+    )
+
+    result["cost_to_revenue"] = safe_divide(
+        result["operating_costs_abs"],
+        result["revenue_abs"],
+    )
+
+    result["ocf_to_revenue"] = safe_divide(
+        result["operating_cash_flow"],
+        result["revenue_abs"],
     )
 
     # --------------------------------------------------------
@@ -591,49 +704,40 @@ def create_features(
     # --------------------------------------------------------
 
     result["revenue_lag_1"] = (
-        result["revenue"]
-        .shift(1)
+        result["revenue_abs"].shift(1)
     )
 
     result["revenue_lag_3"] = (
-        result["revenue"]
-        .shift(3)
+        result["revenue_abs"].shift(3)
     )
 
     result["revenue_lag_12"] = (
-        result["revenue"]
-        .shift(12)
+        result["revenue_abs"].shift(12)
     )
 
     result["revenue_change_1"] = (
-        result["revenue"]
-        .diff()
-        .shift(1)
+        result["revenue_abs"]
+        .pct_change()
+        .replace(
+            [np.inf, -np.inf],
+            np.nan,
+        )
     )
 
     # --------------------------------------------------------
-    # Cost history
+    # Operating costs history
     # --------------------------------------------------------
 
-    result["cost_lag_1"] = (
-        result["operating_costs"]
-        .shift(1)
+    result["costs_lag_1"] = (
+        result["operating_costs_abs"].shift(1)
     )
 
-    result["cost_lag_3"] = (
-        result["operating_costs"]
-        .shift(3)
+    result["costs_lag_3"] = (
+        result["operating_costs_abs"].shift(3)
     )
 
-    result["cost_lag_12"] = (
-        result["operating_costs"]
-        .shift(12)
-    )
-
-    result["cost_change_1"] = (
-        result["operating_costs"]
-        .diff()
-        .shift(1)
+    result["costs_lag_12"] = (
+        result["operating_costs_abs"].shift(12)
     )
 
     # --------------------------------------------------------
@@ -643,11 +747,6 @@ def create_features(
     result["ocf_lag_1"] = (
         result["operating_cash_flow"]
         .shift(1)
-    )
-
-    result["ocf_lag_2"] = (
-        result["operating_cash_flow"]
-        .shift(2)
     )
 
     result["ocf_lag_3"] = (
@@ -665,149 +764,413 @@ def create_features(
         .shift(12)
     )
 
-    result["ocf_rolling_3"] = (
+    # --------------------------------------------------------
+    # Robust rolling OCF
+    # --------------------------------------------------------
+
+    shifted_ocf = (
         result["operating_cash_flow"]
         .shift(1)
+    )
+
+    result["ocf_rolling_median_3"] = (
+        shifted_ocf
         .rolling(
-            3,
-            min_periods=3,
+            SHORT_WINDOW,
+            min_periods=SHORT_WINDOW,
         )
-        .mean()
+        .median()
     )
 
-    result["ocf_rolling_6"] = (
-        result["operating_cash_flow"]
-        .shift(1)
+    result["ocf_rolling_median_6"] = (
+        shifted_ocf
         .rolling(
-            6,
-            min_periods=6,
+            MEDIUM_WINDOW,
+            min_periods=MEDIUM_WINDOW,
         )
-        .mean()
+        .median()
     )
 
-    result["ocf_margin_lag_1"] = np.where(
-        result["revenue"].shift(1).abs() > 0,
-        result["operating_cash_flow"].shift(1)
-        / result["revenue"].shift(1).abs(),
-        0.0,
-    )
-
-    result["ocf_margin_rolling_3"] = (
-        result["ocf_margin_lag_1"]
+    result["ocf_rolling_median_12"] = (
+        shifted_ocf
         .rolling(
-            3,
-            min_periods=3,
+            LONG_WINDOW,
+            min_periods=LONG_WINDOW,
+        )
+        .median()
+    )
+
+    result["ocf_rolling_mean_6"] = (
+        shifted_ocf
+        .rolling(
+            MEDIUM_WINDOW,
+            min_periods=MEDIUM_WINDOW,
         )
         .mean()
     )
 
     # --------------------------------------------------------
-    # Cash history
+    # OCF / Revenue conversion history
     # --------------------------------------------------------
 
-    result["cash_lag_1"] = (
-        result["closing_cash"]
+    historical_conversion = (
+        result["ocf_to_revenue"]
+        .replace(
+            [np.inf, -np.inf],
+            np.nan,
+        )
         .shift(1)
     )
 
-    result["cash_lag_3"] = (
-        result["closing_cash"]
+    result["conversion_median_3"] = (
+        historical_conversion
+        .rolling(
+            SHORT_WINDOW,
+            min_periods=SHORT_WINDOW,
+        )
+        .median()
+    )
+
+    result["conversion_median_6"] = (
+        historical_conversion
+        .rolling(
+            MEDIUM_WINDOW,
+            min_periods=MEDIUM_WINDOW,
+        )
+        .median()
+    )
+
+    result["conversion_median_12"] = (
+        historical_conversion
+        .rolling(
+            LONG_WINDOW,
+            min_periods=LONG_WINDOW,
+        )
+        .median()
+    )
+
+    # --------------------------------------------------------
+    # Working Capital
+    # --------------------------------------------------------
+
+    result["nwc_lag_1"] = (
+        result["net_working_capital"]
+        .shift(1)
+    )
+
+    result["nwc_lag_3"] = (
+        result["net_working_capital"]
         .shift(3)
     )
 
-    result["cash_change_lag_1"] = (
-        result["closing_cash"]
+    result["nwc_lag_12"] = (
+        result["net_working_capital"]
+        .shift(12)
+    )
+
+    result["nwc_change_lag_1"] = (
+        result["net_working_capital"]
         .diff()
         .shift(1)
+    )
+
+    # --------------------------------------------------------
+    # Net profit
+    # --------------------------------------------------------
+
+    result["net_profit_lag_1"] = (
+        result["net_profit"]
+        .shift(1)
+    )
+
+    result["net_profit_lag_3"] = (
+        result["net_profit"]
+        .shift(3)
+    )
+
+    result["net_profit_lag_12"] = (
+        result["net_profit"]
+        .shift(12)
     )
 
     return result
 
 
 FEATURE_COLUMNS: Final[list[str]] = [
-    # Calendar
     "month",
     "quarter",
     "month_sin",
     "month_cos",
     "time_index",
 
-    # Current financial drivers
-    "revenue_current",
-    "operating_costs_current",
-    "operating_cost_ratio",
+    "revenue_abs",
+    "operating_costs_abs",
+    "ebitda_proxy",
+    "cost_to_revenue",
 
-    # Revenue history
     "revenue_lag_1",
     "revenue_lag_3",
     "revenue_lag_12",
     "revenue_change_1",
 
-    # Cost history
-    "cost_lag_1",
-    "cost_lag_3",
-    "cost_lag_12",
-    "cost_change_1",
+    "costs_lag_1",
+    "costs_lag_3",
+    "costs_lag_12",
 
-    # OCF history
     "ocf_lag_1",
-    "ocf_lag_2",
     "ocf_lag_3",
     "ocf_lag_6",
     "ocf_lag_12",
-    "ocf_rolling_3",
-    "ocf_rolling_6",
-    "ocf_margin_lag_1",
-    "ocf_margin_rolling_3",
 
-    # Cash history
-    "cash_lag_1",
-    "cash_lag_3",
-    "cash_change_lag_1",
+    "ocf_rolling_median_3",
+    "ocf_rolling_median_6",
+    "ocf_rolling_median_12",
+    "ocf_rolling_mean_6",
+
+    "conversion_median_3",
+    "conversion_median_6",
+    "conversion_median_12",
+
+    "nwc_lag_1",
+    "nwc_lag_3",
+    "nwc_lag_12",
+    "nwc_change_lag_1",
+
+    "net_profit_lag_1",
+    "net_profit_lag_3",
+    "net_profit_lag_12",
 ]
 
 
 # ============================================================
-# MODEL
+# MODELS
 # ============================================================
 
-def create_model() -> HistGradientBoostingRegressor:
-    """Create the OCF prediction model."""
+def create_hist_gradient_model() -> (
+    HistGradientBoostingRegressor
+):
+    """Create robust gradient boosting model."""
 
     return HistGradientBoostingRegressor(
-        learning_rate=0.04,
-        max_iter=400,
-        max_leaf_nodes=12,
+        learning_rate=0.035,
+        max_iter=300,
+        max_leaf_nodes=10,
         min_samples_leaf=5,
-        l2_regularization=3.0,
+        l2_regularization=5.0,
+        loss="absolute_error",
         random_state=RANDOM_STATE,
     )
 
 
+def create_random_forest_model() -> (
+    RandomForestRegressor
+):
+    """Create robust Random Forest model."""
+
+    return RandomForestRegressor(
+        n_estimators=500,
+        max_depth=6,
+        min_samples_leaf=3,
+        max_features=0.70,
+        random_state=RANDOM_STATE,
+        n_jobs=-1,
+    )
+
+
 # ============================================================
-# METRICS
+# TRAINING DATA
 # ============================================================
 
-def calculate_metrics(
+def prepare_training_data(
+    history: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame]:
+    """
+    Prepare direct-driver supervised learning dataset.
+    """
+
+    features = create_features(
+        history
+    )
+
+    training = features.dropna(
+        subset=FEATURE_COLUMNS
+        + [
+            "operating_cash_flow",
+        ]
+    ).copy()
+
+    if training.empty:
+        raise ValueError(
+            "No valid OCF training observations "
+            "after feature engineering."
+        )
+
+    X = training[
+        FEATURE_COLUMNS
+    ]
+
+    y = training[
+        "operating_cash_flow"
+    ]
+
+    return (
+        X,
+        y,
+        training,
+    )
+
+
+# ============================================================
+# ROBUST BASELINE
+# ============================================================
+
+def baseline_prediction(
+    history: pd.DataFrame,
+    periods: pd.Series,
+    driver_revenue: pd.Series,
+) -> np.ndarray:
+    """
+    Generate a robust baseline forecast.
+
+    Components:
+        1. Seasonal naive OCF (12 months ago)
+        2. Recent 6-month OCF median
+        3. Robust OCF/Revenue conversion
+
+    The three components are blended to avoid dependence
+    on any one unstable historical observation.
+    """
+
+    history = (
+        history
+        .sort_values("period")
+        .reset_index(drop=True)
+    )
+
+    ocf_series = history.set_index(
+        "period"
+    )["operating_cash_flow"]
+
+    revenue_series = history.set_index(
+        "period"
+    )["revenue"].abs()
+
+    historical_ratio = (
+        safe_divide(
+            history["operating_cash_flow"],
+            history["revenue"].abs(),
+        )
+        .replace(
+            [np.inf, -np.inf],
+            np.nan,
+        )
+        .dropna()
+    )
+
+    if historical_ratio.empty:
+        robust_ratio = 0.0
+    else:
+        lower = historical_ratio.quantile(
+            0.10
+        )
+        upper = historical_ratio.quantile(
+            0.90
+        )
+
+        clipped_ratio = historical_ratio.clip(
+            lower=lower,
+            upper=upper,
+        )
+
+        robust_ratio = float(
+            clipped_ratio.median()
+        )
+
+    recent_ocf = (
+        history["operating_cash_flow"]
+        .tail(MEDIUM_WINDOW)
+        .median()
+    )
+
+    recent_ocf = float(
+        recent_ocf
+    )
+
+    predictions = []
+
+    for period, revenue in zip(
+        periods,
+        driver_revenue,
+    ):
+
+        # ----------------------------------------------------
+        # Seasonal naive
+        # ----------------------------------------------------
+
+        seasonal_period = (
+            period
+            - pd.DateOffset(
+                months=12
+            )
+        )
+
+        seasonal_value = ocf_series.get(
+            seasonal_period,
+            np.nan,
+        )
+
+        if pd.isna(
+            seasonal_value
+        ):
+            seasonal_value = recent_ocf
+
+        seasonal_value = float(
+            seasonal_value
+        )
+
+        # ----------------------------------------------------
+        # Conversion-based baseline
+        # ----------------------------------------------------
+
+        conversion_value = (
+            robust_ratio
+            * float(
+                abs(revenue)
+            )
+        )
+
+        # ----------------------------------------------------
+        # Blend
+        # ----------------------------------------------------
+
+        prediction = (
+            0.40
+            * seasonal_value
+            + 0.35
+            * recent_ocf
+            + 0.25
+            * conversion_value
+        )
+
+        predictions.append(
+            float(prediction)
+        )
+
+    return np.asarray(
+        predictions,
+        dtype=float,
+    )
+
+
+# ============================================================
+# VALIDATION
+# ============================================================
+
+def calculate_validation_metrics(
     actual: np.ndarray,
     predicted: np.ndarray,
 ) -> dict[str, float]:
-    """
-    Calculate robust validation metrics.
-
-    MAPE is stabilized because OCF may be negative and/or
-    close to zero. We therefore use an epsilon denominator.
-    """
-
-    actual = np.asarray(
-        actual,
-        dtype=float,
-    )
-
-    predicted = np.asarray(
-        predicted,
-        dtype=float,
-    )
+    """Calculate robust validation metrics."""
 
     mae = mean_absolute_error(
         actual,
@@ -821,49 +1184,19 @@ def calculate_metrics(
         )
     )
 
-    denominator = np.maximum(
-        np.abs(actual),
-        MAPE_EPSILON,
+    stabilized = stabilized_mape(
+        actual,
+        predicted,
     )
 
-    mape = (
-        np.mean(
-            np.abs(
-                actual - predicted
-            )
-            / denominator
-        )
-        * 100
+    symmetric = smape(
+        actual,
+        predicted,
     )
-
-    smape_denominator = (
-        np.abs(actual)
-        + np.abs(predicted)
-    )
-
-    smape_mask = (
-        smape_denominator > 0
-    )
-
-    if np.any(smape_mask):
-        smape = (
-            np.mean(
-                2
-                * np.abs(
-                    actual[smape_mask]
-                    - predicted[smape_mask]
-                )
-                / smape_denominator[
-                    smape_mask
-                ]
-            )
-            * 100
-        )
-    else:
-        smape = 0.0
 
     residuals = (
-        actual - predicted
+        actual
+        - predicted
     )
 
     residual_std = float(
@@ -871,154 +1204,85 @@ def calculate_metrics(
             residuals,
             ddof=1,
         )
-    ) if len(residuals) > 1 else float(
-        abs(rmse)
-    )
-
-    if not np.isfinite(residual_std):
-        residual_std = float(
-            abs(rmse)
-        )
+    ) if len(
+        residuals
+    ) > 1 else 0.0
 
     return {
         "mae": float(mae),
         "rmse": float(rmse),
-        "mape_pct": float(mape),
-        "smape_pct": float(smape),
+        "stabilized_mape_pct": float(
+            stabilized
+        ),
+        "smape_pct": float(
+            symmetric
+        ),
         "residual_std": residual_std,
     }
 
 
-# ============================================================
-# PREPARE TRAINING DATA
-# ============================================================
-
-def prepare_training_data(
-    history: pd.DataFrame,
-) -> tuple[
-    pd.DataFrame,
-    pd.Series,
-]:
-    """Prepare historical supervised learning dataset."""
-
-    features = create_features(
-        history
-    )
-
-    training = (
-        features
-        .dropna(
-            subset=FEATURE_COLUMNS
-            + [
-                "operating_cash_flow"
-            ]
-        )
-        .copy()
-    )
-
-    if training.empty:
-        raise ValueError(
-            "No valid OCF training observations."
-        )
-
-    X = training[
-        FEATURE_COLUMNS
-    ]
-
-    y = training[
-        "operating_cash_flow"
-    ]
-
-    return X, y
-
-
-# ============================================================
-# BASELINE
-# ============================================================
-
-def calculate_cash_conversion_baseline(
-    history: pd.DataFrame,
+def composite_validation_score(
+    metrics: dict[str, float],
 ) -> float:
     """
-    Calculate a robust OCF baseline.
+    Create comparable validation score.
 
-    Baseline:
-        median OCF / Revenue ratio over recent history.
-
-    The baseline is deliberately conservative and acts only
-    as a stabilizer for the ML model.
+    Lower is better.
     """
 
-    recent = (
-        history
-        .copy()
-        .sort_values("period")
-        .tail(12)
+    mae = metrics["mae"]
+    rmse = metrics["rmse"]
+    smape_value = metrics["smape_pct"]
+
+    scale = max(
+        abs(
+            metrics.get(
+                "scale",
+                1.0,
+            )
+        ),
+        1.0,
     )
 
-    denominator = (
-        recent["revenue"]
-        .abs()
-        .replace(
-            0,
-            np.nan,
-        )
+    normalized_mae = (
+        mae / scale
     )
 
-    ratio = (
-        recent["operating_cash_flow"]
-        / denominator
+    normalized_rmse = (
+        rmse / scale
     )
 
-    ratio = (
-        ratio
-        .replace(
-            [np.inf, -np.inf],
-            np.nan,
-        )
-        .dropna()
+    normalized_smape = (
+        smape_value / 100.0
     )
 
-    if ratio.empty:
-        return 0.0
-
-    # Robust limits prevent a single abnormal month
-    # from dominating the baseline.
-    q_low = ratio.quantile(0.10)
-    q_high = ratio.quantile(0.90)
-
-    clipped = ratio.clip(
-        lower=q_low,
-        upper=q_high,
+    return float(
+        MAE_WEIGHT
+        * normalized_mae
+        + RMSE_WEIGHT
+        * normalized_rmse
+        + SMAPE_WEIGHT
+        * normalized_smape
     )
 
-    baseline = float(
-        clipped.median()
-    )
 
-    return baseline
-
-
-# ============================================================
-# VALIDATION
-# ============================================================
-
-def validate_ocf_model(
+def validate_models(
     history: pd.DataFrame,
-) -> dict[str, float]:
+) -> dict[str, object]:
     """
-    Validate OCF model using a chronological holdout.
-
-    This preserves the time-series nature of the problem.
+    Compare ML models against robust baseline
+    using a time-ordered validation split.
     """
 
-    X, y = prepare_training_data(
-        history
+    X, y, training = (
+        prepare_training_data(
+            history
+        )
     )
 
     if len(X) <= VALIDATION_MONTHS:
         raise ValueError(
-            "Not enough observations for OCF validation."
+            "Not enough observations for validation."
         )
 
     split = (
@@ -1042,298 +1306,376 @@ def validate_ocf_model(
         split:
     ]
 
-    model = create_model()
-
-    model.fit(
-        X_train,
-        y_train,
+    validation_periods = training[
+        "period"
+    ].iloc[
+        split:
+    ].reset_index(
+        drop=True
     )
 
-    ml_prediction = model.predict(
-        X_test
+    validation_revenue = training[
+        "revenue_abs"
+    ].iloc[
+        split:
+    ].reset_index(
+        drop=True
     )
 
     # --------------------------------------------------------
-    # BASELINE ON VALIDATION
+    # Models
     # --------------------------------------------------------
 
-    validation_features = (
-        create_features(
-            history
-        )
-    )
+    candidates = {
+        "HistGradientBoosting":
+            create_hist_gradient_model(),
 
-    recent_history = (
-        history.iloc[
-            :split + (
-                len(history)
-                - len(X)
-            )
+        "RandomForest":
+            create_random_forest_model(),
+    }
+
+    results: dict[str, dict[str, object]] = {}
+
+    # --------------------------------------------------------
+    # Baseline
+    # --------------------------------------------------------
+
+    history_before_validation = (
+        history[
+            history["period"]
+            <
+            validation_periods.iloc[0]
         ]
+        .copy()
     )
 
-    baseline_ratio = (
-        calculate_cash_conversion_baseline(
-            recent_history
+    baseline_pred = baseline_prediction(
+        history=history_before_validation,
+        periods=validation_periods,
+        driver_revenue=validation_revenue,
+    )
+
+    baseline_metrics = calculate_validation_metrics(
+        y_test.to_numpy(),
+        baseline_pred,
+    )
+
+    scale = max(
+        float(
+            np.median(
+                np.abs(
+                    y_test.to_numpy()
+                )
+            )
+        ),
+        1.0,
+    )
+
+    baseline_metrics[
+        "scale"
+    ] = scale
+
+    baseline_score = (
+        composite_validation_score(
+            baseline_metrics
         )
     )
 
-    baseline_prediction = (
-        validation_features
-        .iloc[
-            -VALIDATION_MONTHS:
-        ]["revenue"]
-        .abs()
-        .to_numpy()
-        * baseline_ratio
-    )
-
-    blended_prediction = (
-        ML_WEIGHT
-        * ml_prediction
-        + BASELINE_WEIGHT
-        * baseline_prediction
-    )
-
-    metrics = calculate_metrics(
-        y_test.to_numpy(),
-        blended_prediction,
-    )
+    results["Baseline"] = {
+        "model": None,
+        "prediction": baseline_pred,
+        "metrics": baseline_metrics,
+        "score": baseline_score,
+    }
 
     logger.info(
-        "Operating CF validation:"
+        "Baseline validation:"
     )
 
     logger.info(
         "MAE: %.2f",
-        metrics["mae"],
+        baseline_metrics["mae"],
     )
 
     logger.info(
         "RMSE: %.2f",
-        metrics["rmse"],
+        baseline_metrics["rmse"],
     )
 
     logger.info(
         "Stabilized MAPE: %.2f%%",
-        metrics["mape_pct"],
+        baseline_metrics[
+            "stabilized_mape_pct"
+        ],
     )
 
     logger.info(
         "sMAPE: %.2f%%",
-        metrics["smape_pct"],
+        baseline_metrics[
+            "smape_pct"
+        ],
+    )
+
+    # --------------------------------------------------------
+    # ML candidates
+    # --------------------------------------------------------
+
+    for model_name, model in candidates.items():
+
+        model.fit(
+            X_train,
+            y_train,
+        )
+
+        prediction = model.predict(
+            X_test
+        )
+
+        metrics = calculate_validation_metrics(
+            y_test.to_numpy(),
+            prediction,
+        )
+
+        metrics[
+            "scale"
+        ] = scale
+
+        score = (
+            composite_validation_score(
+                metrics
+            )
+        )
+
+        results[model_name] = {
+            "model": model,
+            "prediction": prediction,
+            "metrics": metrics,
+            "score": score,
+        }
+
+        logger.info(
+            "%s validation:",
+            model_name,
+        )
+
+        logger.info(
+            "MAE: %.2f",
+            metrics["mae"],
+        )
+
+        logger.info(
+            "RMSE: %.2f",
+            metrics["rmse"],
+        )
+
+        logger.info(
+            "Stabilized MAPE: %.2f%%",
+            metrics[
+                "stabilized_mape_pct"
+            ],
+        )
+
+        logger.info(
+            "sMAPE: %.2f%%",
+            metrics[
+                "smape_pct"
+            ],
+        )
+
+        logger.info(
+            "Composite score: %.6f",
+            score,
+        )
+
+    # --------------------------------------------------------
+    # Select best ML
+    # --------------------------------------------------------
+
+    ml_names = [
+        name
+        for name in results
+        if name != "Baseline"
+    ]
+
+    best_ml_name = min(
+        ml_names,
+        key=lambda name:
+        results[name]["score"],
+    )
+
+    baseline_score = float(
+        results["Baseline"]["score"]
+    )
+
+    best_ml_score = float(
+        results[best_ml_name]["score"]
+    )
+
+    improvement = (
+        (
+            baseline_score
+            - best_ml_score
+        )
+        / max(
+            baseline_score,
+            1e-12,
+        )
     )
 
     logger.info(
-        "Residual standard deviation: %.2f",
-        metrics["residual_std"],
+        "Best ML model: %s",
+        best_ml_name,
     )
 
     logger.info(
-        "Validation blend: ML %.0f%% / Baseline %.0f%%",
-        ML_WEIGHT * 100,
-        BASELINE_WEIGHT * 100,
+        "Baseline score: %.6f",
+        baseline_score,
     )
 
-    return metrics
+    logger.info(
+        "Best ML score: %.6f",
+        best_ml_score,
+    )
+
+    logger.info(
+        "ML improvement vs baseline: %.2f%%",
+        improvement * 100.0,
+    )
+
+    if (
+        improvement
+        >= ML_IMPROVEMENT_THRESHOLD
+    ):
+
+        selected_type = "ML"
+
+        selected_name = (
+            best_ml_name
+        )
+
+        selected_result = (
+            results[
+                best_ml_name
+            ]
+        )
+
+        logger.info(
+            "Selected forecast method: %s",
+            best_ml_name,
+        )
+
+    else:
+
+        selected_type = "BASELINE"
+
+        selected_name = (
+            "RobustBaseline"
+        )
+
+        selected_result = (
+            results[
+                "Baseline"
+            ]
+        )
+
+        logger.info(
+            "ML did not sufficiently "
+            "outperform baseline."
+        )
+
+        logger.info(
+            "Selected forecast method: RobustBaseline"
+        )
+
+    return {
+        "selected_type": selected_type,
+        "selected_name": selected_name,
+        "selected_model": selected_result[
+            "model"
+        ],
+        "selected_metrics": selected_result[
+            "metrics"
+        ],
+        "validation_results": results,
+        "improvement_vs_baseline": improvement,
+    }
 
 
 # ============================================================
-# FUTURE DATASET
+# FUTURE DRIVER DATA
 # ============================================================
 
-def prepare_future_inputs(
+def build_future_drivers(
+    history: pd.DataFrame,
     revenue_prediction: pd.DataFrame,
-    expense_prediction: pd.DataFrame,
-    actual_cutoff: pd.Timestamp,
+    expense_forecast: pd.DataFrame,
 ) -> pd.DataFrame:
     """
-    Prepare the future six-month financial drivers.
+    Build the future driver dataset.
 
-    Future:
-        Revenue -> dedicated Revenue ML
-        Costs   -> dedicated Expense forecast
-
-    This creates the current-period drivers used by the OCF model.
-    """
-
-    revenue = (
-        revenue_prediction[
-            revenue_prediction["period"]
-            > actual_cutoff
-        ]
-        .copy()
-    )
-
-    expense = (
-        expense_prediction[
-            expense_prediction["period"]
-            > actual_cutoff
-        ]
-        .copy()
-    )
-
-    revenue_periods = set(
-        revenue["period"]
-    )
-
-    expense_periods = set(
-        expense["period"]
-    )
-
-    overlapping = sorted(
-        revenue_periods
-        & expense_periods
-    )
-
-    if not overlapping:
-        raise RuntimeError(
-            "Revenue and Expense prediction layers "
-            "have no overlapping future periods."
-        )
-
-    future = pd.DataFrame(
-        {
-            "period": overlapping,
-        }
-    )
-
-    future = (
-        future
-        .merge(
-            revenue[
-                [
-                    "period",
-                    "predicted_revenue",
-                ]
-            ],
-            on="period",
-            how="left",
-            validate="one_to_one",
-        )
-        .merge(
-            expense[
-                [
-                    "period",
-                    "predicted_expense",
-                ]
-            ],
-            on="period",
-            how="left",
-            validate="one_to_one",
-        )
-    )
-
-    future = future.rename(
-        columns={
-            "predicted_revenue":
-                "revenue",
-
-            "predicted_expense":
-                "expense_magnitude",
-        }
-    )
-
-    future["revenue"] = (
-        pd.to_numeric(
-            future["revenue"],
-            errors="coerce",
-        )
-        .abs()
-    )
-
-    future["operating_costs"] = (
-        -pd.to_numeric(
-            future["expense_magnitude"],
-            errors="coerce",
-        ).abs()
-    )
-
-    if future[
-        [
-            "revenue",
-            "operating_costs",
-        ]
-    ].isna().any().any():
-        raise RuntimeError(
-            "Future Revenue/Expense inputs contain "
-            "invalid numeric values."
-        )
-
-    future = (
-        future[
-            [
-                "period",
-                "revenue",
-                "operating_costs",
-            ]
-        ]
-        .sort_values("period")
-        .reset_index(drop=True)
-    )
-
-    return future
-
-
-# ============================================================
-# RECURSIVE FORECAST
-# ============================================================
-
-def recursive_ocf_prediction(
-    history: pd.DataFrame,
-    model: HistGradientBoostingRegressor,
-    revenue_prediction: pd.DataFrame,
-    expense_prediction: pd.DataFrame,
-) -> tuple[
-    pd.DataFrame,
-    float,
-]:
-    """
-    Generate six-month recursive OCF forecast.
-
-    Only genuinely available future drivers are injected:
-        Revenue
-        Operating Costs
-
-    Historical lagged OCF and Cash are then updated recursively.
+    Future revenue and operating costs are known
+    from independent forecast layers.
     """
 
     actual_cutoff = (
         history["period"].max()
     )
 
-    future = prepare_future_inputs(
-        revenue_prediction=revenue_prediction,
-        expense_prediction=expense_prediction,
-        actual_cutoff=actual_cutoff,
+    future = (
+        revenue_prediction[
+            revenue_prediction["period"]
+            > actual_cutoff
+        ]
+        .merge(
+            expense_forecast,
+            on="period",
+            how="inner",
+            validate="one_to_one",
+        )
+        .sort_values("period")
+        .reset_index(drop=True)
     )
 
-    if len(future) != HORIZON:
-        raise RuntimeError(
-            "Cash Flow forecast horizon mismatch: "
-            f"expected {HORIZON}, "
-            f"found {len(future)}."
+    if future.empty:
+        raise ValueError(
+            "No overlapping future Revenue "
+            "and Expense forecast periods found."
         )
 
-    expected_periods = pd.Series(
-        pd.date_range(
-            start=future["period"].min(),
-            periods=HORIZON,
-            freq="MS",
-        )
+    future[
+        "revenue"
+    ] = (
+        future[
+            "predicted_revenue"
+        ]
+        .abs()
     )
 
-    if not future[
-        "period"
-    ].reset_index(drop=True).equals(
-        expected_periods
-    ):
-        raise RuntimeError(
-            "Cash Flow forecast periods are not "
-            "six consecutive months."
-        )
+    future[
+        "operating_costs"
+    ] = (
+        -future[
+            "predicted_expense"
+        ].abs()
+    )
 
-    working = history[
+    future[
+        "net_profit"
+    ] = np.nan
+
+    future[
+        "net_working_capital"
+    ] = np.nan
+
+    future[
+        "operating_cash_flow"
+    ] = np.nan
+
+    future[
+        "closing_cash"
+    ] = np.nan
+
+    return future[
         [
             "period",
             "revenue",
@@ -1343,412 +1685,916 @@ def recursive_ocf_prediction(
             "operating_cash_flow",
             "closing_cash",
         ]
+    ]
+
+
+# ============================================================
+# BUILD FUTURE FEATURES
+# ============================================================
+
+def create_future_feature_rows(
+    history: pd.DataFrame,
+    future_drivers: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Create future feature rows without recursive OCF.
+
+    Historical OCF lags and robust statistics remain anchored
+    in actual history.
+    """
+
+    history = (
+        history
+        .copy()
+        .sort_values("period")
+        .reset_index(drop=True)
+    )
+
+    feature_history = create_features(
+        history
+    )
+
+    feature_history[
+        "source_type"
+    ] = "HISTORICAL"
+
+    historical_ocf = (
+        history[
+            "operating_cash_flow"
+        ]
+        .copy()
+    )
+
+    historical_revenue = (
+        history[
+            "revenue"
+        ]
+        .abs()
+        .copy()
+    )
+
+    historical_costs = (
+        history[
+            "operating_costs"
+        ]
+        .abs()
+        .copy()
+    )
+
+    historical_nwc = (
+        history[
+            "net_working_capital"
+        ]
+        .copy()
+    )
+
+    historical_net_profit = (
+        history[
+            "net_profit"
+        ]
+        .copy()
+    )
+
+    rows = []
+
+    for _, item in future_drivers.iterrows():
+
+        period = item["period"]
+
+        month = period.month
+        quarter = period.quarter
+
+        revenue = float(
+            abs(
+                item["revenue"]
+            )
+        )
+
+        operating_costs_abs = float(
+            abs(
+                item["operating_costs"]
+            )
+        )
+
+        # ----------------------------------------------------
+        # Recent actual context
+        # ----------------------------------------------------
+
+        ocf_lag_1 = float(
+            historical_ocf.iloc[-1]
+        )
+
+        ocf_lag_3 = float(
+            historical_ocf.tail(3).iloc[0]
+            if len(historical_ocf) >= 3
+            else historical_ocf.iloc[-1]
+        )
+
+        ocf_lag_6 = float(
+            historical_ocf.tail(6).iloc[0]
+            if len(historical_ocf) >= 6
+            else historical_ocf.iloc[-1]
+        )
+
+        ocf_lag_12 = float(
+            historical_ocf.tail(12).iloc[0]
+            if len(historical_ocf) >= 12
+            else historical_ocf.iloc[-1]
+        )
+
+        recent_ocf_3 = float(
+            historical_ocf.tail(
+                SHORT_WINDOW
+            ).median()
+        )
+
+        recent_ocf_6 = float(
+            historical_ocf.tail(
+                MEDIUM_WINDOW
+            ).median()
+        )
+
+        recent_ocf_12 = float(
+            historical_ocf.tail(
+                LONG_WINDOW
+            ).median()
+        )
+
+        recent_ocf_mean_6 = float(
+            historical_ocf.tail(
+                MEDIUM_WINDOW
+            ).mean()
+        )
+
+        conversion = (
+            historical_ocf
+            / historical_revenue.replace(
+                0,
+                np.nan,
+            )
+        )
+
+        conversion = conversion.replace(
+            [np.inf, -np.inf],
+            np.nan,
+        ).dropna()
+
+        if conversion.empty:
+            conversion_median_3 = 0.0
+            conversion_median_6 = 0.0
+            conversion_median_12 = 0.0
+
+        else:
+
+            clipped = conversion.clip(
+                lower=conversion.quantile(
+                    0.10
+                ),
+                upper=conversion.quantile(
+                    0.90
+                ),
+            )
+
+            conversion_median_3 = float(
+                clipped.tail(3).median()
+            )
+
+            conversion_median_6 = float(
+                clipped.tail(6).median()
+            )
+
+            conversion_median_12 = float(
+                clipped.tail(12).median()
+            )
+
+        latest_revenue = float(
+            historical_revenue.iloc[-1]
+        )
+
+        prior_revenue = float(
+            historical_revenue.iloc[-2]
+            if len(historical_revenue) >= 2
+            else latest_revenue
+        )
+
+        revenue_change_1 = (
+            (
+                latest_revenue
+                - prior_revenue
+            )
+            / prior_revenue
+            if prior_revenue != 0
+            else 0.0
+        )
+
+        latest_cost = float(
+            historical_costs.iloc[-1]
+        )
+
+        costs_lag_3 = float(
+            historical_costs.tail(3).iloc[0]
+            if len(historical_costs) >= 3
+            else latest_cost
+        )
+
+        costs_lag_12 = float(
+            historical_costs.tail(12).iloc[0]
+            if len(historical_costs) >= 12
+            else latest_cost
+        )
+
+        latest_nwc = float(
+            historical_nwc.iloc[-1]
+        )
+
+        nwc_lag_3 = float(
+            historical_nwc.tail(3).iloc[0]
+            if len(historical_nwc) >= 3
+            else latest_nwc
+        )
+
+        nwc_lag_12 = float(
+            historical_nwc.tail(12).iloc[0]
+            if len(historical_nwc) >= 12
+            else latest_nwc
+        )
+
+        if len(historical_nwc) >= 2:
+            nwc_change_lag_1 = float(
+                historical_nwc.iloc[-1]
+                - historical_nwc.iloc[-2]
+            )
+        else:
+            nwc_change_lag_1 = 0.0
+
+        latest_net_profit = float(
+            historical_net_profit.iloc[-1]
+        )
+
+        net_profit_lag_3 = float(
+            historical_net_profit.tail(3).iloc[0]
+            if len(historical_net_profit) >= 3
+            else latest_net_profit
+        )
+
+        net_profit_lag_12 = float(
+            historical_net_profit.tail(12).iloc[0]
+            if len(historical_net_profit) >= 12
+            else latest_net_profit
+        )
+
+        # ----------------------------------------------------
+        # Construct row
+        # ----------------------------------------------------
+
+        row = {
+            "month": month,
+            "quarter": quarter,
+
+            "month_sin": np.sin(
+                2
+                * np.pi
+                * month
+                / 12.0
+            ),
+
+            "month_cos": np.cos(
+                2
+                * np.pi
+                * month
+                / 12.0
+            ),
+
+            "time_index":
+                len(history)
+                + len(rows),
+
+            "revenue_abs":
+                revenue,
+
+            "operating_costs_abs":
+                operating_costs_abs,
+
+            "ebitda_proxy":
+                revenue
+                - operating_costs_abs,
+
+            "cost_to_revenue":
+                (
+                    operating_costs_abs
+                    / revenue
+                    if revenue != 0
+                    else 0.0
+                ),
+
+            "revenue_lag_1":
+                latest_revenue,
+
+            "revenue_lag_3":
+                historical_revenue.tail(3).iloc[0]
+                if len(historical_revenue) >= 3
+                else latest_revenue,
+
+            "revenue_lag_12":
+                historical_revenue.tail(12).iloc[0]
+                if len(historical_revenue) >= 12
+                else latest_revenue,
+
+            "revenue_change_1":
+                revenue_change_1,
+
+            "costs_lag_1":
+                latest_cost,
+
+            "costs_lag_3":
+                costs_lag_3,
+
+            "costs_lag_12":
+                costs_lag_12,
+
+            "ocf_lag_1":
+                ocf_lag_1,
+
+            "ocf_lag_3":
+                ocf_lag_3,
+
+            "ocf_lag_6":
+                ocf_lag_6,
+
+            "ocf_lag_12":
+                ocf_lag_12,
+
+            "ocf_rolling_median_3":
+                recent_ocf_3,
+
+            "ocf_rolling_median_6":
+                recent_ocf_6,
+
+            "ocf_rolling_median_12":
+                recent_ocf_12,
+
+            "ocf_rolling_mean_6":
+                recent_ocf_mean_6,
+
+            "conversion_median_3":
+                conversion_median_3,
+
+            "conversion_median_6":
+                conversion_median_6,
+
+            "conversion_median_12":
+                conversion_median_12,
+
+            "nwc_lag_1":
+                latest_nwc,
+
+            "nwc_lag_3":
+                nwc_lag_3,
+
+            "nwc_lag_12":
+                nwc_lag_12,
+
+            "nwc_change_lag_1":
+                nwc_change_lag_1,
+
+            "net_profit_lag_1":
+                latest_net_profit,
+
+            "net_profit_lag_3":
+                net_profit_lag_3,
+
+            "net_profit_lag_12":
+                net_profit_lag_12,
+
+            "period":
+                period,
+        }
+
+        rows.append(
+            row
+        )
+
+    return pd.DataFrame(
+        rows
+    )
+
+
+# ============================================================
+# FINAL FORECAST
+# ============================================================
+
+def generate_ocf_forecast(
+    history: pd.DataFrame,
+    future_drivers: pd.DataFrame,
+    validation: dict[str, object],
+) -> pd.DataFrame:
+    """
+    Generate six-month OCF forecast.
+
+    The selected model is trained on the full available
+    historical dataset.
+
+    No future predicted OCF is fed back into the model.
+    """
+
+    selected_type = str(
+        validation[
+            "selected_type"
+        ]
+    )
+
+    selected_name = str(
+        validation[
+            "selected_name"
+        ]
+    )
+
+    metrics = (
+        validation[
+            "selected_metrics"
+        ]
+    )
+
+    future_features = (
+        create_future_feature_rows(
+            history=history,
+            future_drivers=future_drivers,
+        )
+    )
+
+    X_future = future_features[
+        FEATURE_COLUMNS
     ].copy()
 
-    baseline_ratio = (
-        calculate_cash_conversion_baseline(
+    X_future = (
+        X_future
+        .replace(
+            [np.inf, -np.inf],
+            np.nan,
+        )
+        .fillna(0)
+    )
+
+    # --------------------------------------------------------
+    # Baseline
+    # --------------------------------------------------------
+
+    baseline_pred = baseline_prediction(
+        history=history,
+        periods=future_drivers["period"],
+        driver_revenue=future_drivers[
+            "revenue"
+        ],
+    )
+
+    # --------------------------------------------------------
+    # ML
+    # --------------------------------------------------------
+
+    ml_prediction = None
+
+    if selected_type == "ML":
+
+        X, y, _ = prepare_training_data(
+            history
+        )
+
+        if selected_name == (
+            "HistGradientBoosting"
+        ):
+            model = (
+                create_hist_gradient_model()
+            )
+
+        elif selected_name == (
+            "RandomForest"
+        ):
+            model = (
+                create_random_forest_model()
+            )
+
+        else:
+            raise RuntimeError(
+                f"Unknown selected model: "
+                f"{selected_name}"
+            )
+
+        logger.info(
+            "Training final Cash Flow model "
+            "on %s observations.",
+            len(X),
+        )
+
+        model.fit(
+            X,
+            y,
+        )
+
+        ml_prediction = (
+            model.predict(
+                X_future
+            )
+        )
+
+        ml_prediction = np.asarray(
+            ml_prediction,
+            dtype=float,
+        )
+
+        # ----------------------------------------------------
+        # Final defensive clipping
+        # ----------------------------------------------------
+
+        if not np.isfinite(
+            ml_prediction
+        ).all():
+            raise RuntimeError(
+                "ML OCF forecast contains "
+                "non-finite values."
+            )
+
+    # --------------------------------------------------------
+    # Select / blend
+    # --------------------------------------------------------
+
+    if selected_type == "ML":
+
+        improvement = float(
+            validation[
+                "improvement_vs_baseline"
+            ]
+        )
+
+        # Strongly outperforming ML:
+        # use 80% ML / 20% baseline.
+        #
+        # Moderately outperforming ML:
+        # use 65% ML / 35% baseline.
+        #
+        # This keeps the forecast stable.
+        if improvement >= 0.20:
+            ml_weight = 0.80
+        else:
+            ml_weight = 0.65
+
+        baseline_weight = (
+            1.0
+            - ml_weight
+        )
+
+        final_prediction = (
+            ml_weight
+            * ml_prediction
+            + baseline_weight
+            * baseline_pred
+        )
+
+        logger.info(
+            "Final OCF blend: ML %.0f%% / "
+            "Baseline %.0f%%",
+            ml_weight * 100.0,
+            baseline_weight * 100.0,
+        )
+
+    else:
+
+        final_prediction = (
+            baseline_pred
+        )
+
+        logger.info(
+            "Final OCF method: Robust Baseline"
+        )
+
+    # --------------------------------------------------------
+    # Build forecast
+    # --------------------------------------------------------
+
+    result = future_drivers[
+        [
+            "period",
+        ]
+    ].copy()
+
+    result[
+        "predicted_operating_cash_flow"
+    ] = (
+        final_prediction
+    )
+
+    # Defensive finite check.
+    if not np.isfinite(
+        result[
+            "predicted_operating_cash_flow"
+        ]
+    ).all():
+        raise RuntimeError(
+            "Final OCF forecast contains "
+            "non-finite values."
+        )
+
+    # --------------------------------------------------------
+    # Prediction interval
+    # --------------------------------------------------------
+
+    validation_results = (
+        validation[
+            "validation_results"
+        ]
+    )
+
+    selected_validation = (
+        validation_results[
+            validation[
+                "selected_name"
+            ]
+        ]
+        if validation[
+            "selected_type"
+        ] == "ML"
+        else validation_results[
+            "Baseline"
+        ]
+    )
+
+    validation_actual = (
+        selected_validation[
+            "metrics"
+        ]
+    )
+
+    residuals = None
+
+    actual_prediction = np.asarray(
+        selected_validation[
+            "prediction"
+        ],
+        dtype=float,
+    )
+
+    # The corresponding actual values are always
+    # the validation tail.
+    _, y, training = (
+        prepare_training_data(
             history
         )
     )
 
-    logger.info(
-        "Recent OCF / Revenue baseline: %.4f",
-        baseline_ratio,
-    )
-
-    predictions = []
-
-    for index, future_row in future.iterrows():
-
-        period = future_row[
-            "period"
+    validation_actual_values = (
+        y.iloc[
+            -VALIDATION_MONTHS:
         ]
-
-        revenue = float(
-            future_row["revenue"]
-        )
-
-        operating_costs = float(
-            future_row[
-                "operating_costs"
-            ]
-        )
-
-        # ----------------------------------------------------
-        # Historical context
-        # ----------------------------------------------------
-
-        latest_nwc = float(
-            working[
-                "net_working_capital"
-            ]
-            .dropna()
-            .iloc[-1]
-        )
-
-        latest_net_profit = float(
-            working[
-                "net_profit"
-            ]
-            .dropna()
-            .iloc[-1]
-        )
-
-        previous_cash = float(
-            working[
-                "closing_cash"
-            ]
-            .dropna()
-            .iloc[-1]
-        )
-
-        # For future periods these two variables are not used
-        # as direct model features, but keeping them in the
-        # working dataset preserves the schema.
-        new_row = {
-            "period": period,
-            "revenue": revenue,
-            "operating_costs": operating_costs,
-            "net_profit": latest_net_profit,
-            "net_working_capital": latest_nwc,
-            "operating_cash_flow": np.nan,
-            "closing_cash": previous_cash,
-        }
-
-        working = pd.concat(
-            [
-                working,
-                pd.DataFrame(
-                    [new_row]
-                ),
-            ],
-            ignore_index=True,
-        )
-
-        # ----------------------------------------------------
-        # Feature engineering
-        # ----------------------------------------------------
-
-        engineered = create_features(
-            working
-        )
-
-        current = engineered.iloc[
-            [-1]
-        ][FEATURE_COLUMNS].copy()
-
-        # Any remaining missing lag due to short history is
-        # filled using the latest known observation.
-        current = (
-            current
-            .ffill(
-                axis=0
-            )
-            .bfill(
-                axis=0
-            )
-            .fillna(0.0)
-        )
-
-        # ----------------------------------------------------
-        # ML prediction
-        # ----------------------------------------------------
-
-        ml_prediction = float(
-            model.predict(
-                current
-            )[0]
-        )
-
-        # ----------------------------------------------------
-        # Baseline prediction
-        #
-        # Recent cash conversion ratio x forecast revenue.
-        # ----------------------------------------------------
-
-        baseline_prediction = (
-            revenue
-            * baseline_ratio
-        )
-
-        # ----------------------------------------------------
-        # Blend
-        # ----------------------------------------------------
-
-        prediction = (
-            ML_WEIGHT
-            * ml_prediction
-            + BASELINE_WEIGHT
-            * baseline_prediction
-        )
-
-        if not np.isfinite(
-            prediction
-        ):
-            raise RuntimeError(
-                f"Non-finite OCF prediction for "
-                f"{period:%Y-%m}."
-            )
-
-        predictions.append(
-            {
-                "period": period,
-                "ml_prediction":
-                    ml_prediction,
-                "baseline_prediction":
-                    baseline_prediction,
-                "predicted_operating_cash_flow":
-                    prediction,
-            }
-        )
-
-        # ----------------------------------------------------
-        # Update recursive history
-        # ----------------------------------------------------
-
-        working.loc[
-            working["period"] == period,
-            "operating_cash_flow",
-        ] = prediction
-
-        predicted_cash = (
-            previous_cash
-            + prediction
-        )
-
-        working.loc[
-            working["period"] == period,
-            "closing_cash",
-        ] = predicted_cash
-
-        logger.info(
-            "Cash Flow forecast %s/%s | %s | "
-            "ML %.2f | Baseline %.2f | Final %.2f | Cash %.2f",
-            index + 1,
-            HORIZON,
-            period.strftime("%Y-%m"),
-            ml_prediction,
-            baseline_prediction,
-            prediction,
-            predicted_cash,
-        )
-
-    return (
-        pd.DataFrame(
-            predictions
-        ),
-        baseline_ratio,
+        .to_numpy()
     )
 
+    residuals = (
+        validation_actual_values
+        - actual_prediction
+    )
+
+    absolute_residuals = np.abs(
+        residuals
+    )
+
+    if len(
+        absolute_residuals
+    ) > 1:
+
+        interval_width = float(
+            np.quantile(
+                absolute_residuals,
+                INTERVAL_QUANTILE,
+            )
+        )
+
+    else:
+
+        interval_width = float(
+            validation_actual[
+                "residual_std"
+            ]
+        )
+
+    if not np.isfinite(
+        interval_width
+    ) or interval_width <= 0:
+
+        interval_width = float(
+            validation_actual[
+                "rmse"
+            ]
+        )
+
+    result[
+        "ocf_lower_bound"
+    ] = (
+        result[
+            "predicted_operating_cash_flow"
+        ]
+        - interval_width
+    )
+
+    result[
+        "ocf_upper_bound"
+    ] = (
+        result[
+            "predicted_operating_cash_flow"
+        ]
+        + interval_width
+    )
+
+    result[
+        "selected_method"
+    ] = (
+        selected_name
+    )
+
+    result[
+        "validation_mae"
+    ] = (
+        validation_actual[
+            "mae"
+        ]
+    )
+
+    result[
+        "validation_rmse"
+    ] = (
+        validation_actual[
+            "rmse"
+        ]
+    )
+
+    result[
+        "validation_smape_pct"
+    ] = (
+        validation_actual[
+            "smape_pct"
+        ]
+    )
+
+    result[
+        "validation_stabilized_mape_pct"
+    ] = (
+        validation_actual[
+            "stabilized_mape_pct"
+        ]
+    )
+
+    result[
+        "validation_residual_std"
+    ] = (
+        validation_actual[
+            "residual_std"
+        ]
+    )
+
+    result[
+        "forecast_interval_width"
+    ] = (
+        interval_width
+    )
+
+    return result
+
 
 # ============================================================
-# OUTPUT
+# CLOSING CASH BRIDGE
 # ============================================================
 
-def build_output(
+def build_cash_bridge(
     history: pd.DataFrame,
     ocf_forecast: pd.DataFrame,
-    metrics: dict[str, float],
 ) -> pd.DataFrame:
     """
-    Build final six-month cash-flow prediction dataset.
+    Calculate Closing Cash from the OCF forecast.
 
-    Cash uncertainty accumulates across forecast periods.
+    Formula:
+        Closing Cash(t)
+            = Closing Cash(t-1)
+            + Forecast OCF(t)
+
+    This explicitly assumes:
+        Investing CF = 0
+        Financing CF = 0
+
+    until those components receive dedicated forecasts.
     """
-
-    if ocf_forecast.empty:
-        raise RuntimeError(
-            "OCF forecast is empty."
-        )
 
     last_actual_period = (
         history["period"].max()
     )
 
-    actual_cash = float(
-        history.loc[
+    last_actual_row = (
+        history[
             history["period"]
-            == last_actual_period,
-            "closing_cash",
-        ].iloc[0]
+            == last_actual_period
+        ]
+        .iloc[0]
     )
 
-    residual_std = float(
-        metrics[
-            "residual_std"
+    opening_cash = float(
+        last_actual_row[
+            "closing_cash"
         ]
     )
 
-    if residual_std <= 0:
-        residual_std = float(
-            metrics["rmse"]
-        )
+    running_cash = opening_cash
 
-    outputs = []
+    rows = []
 
-    running_cash = actual_cash
+    monthly_half_width = (
+        ocf_forecast[
+            "forecast_interval_width"
+        ]
+    )
 
-    for horizon_index, row in enumerate(
-        ocf_forecast.itertuples(
-            index=False
-        ),
-        start=1,
+    cumulative_variance = 0.0
+
+    for index, row in (
+        ocf_forecast
+        .sort_values("period")
+        .reset_index(drop=True)
+        .iterrows()
     ):
 
         operating_cf = float(
-            row.predicted_operating_cash_flow
+            row[
+                "predicted_operating_cash_flow"
+            ]
         )
 
         running_cash += (
             operating_cf
         )
 
-        # ----------------------------------------------------
-        # OCF uncertainty
-        # ----------------------------------------------------
-
-        ocf_margin = (
-            CONFIDENCE_Z
-            * residual_std
+        monthly_error = float(
+            monthly_half_width.iloc[
+                index
+            ]
         )
 
-        ocf_lower = (
-            operating_cf
-            - ocf_margin
+        cumulative_variance += (
+            monthly_error ** 2
         )
 
-        ocf_upper = (
-            operating_cf
-            + ocf_margin
-        )
-
-        # ----------------------------------------------------
-        # Cash uncertainty
-        #
-        # Independent monthly residuals are approximated using
-        # root-sum-of-squares accumulation.
-        # ----------------------------------------------------
-
-        cumulative_cash_std = (
-            residual_std
-            * np.sqrt(
-                horizon_index
+        cumulative_error = float(
+            np.sqrt(
+                cumulative_variance
             )
         )
 
-        cash_margin = (
-            CONFIDENCE_Z
-            * cumulative_cash_std
-        )
-
-        cash_lower = (
-            running_cash
-            - cash_margin
-        )
-
-        cash_upper = (
-            running_cash
-            + cash_margin
-        )
-
-        outputs.append(
+        rows.append(
             {
                 "period":
-                    row.period,
+                    row["period"],
 
                 "predicted_operating_cash_flow":
                     operating_cf,
 
                 "ocf_lower_bound":
-                    ocf_lower,
+                    float(
+                        row[
+                            "ocf_lower_bound"
+                        ]
+                    ),
 
                 "ocf_upper_bound":
-                    ocf_upper,
+                    float(
+                        row[
+                            "ocf_upper_bound"
+                        ]
+                    ),
 
                 "predicted_closing_cash":
                     running_cash,
 
                 "cash_lower_bound":
-                    cash_lower,
+                    running_cash
+                    - cumulative_error,
 
                 "cash_upper_bound":
-                    cash_upper,
+                    running_cash
+                    + cumulative_error,
             }
         )
 
     result = pd.DataFrame(
-        outputs
+        rows
     )
 
-    result["year_month"] = (
-        result["period"]
-        .dt.strftime("%Y-%m")
-    )
-
-    result["forecast_year"] = (
-        result["period"]
-        .dt.year
-    )
-
-    result["forecast_month"] = (
-        result["period"]
-        .dt.month
-    )
-
-    result["model"] = (
-        "HistGradientBoosting+Baseline"
-    )
-
-    result["validation_mae"] = (
-        metrics["mae"]
-    )
-
-    result["validation_rmse"] = (
-        metrics["rmse"]
-    )
-
-    result["validation_mape_pct"] = (
-        metrics["mape_pct"]
-    )
-
-    result["prediction_type"] = (
-        "ML_PREDICTION"
-    )
-
-    return result[
-        [
-            "period",
-            "year_month",
-            "forecast_year",
-            "forecast_month",
-
-            "predicted_operating_cash_flow",
-            "ocf_lower_bound",
-            "ocf_upper_bound",
-
-            "predicted_closing_cash",
-            "cash_lower_bound",
-            "cash_upper_bound",
-
-            "model",
-            "validation_mae",
-            "validation_rmse",
-            "validation_mape_pct",
-
-            "prediction_type",
-        ]
-    ]
+    return result
 
 
 # ============================================================
 # OUTPUT VALIDATION
 # ============================================================
 
-def validate_forecast_output(
-    output: pd.DataFrame,
+def validate_output(
     history: pd.DataFrame,
+    output: pd.DataFrame,
 ) -> None:
-    """Validate final forecast dataset."""
+    """Validate final forecast output."""
 
     if output.empty:
         raise RuntimeError(
@@ -1757,14 +2603,17 @@ def validate_forecast_output(
 
     if len(output) != HORIZON:
         raise RuntimeError(
-            f"Expected {HORIZON} forecast rows, "
+            "Invalid forecast horizon: "
+            f"expected {HORIZON}, "
             f"found {len(output)}."
         )
 
     periods = (
         output["period"]
         .sort_values()
-        .reset_index(drop=True)
+        .reset_index(
+            drop=True
+        )
     )
 
     expected = pd.Series(
@@ -1779,22 +2628,21 @@ def validate_forecast_output(
         expected
     ):
         raise RuntimeError(
-            "Cash Flow forecast periods are not "
-            "consecutive."
+            "Cash Flow forecast periods "
+            "are not consecutive."
         )
 
-    actual_cutoff = (
-        history["period"].max()
-    )
-
-    if not (
-        periods
-        > actual_cutoff
-    ).all():
+    if output[
+        "period"
+    ].duplicated().any():
         raise RuntimeError(
-            "Cash Flow forecast contains a period "
-            "inside the ACTUAL range."
+            "Cash Flow forecast contains "
+            "duplicate periods."
         )
+
+    # --------------------------------------------------------
+    # Numeric validation
+    # --------------------------------------------------------
 
     numeric_columns = [
         "predicted_operating_cash_flow",
@@ -1805,68 +2653,104 @@ def validate_forecast_output(
         "cash_upper_bound",
     ]
 
-    if output[
-        numeric_columns
-    ].isna().any().any():
-        raise RuntimeError(
-            "Cash Flow output contains NaN values."
+    for column in numeric_columns:
+
+        values = pd.to_numeric(
+            output[column],
+            errors="coerce",
         )
 
-    if not np.isfinite(
+        if values.isna().any():
+            raise RuntimeError(
+                f"Cash Flow forecast column "
+                f"'{column}' contains invalid values."
+            )
+
+        if not np.isfinite(
+            values.to_numpy(
+                dtype=float
+            )
+        ).all():
+            raise RuntimeError(
+                f"Cash Flow forecast column "
+                f"'{column}' contains non-finite values."
+            )
+
+    # --------------------------------------------------------
+    # Interval validation
+    # --------------------------------------------------------
+
+    invalid_ocf = (
         output[
-            numeric_columns
-        ].to_numpy()
-    ).all():
-        raise RuntimeError(
-            "Cash Flow output contains non-finite values."
-        )
-
-    # Interval checks.
-    if (
-        output["ocf_lower_bound"]
+            "ocf_lower_bound"
+        ]
         >
-        output["ocf_upper_bound"]
-    ).any():
+        output[
+            "ocf_upper_bound"
+        ]
+    )
+
+    if invalid_ocf.any():
         raise RuntimeError(
-            "Invalid OCF prediction interval."
+            "OCF prediction interval is invalid."
         )
 
-    if (
-        output["cash_lower_bound"]
+    invalid_cash = (
+        output[
+            "cash_lower_bound"
+        ]
         >
-        output["cash_upper_bound"]
-    ).any():
+        output[
+            "cash_upper_bound"
+        ]
+    )
+
+    if invalid_cash.any():
         raise RuntimeError(
-            "Invalid cash prediction interval."
+            "Closing Cash prediction interval is invalid."
         )
 
-    # Cash continuity.
-    last_actual_cash = float(
-        history.loc[
+    # --------------------------------------------------------
+    # Cash bridge validation
+    # --------------------------------------------------------
+
+    previous_cash = float(
+        history[
             history["period"]
-            == actual_cutoff,
-            "closing_cash",
-        ].iloc[0]
+            == history["period"].max()
+        ]["closing_cash"].iloc[0]
     )
 
-    expected_cash = (
-        last_actual_cash
-        + output[
-            "predicted_operating_cash_flow"
-        ].cumsum()
-    )
+    for _, row in output.iterrows():
 
-    if not np.allclose(
-        expected_cash.to_numpy(),
-        output[
-            "predicted_closing_cash"
-        ].to_numpy(),
-        rtol=1e-9,
-        atol=1e-6,
-    ):
-        raise RuntimeError(
-            "Closing Cash reconciliation failed."
+        expected_cash = (
+            previous_cash
+            + float(
+                row[
+                    "predicted_operating_cash_flow"
+                ]
+            )
         )
+
+        actual_cash = float(
+            row[
+                "predicted_closing_cash"
+            ]
+        )
+
+        if not np.isclose(
+            expected_cash,
+            actual_cash,
+            atol=0.01,
+        ):
+            raise RuntimeError(
+                "Closing Cash bridge validation failed "
+                f"for {row['period']}: "
+                f"expected {expected_cash}, "
+                f"found {actual_cash}."
+            )
+
+        previous_cash = actual_cash
 
     logger.info(
         "Cash Flow forecast output validation passed."
@@ -1874,13 +2758,13 @@ def validate_forecast_output(
 
 
 # ============================================================
-# SAVE
+# SAVE OUTPUT
 # ============================================================
 
 def save_output(
     df: pd.DataFrame,
 ) -> None:
-    """Save Cash Flow Prediction dataset."""
+    """Save Cash Flow prediction dataset."""
 
     OUTPUT_DIR.mkdir(
         parents=True,
@@ -1903,7 +2787,7 @@ def save_output(
 # ============================================================
 
 def main() -> int:
-    """Run the EFAP Cash Flow Prediction pipeline."""
+    """Run EFAP Cash Flow Prediction pipeline."""
 
     try:
 
@@ -1929,50 +2813,203 @@ def main() -> int:
             load_revenue_prediction()
         )
 
-        expense_prediction = (
+        expense_forecast = (
             load_expense_forecast()
         )
 
         # ----------------------------------------------------
-        # VALIDATION
+        # VALIDATION / MODEL SELECTION
         # ----------------------------------------------------
 
-        metrics = (
-            validate_ocf_model(
+        validation = (
+            validate_models(
                 history
             )
         )
 
         # ----------------------------------------------------
-        # TRAIN FINAL MODEL
+        # FINAL MODEL / BASELINE FORECAST
         # ----------------------------------------------------
 
-        X, y = (
-            prepare_training_data(
-                history
+        future_drivers = (
+            build_future_drivers(
+                history=history,
+                revenue_prediction=(
+                    revenue_prediction
+                ),
+                expense_forecast=(
+                    expense_forecast
+                ),
             )
+        )
+
+        if len(
+            future_drivers
+        ) != HORIZON:
+
+            raise RuntimeError(
+                "Invalid future driver horizon: "
+                f"expected {HORIZON}, "
+                f"found {len(future_drivers)}."
+            )
+
+        logger.info(
+            "Future driver horizon: %s months.",
+            len(future_drivers),
         )
 
         logger.info(
-            "Training final Cash Flow model on %s observations.",
-            len(X),
-        )
-
-        model = create_model()
-
-        model.fit(
-            X,
-            y,
+            "Forecast period: %s -> %s",
+            future_drivers[
+                "period"
+            ].min().strftime("%Y-%m"),
+            future_drivers[
+                "period"
+            ].max().strftime("%Y-%m"),
         )
 
         # ----------------------------------------------------
-        # LATEST FINANCIAL CONTEXT
+        # OCF FORECAST
         # ----------------------------------------------------
+
+        ocf_forecast = (
+            generate_ocf_forecast(
+                history=history,
+                future_drivers=(
+                    future_drivers
+                ),
+                validation=validation,
+            )
+        )
+
+        # ----------------------------------------------------
+        # CASH BRIDGE
+        # ----------------------------------------------------
+
+        cash_bridge = (
+            build_cash_bridge(
+                history=history,
+                ocf_forecast=ocf_forecast,
+            )
+        )
+
+        output = (
+            ocf_forecast[
+                [
+                    "period",
+                    "selected_method",
+                    "validation_mae",
+                    "validation_rmse",
+                    "validation_smape_pct",
+                    "validation_stabilized_mape_pct",
+                    "validation_residual_std",
+                    "forecast_interval_width",
+                ]
+            ]
+            .merge(
+                cash_bridge,
+                on="period",
+                how="inner",
+                validate="one_to_one",
+            )
+        )
+
+        # ----------------------------------------------------
+        # OUTPUT METADATA
+        # ----------------------------------------------------
+
+        output[
+            "model"
+        ] = (
+            output[
+                "selected_method"
+            ]
+        )
+
+        output[
+            "prediction_type"
+        ] = "ML_PREDICTION"
+
+        output[
+            "year_month"
+        ] = (
+            output[
+                "period"
+            ]
+            .dt.strftime(
+                "%Y-%m"
+            )
+        )
+
+        output[
+            "forecast_year"
+        ] = (
+            output[
+                "period"
+            ]
+            .dt.year
+        )
+
+        output[
+            "forecast_month"
+        ] = (
+            output[
+                "period"
+            ]
+            .dt.month
+        )
+
+        output = output[
+            [
+                "period",
+                "year_month",
+                "forecast_year",
+                "forecast_month",
+
+                "predicted_operating_cash_flow",
+                "ocf_lower_bound",
+                "ocf_upper_bound",
+
+                "predicted_closing_cash",
+                "cash_lower_bound",
+                "cash_upper_bound",
+
+                "model",
+
+                "validation_mae",
+                "validation_rmse",
+                "validation_smape_pct",
+                "validation_stabilized_mape_pct",
+                "validation_residual_std",
+                "forecast_interval_width",
+
+                "prediction_type",
+            ]
+        ].copy()
+
+        # ----------------------------------------------------
+        # VALIDATE
+        # ----------------------------------------------------
+
+        validate_output(
+            history=history,
+            output=output,
+        )
+
+        # ----------------------------------------------------
+        # LOG CONTEXT
+        # ----------------------------------------------------
+
+        last_actual_period = (
+            history["period"].max()
+        )
 
         latest = (
-            history
-            .sort_values("period")
-            .iloc[-1]
+            history[
+                history["period"]
+                == last_actual_period
+            ]
+            .iloc[0]
         )
 
         logger.info(
@@ -1981,61 +3018,79 @@ def main() -> int:
 
         logger.info(
             "Revenue: %.2f",
-            latest["revenue"],
+            latest[
+                "revenue"
+            ],
         )
 
         logger.info(
             "Operating Costs: %.2f",
-            latest["operating_costs"],
+            latest[
+                "operating_costs"
+            ],
         )
 
         logger.info(
             "Operating Cash Flow: %.2f",
-            latest["operating_cash_flow"],
+            latest[
+                "operating_cash_flow"
+            ],
         )
 
         logger.info(
             "Closing Cash: %.2f",
-            latest["closing_cash"],
-        )
-
-        # ----------------------------------------------------
-        # FORECAST
-        # ----------------------------------------------------
-
-        (
-            ocf_forecast,
-            baseline_ratio,
-        ) = recursive_ocf_prediction(
-            history=history,
-            model=model,
-            revenue_prediction=revenue_prediction,
-            expense_prediction=expense_prediction,
+            latest[
+                "closing_cash"
+            ],
         )
 
         logger.info(
-            "Cash conversion baseline: %.4f",
-            baseline_ratio,
+            "Selected Cash Flow method: %s",
+            validation[
+                "selected_name"
+            ],
+        )
+
+        logger.info(
+            "ML improvement vs baseline: %.2f%%",
+            float(
+                validation[
+                    "improvement_vs_baseline"
+                ]
+            )
+            * 100.0,
         )
 
         # ----------------------------------------------------
-        # BUILD OUTPUT
+        # FORECAST LOG
         # ----------------------------------------------------
 
-        output = build_output(
-            history=history,
-            ocf_forecast=ocf_forecast,
-            metrics=metrics,
-        )
+        for index, row in (
+            output
+            .sort_values("period")
+            .reset_index(
+                drop=True
+            )
+            .iterrows()
+        ):
 
-        # ----------------------------------------------------
-        # VALIDATE OUTPUT
-        # ----------------------------------------------------
-
-        validate_forecast_output(
-            output=output,
-            history=history,
-        )
+            logger.info(
+                "Cash Flow forecast %s/%s | %s | "
+                "OCF %.2f | Cash %.2f",
+                index + 1,
+                len(output),
+                row[
+                    "period"
+                ].strftime(
+                    "%Y-%m"
+                ),
+                row[
+                    "predicted_operating_cash_flow"
+                ],
+                row[
+                    "predicted_closing_cash"
+                ],
+            )
 
         # ----------------------------------------------------
         # SAVE
@@ -2045,10 +3100,6 @@ def main() -> int:
             output
         )
 
-        # ----------------------------------------------------
-        # SUMMARY
-        # ----------------------------------------------------
-
         logger.info(
             "Generated %s Cash Flow prediction months.",
             len(output),
@@ -2056,10 +3107,14 @@ def main() -> int:
 
         logger.info(
             "Forecast period: %s -> %s",
-            output["period"].min().strftime(
+            output[
+                "period"
+            ].min().strftime(
                 "%Y-%m"
             ),
-            output["period"].max().strftime(
+            output[
+                "period"
+            ].max().strftime(
                 "%Y-%m"
             ),
         )
