@@ -2,7 +2,7 @@
 EFAP - Power BI Analytics Reporting Export
 
 Object:
-    Python/build_powerbi_analytics_export.py
+    Scripts/Python/build_powerbi_analytics_export.py
 
 Purpose:
     Consolidate EFAP analytical outputs into one Power BI-ready
@@ -27,7 +27,7 @@ Important:
     It does not replace the underlying financial business logic.
 
 QA guarantees:
-    - Exactly one row per month
+    - Exactly one row per calendar month
     - ACTUAL / FORECAST split is authoritative
     - Exactly six consecutive forecast months
     - Revenue / Expense / Cash forecast horizons must match
@@ -35,6 +35,8 @@ QA guarantees:
     - FORECAST rows cannot contain historical-only metrics
     - Management sign conventions are validated
     - Forecast prediction intervals are validated
+    - Forecast metadata is preserved
+    - Cash Flow forecast selection reason is preserved
 """
 
 from __future__ import annotations
@@ -46,12 +48,61 @@ import pandas as pd
 
 
 # ============================================================
-# PATHS
+# PROJECT ROOT RESOLUTION
 # ============================================================
 
+def resolve_project_root() -> Path:
+    """
+    Resolve the EFAP project root dynamically.
+
+    The script location is not assumed to be at a fixed depth.
+    The root is identified by expected project directories.
+    """
+
+    script_path = (
+        Path(__file__)
+        .resolve()
+    )
+
+    candidates = [
+        script_path.parent,
+        *script_path.parents,
+    ]
+
+    for candidate in candidates:
+
+        required_directories = {
+            "data",
+            "Scripts",
+        }
+
+        if all(
+            (
+                candidate / directory
+            ).is_dir()
+            for directory
+            in required_directories
+        ):
+
+            return candidate
+
+    raise RuntimeError(
+        "Unable to resolve EFAP project root.\n"
+        f"Script location: {script_path}\n"
+        "Expected project root to contain:\n"
+        "  - data\\\n"
+        "  - Scripts\\\n"
+    )
+
+
 PROJECT_ROOT = (
-    Path(__file__).resolve().parents[2]
+    resolve_project_root()
 )
+
+
+# ============================================================
+# PATHS
+# ============================================================
 
 CONTROLLER_TIMESERIES_FILE = (
     PROJECT_ROOT
@@ -110,6 +161,67 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================
+# FILE VALIDATION
+# ============================================================
+
+def validate_files() -> None:
+    """
+    Validate mandatory source files before processing.
+
+    Required:
+        controller KPI time series
+        revenue prediction
+        expense forecast
+
+    Cash Flow prediction is also required because the final
+    Power BI export must contain a complete Cash ML layer.
+    """
+
+    required_files = {
+        "controller KPI time series":
+            CONTROLLER_TIMESERIES_FILE,
+
+        "revenue prediction":
+            PREDICTION_DIR
+            / "revenue_prediction.csv",
+
+        "expense forecast":
+            FORECAST_DIR
+            / "expense_forecast.csv",
+
+        "cash flow prediction":
+            PREDICTION_DIR
+            / "cash_flow_prediction.csv",
+    }
+
+    missing = []
+
+    for name, path in required_files.items():
+
+        if not path.exists():
+
+            missing.append(
+                f"{name}: {path}"
+            )
+
+    if missing:
+
+        raise FileNotFoundError(
+            "Missing required files:\n"
+            + "\n".join(missing)
+        )
+
+    logger.info(
+        "Required source file validation passed."
+    )
+
+    logger.info(
+        "EFAP project root: %s",
+        PROJECT_ROOT,
+    )
+
+
+# ============================================================
 # FILE LOADING
 # ============================================================
 
@@ -117,9 +229,12 @@ def load_required_csv(
     path: Path,
     dataset_name: str,
 ) -> pd.DataFrame:
-    """Load a required CSV dataset."""
+    """
+    Load a required CSV dataset.
+    """
 
     if not path.exists():
+
         raise FileNotFoundError(
             f"{dataset_name} not found: {path}"
         )
@@ -135,6 +250,7 @@ def load_required_csv(
     )
 
     if df.empty:
+
         raise ValueError(
             f"{dataset_name} is empty: {path}"
         )
@@ -146,7 +262,9 @@ def load_optional_csv(
     path: Path,
     dataset_name: str,
 ) -> pd.DataFrame:
-    """Load an optional CSV dataset."""
+    """
+    Load an optional CSV dataset.
+    """
 
     if not path.exists():
 
@@ -188,6 +306,7 @@ def normalize_period(
     """
 
     if df.empty:
+
         return df
 
     result = df.copy()
@@ -213,15 +332,6 @@ def normalize_period(
 def load_all_sources() -> dict[str, pd.DataFrame]:
     """
     Load all EFAP reporting sources.
-
-    Expense forecast:
-        data/forecasts/expense_forecast.csv
-
-    Revenue ML:
-        data/predictions/revenue_prediction.csv
-
-    Cash ML:
-        data/predictions/cash_flow_prediction.csv
     """
 
     return {
@@ -245,7 +355,7 @@ def load_all_sources() -> dict[str, pd.DataFrame]:
 
         "expense_forecast":
             normalize_period(
-                load_optional_csv(
+                load_required_csv(
                     FORECAST_DIR
                     / "expense_forecast.csv",
                     "Expense forecast",
@@ -281,7 +391,7 @@ def load_all_sources() -> dict[str, pd.DataFrame]:
 
         "revenue_prediction":
             normalize_period(
-                load_optional_csv(
+                load_required_csv(
                     PREDICTION_DIR
                     / "revenue_prediction.csv",
                     "Revenue ML prediction",
@@ -290,7 +400,7 @@ def load_all_sources() -> dict[str, pd.DataFrame]:
 
         "cash_prediction":
             normalize_period(
-                load_optional_csv(
+                load_required_csv(
                     PREDICTION_DIR
                     / "cash_flow_prediction.csv",
                     "Cash Flow ML prediction",
@@ -483,6 +593,7 @@ def prepare_rolling_forecast(
     """
 
     if df.empty:
+
         return pd.DataFrame()
 
     required = {
@@ -633,12 +744,10 @@ def prepare_expense_prediction(
 
     Target grain:
         One row per forecast month
-
-    Important:
-        Periods on or before actual_cutoff are excluded.
     """
 
     if df.empty:
+
         return pd.DataFrame()
 
     required = {
@@ -656,20 +765,14 @@ def prepare_expense_prediction(
 
     if missing:
 
-        logger.warning(
-            "Expense forecast missing columns: %s",
-            ", ".join(
+        raise RuntimeError(
+            "Expense forecast missing columns: "
+            + ", ".join(
                 sorted(missing)
-            ),
+            )
         )
 
-        return pd.DataFrame()
-
     result = df.copy()
-
-    # --------------------------------------------------------
-    # NORMALIZE PERIOD
-    # --------------------------------------------------------
 
     result["period"] = (
         pd.to_datetime(
@@ -689,10 +792,6 @@ def prepare_expense_prediction(
             "forecast_period values."
         )
 
-    # --------------------------------------------------------
-    # FUTURE ONLY
-    # --------------------------------------------------------
-
     result = result[
         result["period"]
         >
@@ -706,10 +805,6 @@ def prepare_expense_prediction(
         )
 
         return pd.DataFrame()
-
-    # --------------------------------------------------------
-    # NUMERIC NORMALIZATION
-    # --------------------------------------------------------
 
     numeric_columns = [
         "forecast_expense",
@@ -732,10 +827,6 @@ def prepare_expense_prediction(
         raise RuntimeError(
             "Expense forecast contains invalid numeric values."
         )
-
-    # --------------------------------------------------------
-    # ACCOUNT -> MONTH
-    # --------------------------------------------------------
 
     monthly = (
         result
@@ -794,10 +885,6 @@ def prepare_expense_prediction(
         ].abs()
     )
 
-    # --------------------------------------------------------
-    # INTERVAL VALIDATION
-    # --------------------------------------------------------
-
     invalid_interval = (
         monthly[
             "ml_expense_lower_bound"
@@ -814,10 +901,6 @@ def prepare_expense_prediction(
             "Expense prediction interval is invalid "
             "after sign normalization."
         )
-
-    # --------------------------------------------------------
-    # SIGN VALIDATION
-    # --------------------------------------------------------
 
     invalid_costs = (
         monthly[
@@ -883,6 +966,7 @@ def prepare_anomaly(
     """Prepare monthly anomaly summary."""
 
     if df.empty:
+
         return pd.DataFrame()
 
     required = {
@@ -966,6 +1050,7 @@ def prepare_variance(
     """Prepare controller variance root-cause output."""
 
     if df.empty:
+
         return pd.DataFrame()
 
     required = {
@@ -1098,6 +1183,7 @@ def prepare_pvm(
     """Prepare Price / Volume / Mix analysis."""
 
     if df.empty:
+
         return pd.DataFrame()
 
     required = {
@@ -1273,6 +1359,7 @@ def prepare_revenue_prediction(
     """
 
     if df.empty:
+
         return pd.DataFrame()
 
     required = {
@@ -1290,14 +1377,12 @@ def prepare_revenue_prediction(
 
     if missing:
 
-        logger.warning(
-            "Revenue prediction missing columns: %s",
-            ", ".join(
+        raise RuntimeError(
+            "Revenue prediction missing columns: "
+            + ", ".join(
                 sorted(missing)
-            ),
+            )
         )
-
-        return pd.DataFrame()
 
     result = df[
         [
@@ -1309,9 +1394,14 @@ def prepare_revenue_prediction(
         ]
     ].copy()
 
-    # --------------------------------------------------------
-    # FUTURE ONLY
-    # --------------------------------------------------------
+    result["period"] = (
+        pd.to_datetime(
+            result["period"],
+            errors="coerce",
+        )
+        .dt.to_period("M")
+        .dt.to_timestamp()
+    )
 
     result = result[
         result["period"]
@@ -1326,10 +1416,6 @@ def prepare_revenue_prediction(
         )
 
         return pd.DataFrame()
-
-    # --------------------------------------------------------
-    # NUMERIC
-    # --------------------------------------------------------
 
     numeric_columns = [
         "predicted_revenue",
@@ -1389,10 +1475,6 @@ def prepare_revenue_prediction(
         ]
     )
 
-    # --------------------------------------------------------
-    # INTERVAL VALIDATION
-    # --------------------------------------------------------
-
     invalid_interval = (
         result[
             "ml_revenue_lower_bound"
@@ -1409,8 +1491,6 @@ def prepare_revenue_prediction(
             "Revenue prediction interval is invalid "
             "after sign normalization."
         )
-
-    # Prediction must sit inside interval.
 
     invalid_prediction_position = (
         (
@@ -1440,10 +1520,6 @@ def prepare_revenue_prediction(
             "Revenue prediction lies outside its "
             "prediction interval."
         )
-
-    # --------------------------------------------------------
-    # ONE ROW PER PERIOD
-    # --------------------------------------------------------
 
     result = (
         result[
@@ -1483,9 +1559,31 @@ def prepare_cash_prediction(
     df: pd.DataFrame,
     actual_cutoff: pd.Timestamp,
 ) -> pd.DataFrame:
-    """Prepare Cash Flow ML prediction."""
+    """
+    Prepare Cash Flow prediction for Power BI.
+
+    This function supports the current Cash Flow output schema:
+
+        validation_mae
+        validation_rmse
+        validation_smape_pct
+        validation_stabilized_mape_pct
+        validation_residual_std
+        forecast_interval_width
+        prediction_type
+        forecast_selection_reason
+        forecast_quality
+        forecast_confidence
+        model
+        ml_improvement_vs_baseline
+
+    It intentionally does not require validation_mape_pct,
+    because the current Cash Flow generator no longer produces
+    that legacy field.
+    """
 
     if df.empty:
+
         return pd.DataFrame()
 
     required = {
@@ -1496,8 +1594,18 @@ def prepare_cash_prediction(
         "ocf_upper_bound",
         "cash_lower_bound",
         "cash_upper_bound",
+        "validation_mae",
         "validation_rmse",
-        "validation_mape_pct",
+        "validation_smape_pct",
+        "validation_stabilized_mape_pct",
+        "validation_residual_std",
+        "forecast_interval_width",
+        "prediction_type",
+        "forecast_selection_reason",
+        "forecast_quality_status",
+        "forecast_confidence",
+        "model",
+        "ml_improvement_vs_baseline_pct",
     }
 
     missing = (
@@ -1507,28 +1615,57 @@ def prepare_cash_prediction(
 
     if missing:
 
-        logger.warning(
-            "Cash prediction missing columns: %s",
-            ", ".join(
+        raise RuntimeError(
+            "Cash prediction missing columns: "
+            + ", ".join(
                 sorted(missing)
-            ),
+            )
         )
 
-        return pd.DataFrame()
+    selected_columns = [
+        "period",
+        "predicted_operating_cash_flow",
+        "predicted_closing_cash",
+        "ocf_lower_bound",
+        "ocf_upper_bound",
+        "cash_lower_bound",
+        "cash_upper_bound",
+        "validation_mae",
+        "validation_rmse",
+        "validation_smape_pct",
+        "validation_stabilized_mape_pct",
+        "validation_residual_std",
+        "forecast_interval_width",
+        "prediction_type",
+        "forecast_selection_reason",
+        "forecast_quality_status",
+        "forecast_confidence",
+        "model",
+        "ml_improvement_vs_baseline_pct",
+    ]
 
     result = df[
-        [
-            "period",
-            "predicted_operating_cash_flow",
-            "predicted_closing_cash",
-            "ocf_lower_bound",
-            "ocf_upper_bound",
-            "cash_lower_bound",
-            "cash_upper_bound",
-            "validation_rmse",
-            "validation_mape_pct",
-        ]
+        selected_columns
     ].copy()
+
+    # --------------------------------------------------------
+    # PERIOD
+    # --------------------------------------------------------
+
+    result["period"] = (
+        pd.to_datetime(
+            result["period"],
+            errors="coerce",
+        )
+        .dt.to_period("M")
+        .dt.to_timestamp()
+    )
+
+    if result["period"].isna().any():
+
+        raise RuntimeError(
+            "Cash prediction contains invalid period values."
+        )
 
     # --------------------------------------------------------
     # FUTURE ONLY
@@ -1559,8 +1696,13 @@ def prepare_cash_prediction(
         "ocf_upper_bound",
         "cash_lower_bound",
         "cash_upper_bound",
+        "validation_mae",
         "validation_rmse",
-        "validation_mape_pct",
+        "validation_smape_pct",
+        "validation_stabilized_mape_pct",
+        "validation_residual_std",
+        "forecast_interval_width",
+        "ml_improvement_vs_baseline_pct",
     ]
 
     for column in numeric_columns:
@@ -1574,16 +1716,49 @@ def prepare_cash_prediction(
         numeric_columns
     ].isna().any().any():
 
+        invalid_columns = [
+            column
+            for column in numeric_columns
+            if result[
+                column
+            ].isna().any()
+        ]
+
         raise RuntimeError(
-            "Cash prediction contains invalid numeric values."
+            "Cash prediction contains invalid numeric values "
+            "in columns: "
+            + ", ".join(
+                invalid_columns
+            )
         )
 
     # --------------------------------------------------------
-    # RENAME
+    # STRING NORMALIZATION
+    # --------------------------------------------------------
+
+    string_columns = [
+        "prediction_type",
+        "forecast_selection_reason",
+        "forecast_quality_status",
+        "forecast_confidence",
+        "model",
+    ]
+
+    for column in string_columns:
+
+        result[column] = (
+            result[column]
+            .astype("string")
+            .str.strip()
+        )
+
+    # --------------------------------------------------------
+    # RENAME TO POWER BI MODEL
     # --------------------------------------------------------
 
     result = result.rename(
         columns={
+
             "predicted_operating_cash_flow":
                 "ml_predicted_operating_cf",
 
@@ -1602,11 +1777,41 @@ def prepare_cash_prediction(
             "cash_upper_bound":
                 "ml_cash_upper_bound",
 
+            "validation_mae":
+                "cash_prediction_mae",
+
             "validation_rmse":
                 "cash_prediction_rmse",
 
-            "validation_mape_pct":
-                "cash_prediction_mape_pct",
+            "validation_smape_pct":
+                "cash_prediction_smape_pct",
+
+            "validation_stabilized_mape_pct":
+                "cash_prediction_stabilized_mape_pct",
+
+            "validation_residual_std":
+                "cash_prediction_residual_std",
+
+            "forecast_interval_width":
+                "cash_forecast_interval_width",
+
+            "prediction_type":
+                "cash_prediction_type",
+
+            "forecast_selection_reason":
+                "cash_forecast_selection_reason",
+
+            "forecast_quality_status":
+                "cash_forecast_quality",
+
+            "forecast_confidence":
+                "cash_forecast_confidence",
+
+            "model":
+                "cash_prediction_model",
+
+            "ml_improvement_vs_baseline_pct":
+                "cash_ml_improvement_vs_baseline",
         }
     )
 
@@ -1630,6 +1835,35 @@ def prepare_cash_prediction(
             "Cash OCF prediction interval is invalid."
         )
 
+    invalid_ocf_position = (
+        (
+            result[
+                "ml_predicted_operating_cf"
+            ]
+            <
+            result[
+                "ml_ocf_lower_bound"
+            ]
+        )
+        |
+        (
+            result[
+                "ml_predicted_operating_cf"
+            ]
+            >
+            result[
+                "ml_ocf_upper_bound"
+            ]
+        )
+    )
+
+    if invalid_ocf_position.any():
+
+        raise RuntimeError(
+            "Predicted Operating Cash Flow lies outside "
+            "its prediction interval."
+        )
+
     # --------------------------------------------------------
     # CASH INTERVAL VALIDATION
     # --------------------------------------------------------
@@ -1650,18 +1884,182 @@ def prepare_cash_prediction(
             "Closing cash prediction interval is invalid."
         )
 
+    invalid_cash_position = (
+        (
+            result[
+                "ml_predicted_closing_cash"
+            ]
+            <
+            result[
+                "ml_cash_lower_bound"
+            ]
+        )
+        |
+        (
+            result[
+                "ml_predicted_closing_cash"
+            ]
+            >
+            result[
+                "ml_cash_upper_bound"
+            ]
+        )
+    )
+
+    if invalid_cash_position.any():
+
+        raise RuntimeError(
+            "Predicted Closing Cash lies outside "
+            "its prediction interval."
+        )
+
+    # --------------------------------------------------------
+    # FORECAST QUALITY VALIDATION
+    # --------------------------------------------------------
+
+    allowed_quality = {
+        "HIGH_CONFIDENCE",
+        "MEDIUM_CONFIDENCE",
+        "LOW_CONFIDENCE",
+        "VERY_LOW",
+        "VERY_LOW_CONFIDENCE",
+    }
+
+    observed_quality = set(
+        result[
+            "cash_forecast_quality"
+        ]
+        .dropna()
+        .astype(str)
+        .str.upper()
+        .unique()
+    )
+
+    unknown_quality = (
+        observed_quality
+        - allowed_quality
+    )
+
+    if unknown_quality:
+
+        raise RuntimeError(
+            "Unknown cash forecast quality values: "
+            + ", ".join(
+                sorted(unknown_quality)
+            )
+        )
+
+    # --------------------------------------------------------
+    # FORECAST CONFIDENCE VALIDATION
+    # --------------------------------------------------------
+
+    allowed_confidence = {
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "VERY_LOW",
+        "HIGH_CONFIDENCE",
+        "MEDIUM_CONFIDENCE",
+        "LOW_CONFIDENCE",
+        "VERY_LOW_CONFIDENCE",
+    }
+
+    observed_confidence = set(
+        result[
+            "cash_forecast_confidence"
+        ]
+        .dropna()
+        .astype(str)
+        .str.upper()
+        .unique()
+    )
+
+    unknown_confidence = (
+        observed_confidence
+        - allowed_confidence
+    )
+
+    if unknown_confidence:
+
+        raise RuntimeError(
+            "Unknown cash forecast confidence values: "
+            + ", ".join(
+                sorted(unknown_confidence)
+            )
+        )
+
+    # --------------------------------------------------------
+    # SELECTION REASON
+    # --------------------------------------------------------
+
+    allowed_selection_reasons = {
+        "ML_OUTPERFORMED_BASELINE",
+        "ML_DID_NOT_OUTPERFORM_BASELINE",
+        "BASELINE_SELECTED",
+        "ML_SELECTED",
+    }
+
+    observed_selection_reasons = set(
+        result[
+            "cash_forecast_selection_reason"
+        ]
+        .dropna()
+        .astype(str)
+        .str.upper()
+        .unique()
+    )
+
+    unknown_selection_reasons = (
+        observed_selection_reasons
+        - allowed_selection_reasons
+    )
+
+    if unknown_selection_reasons:
+
+        logger.warning(
+            "Unknown cash forecast selection reason(s): %s",
+            ", ".join(
+                sorted(
+                    unknown_selection_reasons
+                )
+            ),
+        )
+
     # --------------------------------------------------------
     # ONE ROW PER PERIOD
     # --------------------------------------------------------
+
+    if (
+        result["period"]
+        .duplicated()
+        .any()
+    ):
+
+        duplicate_periods = (
+            result.loc[
+                result["period"].duplicated(
+                    keep=False
+                ),
+                "period",
+            ]
+            .dt.strftime(
+                "%Y-%m"
+            )
+            .unique()
+            .tolist()
+        )
+
+        raise RuntimeError(
+            "Cash prediction contains duplicate periods: "
+            + ", ".join(
+                duplicate_periods
+            )
+        )
 
     result = (
         result
         .sort_values(
             "period"
-        )
-        .drop_duplicates(
-            "period",
-            keep="last",
         )
         .reset_index(
             drop=True
@@ -1673,7 +2071,82 @@ def prepare_cash_prediction(
         len(result),
     )
 
-    return result
+    logger.info(
+        "Cash prediction method: %s",
+        ", ".join(
+            result[
+                "cash_prediction_model"
+            ]
+            .dropna()
+            .astype(str)
+            .unique()
+        ),
+    )
+
+    logger.info(
+        "Cash forecast selection reason: %s",
+        ", ".join(
+            result[
+                "cash_forecast_selection_reason"
+            ]
+            .dropna()
+            .astype(str)
+            .unique()
+        ),
+    )
+
+    logger.info(
+        "Cash forecast quality: %s",
+        ", ".join(
+            result[
+                "cash_forecast_quality"
+            ]
+            .dropna()
+            .astype(str)
+            .unique()
+        ),
+    )
+
+    logger.info(
+        "Cash forecast confidence: %s",
+        ", ".join(
+            result[
+                "cash_forecast_confidence"
+            ]
+            .dropna()
+            .astype(str)
+            .unique()
+        ),
+    )
+
+    return result[
+        [
+            "period",
+
+            "ml_predicted_operating_cf",
+            "ml_predicted_closing_cash",
+
+            "ml_ocf_lower_bound",
+            "ml_ocf_upper_bound",
+
+            "ml_cash_lower_bound",
+            "ml_cash_upper_bound",
+
+            "cash_prediction_mae",
+            "cash_prediction_rmse",
+            "cash_prediction_smape_pct",
+            "cash_prediction_stabilized_mape_pct",
+            "cash_prediction_residual_std",
+            "cash_forecast_interval_width",
+
+            "cash_prediction_type",
+            "cash_forecast_selection_reason",
+            "cash_forecast_quality",
+            "cash_forecast_confidence",
+            "cash_prediction_model",
+            "cash_ml_improvement_vs_baseline",
+        ]
+    ]
 
 
 # ============================================================
@@ -1686,9 +2159,11 @@ def prepare_classification(
     """Prepare financial classification predictions."""
 
     if df.empty:
+
         return pd.DataFrame()
 
     if "period" not in df.columns:
+
         return pd.DataFrame()
 
     return (
@@ -1715,9 +2190,12 @@ def safe_merge(
     dataset: pd.DataFrame,
     dataset_name: str,
 ) -> pd.DataFrame:
-    """Perform validated one-to-one monthly merge."""
+    """
+    Perform validated one-to-one monthly merge.
+    """
 
     if dataset.empty:
+
         return base
 
     if "period" not in dataset.columns:
@@ -1780,9 +2258,6 @@ def validate_forecast_horizon(
 ) -> pd.Series:
     """
     Validate six consecutive future forecast months.
-
-    Returns:
-        Series containing the six forecast periods.
     """
 
     future = reporting[
@@ -1875,8 +2350,8 @@ def validate_prediction_horizons(
     expected_periods: pd.Series,
 ) -> None:
     """
-    Validate that Revenue, Expense and Cash ML layers
-    contain exactly the same six forecast periods.
+    Validate Revenue, Expense and Cash ML layers
+    against the same six forecast periods.
     """
 
     expected = (
@@ -2121,7 +2596,25 @@ def clear_context_specific_metrics(
                 "_prediction_rmse"
             )
             or column.endswith(
-                "_prediction_mape_pct"
+                "_prediction_mae"
+            )
+            or column.endswith(
+                "_prediction_smape_pct"
+            )
+            or column.endswith(
+                "_prediction_stabilized_mape_pct"
+            )
+            or column.endswith(
+                "_prediction_residual_std"
+            )
+            or column.endswith(
+                "_forecast_interval_width"
+            )
+            or column.startswith(
+                "cash_forecast_"
+            )
+            or column.startswith(
+                "cash_prediction_"
             )
         )
     ]
@@ -2131,20 +2624,6 @@ def clear_context_specific_metrics(
         result.loc[
             actual_mask,
             prediction_columns,
-        ] = pd.NA
-
-    # --------------------------------------------------------
-    # ML expense magnitude
-    # --------------------------------------------------------
-
-    if (
-        "ml_predicted_expense_magnitude"
-        in result.columns
-    ):
-
-        result.loc[
-            actual_mask,
-            "ml_predicted_expense_magnitude",
         ] = pd.NA
 
     return result
@@ -2239,7 +2718,7 @@ def validate_actual_forecast_boundary(
 
 
 # ============================================================
-# GRAIN VALIDATION
+# MONTHLY GRAIN VALIDATION
 # ============================================================
 
 def validate_monthly_grain(
@@ -2253,6 +2732,12 @@ def validate_monthly_grain(
 
         raise RuntimeError(
             "Final dataset is missing period."
+        )
+
+    if df.empty:
+
+        raise RuntimeError(
+            "Final dataset is empty."
         )
 
     if df["period"].duplicated().any():
@@ -2318,7 +2803,9 @@ def validate_monthly_grain(
 def validate_sign_convention(
     df: pd.DataFrame,
 ) -> None:
-    """Validate management sign conventions."""
+    """
+    Validate management sign conventions.
+    """
 
     forecast = df[
         df[
@@ -2329,6 +2816,7 @@ def validate_sign_convention(
     ].copy()
 
     if forecast.empty:
+
         return
 
     # --------------------------------------------------------
@@ -2337,9 +2825,7 @@ def validate_sign_convention(
 
     revenue = forecast.get(
         "rolling_revenue",
-        pd.Series(
-            dtype=float
-        ),
+        pd.Series(dtype=float),
     ).dropna()
 
     if (
@@ -2358,9 +2844,7 @@ def validate_sign_convention(
 
     ml_revenue = forecast.get(
         "ml_predicted_revenue",
-        pd.Series(
-            dtype=float
-        ),
+        pd.Series(dtype=float),
     ).dropna()
 
     if (
@@ -2379,9 +2863,7 @@ def validate_sign_convention(
 
     costs = forecast.get(
         "rolling_operating_costs",
-        pd.Series(
-            dtype=float
-        ),
+        pd.Series(dtype=float),
     ).dropna()
 
     if (
@@ -2400,9 +2882,7 @@ def validate_sign_convention(
 
     ml_costs = forecast.get(
         "ml_predicted_operating_costs",
-        pd.Series(
-            dtype=float
-        ),
+        pd.Series(dtype=float),
     ).dropna()
 
     if (
@@ -2443,6 +2923,7 @@ def validate_forecast_intervals(
     )
 
     if forecast.empty:
+
         return
 
     # --------------------------------------------------------
@@ -2490,8 +2971,6 @@ def validate_forecast_intervals(
 
     # --------------------------------------------------------
     # Expense interval
-    #
-    # Costs are negative.
     # --------------------------------------------------------
 
     expense_columns = {
@@ -2621,6 +3100,90 @@ def validate_forecast_intervals(
 
     logger.info(
         "Forecast interval validation passed."
+    )
+
+
+# ============================================================
+# CASH FORECAST METADATA VALIDATION
+# ============================================================
+
+def validate_cash_forecast_metadata(
+    df: pd.DataFrame,
+) -> None:
+    """
+    Validate Cash Flow forecast metadata required by Power BI.
+    """
+
+    forecast = df[
+        df[
+            "reporting_data_type"
+        ]
+        ==
+        "FORECAST"
+    ].copy()
+
+    if forecast.empty:
+
+        return
+
+    required_columns = {
+        "cash_prediction_type",
+        "cash_forecast_selection_reason",
+        "cash_forecast_quality",
+        "cash_forecast_confidence",
+        "cash_prediction_model",
+        "cash_ml_improvement_vs_baseline",
+    }
+
+    missing = (
+        required_columns
+        - set(forecast.columns)
+    )
+
+    if missing:
+
+        raise RuntimeError(
+            "Cash Flow forecast metadata missing: "
+            + ", ".join(
+                sorted(missing)
+            )
+        )
+
+    for column in [
+        "cash_prediction_type",
+        "cash_forecast_selection_reason",
+        "cash_forecast_quality",
+        "cash_forecast_confidence",
+        "cash_prediction_model",
+    ]:
+
+        if (
+            forecast[column]
+            .isna()
+            .any()
+        ):
+
+            missing_periods = (
+                forecast.loc[
+                    forecast[column].isna(),
+                    "period",
+                ]
+                .dt.strftime(
+                    "%Y-%m"
+                )
+                .tolist()
+            )
+
+            raise RuntimeError(
+                f"Cash Flow metadata column '{column}' "
+                "contains missing values for: "
+                + ", ".join(
+                    missing_periods
+                )
+            )
+
+    logger.info(
+        "Cash Flow forecast metadata validation passed."
     )
 
 
@@ -2799,7 +3362,7 @@ def build_reporting_dataset(
     )
 
     # --------------------------------------------------------
-    # HORIZON
+    # FORECAST HORIZON
     # --------------------------------------------------------
 
     forecast_periods = (
@@ -2830,7 +3393,15 @@ def build_reporting_dataset(
     )
 
     # --------------------------------------------------------
-    # BOUNDARY
+    # CASH METADATA
+    # --------------------------------------------------------
+
+    validate_cash_forecast_metadata(
+        result
+    )
+
+    # --------------------------------------------------------
+    # ACTUAL / FORECAST BOUNDARY
     # --------------------------------------------------------
 
     validate_actual_forecast_boundary(
@@ -2873,7 +3444,9 @@ def build_reporting_dataset(
 def log_forecast_samples(
     df: pd.DataFrame,
 ) -> None:
-    """Log forecast samples for manual QA."""
+    """
+    Log forecast samples for manual QA.
+    """
 
     forecast = (
         df[
@@ -2892,10 +3465,11 @@ def log_forecast_samples(
     )
 
     if forecast.empty:
+
         return
 
     # --------------------------------------------------------
-    # Revenue
+    # REVENUE
     # --------------------------------------------------------
 
     if {
@@ -2922,7 +3496,7 @@ def log_forecast_samples(
         )
 
     # --------------------------------------------------------
-    # Expense
+    # EXPENSE
     # --------------------------------------------------------
 
     if {
@@ -2947,13 +3521,16 @@ def log_forecast_samples(
         )
 
     # --------------------------------------------------------
-    # Cash
+    # CASH
     # --------------------------------------------------------
 
     if {
         "period",
         "ml_predicted_operating_cf",
         "ml_predicted_closing_cash",
+        "cash_forecast_selection_reason",
+        "cash_forecast_quality",
+        "cash_forecast_confidence",
     }.issubset(
         forecast.columns
     ):
@@ -2965,6 +3542,9 @@ def log_forecast_samples(
                     "period",
                     "ml_predicted_operating_cf",
                     "ml_predicted_closing_cash",
+                    "cash_forecast_selection_reason",
+                    "cash_forecast_quality",
+                    "cash_forecast_confidence",
                 ]
             ].to_string(
                 index=False
@@ -2980,7 +3560,9 @@ def log_final_validation(
     df: pd.DataFrame,
     actual_cutoff: pd.Timestamp,
 ) -> None:
-    """Log final dataset structure."""
+    """
+    Log final dataset structure.
+    """
 
     actual_count = int(
         (
@@ -3058,6 +3640,10 @@ def log_final_validation(
             [
                 "period",
                 "reporting_data_type",
+                "cash_prediction_type",
+                "cash_forecast_selection_reason",
+                "cash_forecast_quality",
+                "cash_forecast_confidence",
             ],
         ].to_string(
             index=False
@@ -3072,7 +3658,9 @@ def log_final_validation(
 def save_output(
     df: pd.DataFrame,
 ) -> None:
-    """Save final Power BI reporting dataset."""
+    """
+    Save final Power BI reporting dataset.
+    """
 
     OUTPUT_DIR.mkdir(
         parents=True,
@@ -3095,13 +3683,21 @@ def save_output(
 # ============================================================
 
 def main() -> int:
-    """Run EFAP Power BI reporting export."""
+    """
+    Run EFAP Power BI reporting export.
+    """
 
     try:
 
         logger.info(
             "Starting EFAP Power BI Analytics Export."
         )
+
+        # ----------------------------------------------------
+        # PROJECT / FILE VALIDATION
+        # ----------------------------------------------------
+
+        validate_files()
 
         # ----------------------------------------------------
         # LOAD
@@ -3137,6 +3733,10 @@ def main() -> int:
         )
 
         validate_forecast_intervals(
+            reporting
+        )
+
+        validate_cash_forecast_metadata(
             reporting
         )
 
